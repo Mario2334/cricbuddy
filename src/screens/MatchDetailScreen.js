@@ -6,7 +6,6 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
@@ -30,16 +29,13 @@ const MatchDetailScreen = ({ route, navigation }) => {
   
   // Process scorecard data into tab routes when it's loaded
   useEffect(() => {
-    if (scorecard && scorecard.pageProps) {
-      const scorecardData = scorecard.pageProps.scorecard || [];
-      if (scorecardData.length > 0) {
-        const newRoutes = scorecardData.map((innings, idx) => ({
-          key: String(idx),
-          title: innings.teamName || `Innings ${idx + 1}`,
-          innings: innings
-        }));
-        setRoutes(newRoutes);
-      }
+    if (scorecard?.pageProps?.scorecard?.length > 0) {
+      const newRoutes = scorecard.pageProps.scorecard.map((innings, idx) => ({
+        key: String(idx),
+        title: innings.teamName || `Innings ${idx + 1}`,
+        innings: innings
+      }));
+      setRoutes(newRoutes);
     }
   }, [scorecard]);
 
@@ -91,7 +87,6 @@ const MatchDetailScreen = ({ route, navigation }) => {
         Status: {match.status || 'Unknown'}
       </Text>
       
-      {/* Show match result for past matches */}
       {match.status === 'past' && match.match_summary?.summary && (
         <View style={styles.resultSection}>
           <Text style={styles.matchResult}>
@@ -173,20 +168,17 @@ const MatchDetailScreen = ({ route, navigation }) => {
     );
   };
 
-  const renderScene = ({ route }) => {
-    const innings = route.innings;
-    return (
-      <ScrollView 
-        style={styles.tabContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={true}
-      >
-        {renderInningsCard(innings, route.title, route.key)}
-      </ScrollView>
-    );
-  };
+  const renderScene = ({ route }) => (
+    <ScrollView 
+      style={styles.tabContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      showsVerticalScrollIndicator={true}
+    >
+      {renderInningsCard(route.innings, route.title, route.key)}
+    </ScrollView>
+  );
 
   const renderTabBar = props => (
     <TabBar
@@ -200,7 +192,7 @@ const MatchDetailScreen = ({ route, navigation }) => {
   );
 
   const renderScorecardContent = () => {
-    if (!scorecard || !scorecard.pageProps) {
+    if (!scorecard?.pageProps) {
       return (
         <View style={styles.noData}>
           <Ionicons name="document-text-outline" size={48} color="#ccc" />
@@ -209,7 +201,6 @@ const MatchDetailScreen = ({ route, navigation }) => {
       );
     }
 
-    // The actual API returns scorecard data in pageProps.scorecard array
     const scorecardData = scorecard.pageProps.scorecard || [];
     
     if (scorecardData.length === 0) {
@@ -422,10 +413,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  tabViewContainer: {
-    flex: 1,
-    minHeight: 400,
-  },
+
   tabBar: {
     backgroundColor: '#f8f8f8',
     elevation: 0,
