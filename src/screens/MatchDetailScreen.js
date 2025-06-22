@@ -8,8 +8,10 @@ import {
   RefreshControl,
   Alert,
   TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { TabView, TabBar } from 'react-native-tab-view';
 import apiService from '../services/apiService';
 
 const MatchDetailScreen = ({ route, navigation }) => {
@@ -18,10 +20,28 @@ const MatchDetailScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [index, setIndex] = useState(0);
+  const [routes, setRoutes] = useState([]);
+  const layout = useWindowDimensions();
 
   useEffect(() => {
     fetchScorecard();
   }, []);
+  
+  // Process scorecard data into tab routes when it's loaded
+  useEffect(() => {
+    if (scorecard && scorecard.pageProps) {
+      const scorecardData = scorecard.pageProps.scorecard || [];
+      if (scorecardData.length > 0) {
+        const newRoutes = scorecardData.map((innings, idx) => ({
+          key: String(idx),
+          title: innings.teamName || `Innings ${idx + 1}`,
+          innings: innings
+        }));
+        setRoutes(newRoutes);
+      }
+    }
+  }, [scorecard]);
 
   const fetchScorecard = async () => {
     try {
@@ -70,6 +90,17 @@ const MatchDetailScreen = ({ route, navigation }) => {
       <Text style={styles.matchStatus}>
         Status: {match.status || 'Unknown'}
       </Text>
+      
+      {/* Show match result for past matches */}
+      {match.status === 'past' && match.match_summary?.summary && (
+        <View style={styles.resultSection}>
+          <Text style={styles.matchResult}>
+            <Ionicons name="trophy-outline" size={16} color="#FFD700" />
+            {' '}Result: {match.match_summary.summary}
+          </Text>
+        </View>
+      )}
+      
       {match.ground && (
         <Text style={styles.ground}>
           <Ionicons name="location-outline" size={14} color="#666" />
@@ -107,14 +138,16 @@ const MatchDetailScreen = ({ route, navigation }) => {
         {batting.length > 0 && (
           <View style={styles.battingSection}>
             <Text style={styles.sectionTitle}>Batting</Text>
-            {batting.slice(0, 6).map((batsman, index) => (
+            {batting.map((batsman, index) => (
               <View key={batsman.player_id || `batsman-${index}`} style={styles.batsmanRow}>
                 <Text style={styles.batsmanName} numberOfLines={1}>
                   {batsman.name || 'Unknown'}
-                  {batsman.how_to_out && batsman.how_to_out !== 'not out' ? '*' : ''}
+                  {batsman.how_to_out === 'not out' ? '*' : ''}
                 </Text>
                 <Text style={styles.batsmanStats}>
                   {batsman.runs || 0} ({batsman.balls || 0})
+                  {batsman.fours ? ` 4s:${batsman.fours}` : ''}
+                  {batsman.sixes ? ` 6s:${batsman.sixes}` : ''}
                 </Text>
               </View>
             ))}
@@ -125,11 +158,12 @@ const MatchDetailScreen = ({ route, navigation }) => {
         {bowling.length > 0 && (
           <View style={styles.bowlingSection}>
             <Text style={styles.sectionTitle}>Bowling</Text>
-            {bowling.slice(0, 4).map((bowler, index) => (
+            {bowling.map((bowler, index) => (
               <View key={bowler.player_id || `bowler-${index}`} style={styles.bowlerRow}>
                 <Text style={styles.bowlerName}>{bowler.name || 'Unknown'}</Text>
                 <Text style={styles.bowlerStats}>
                   {bowler.overs || 0}-{bowler.maidens || 0}-{bowler.runs || 0}-{bowler.wickets || 0}
+                  {bowler.economy && ` (${bowler.economy})`}
                 </Text>
               </View>
             ))}
@@ -138,6 +172,32 @@ const MatchDetailScreen = ({ route, navigation }) => {
       </View>
     );
   };
+
+  const renderScene = ({ route }) => {
+    const innings = route.innings;
+    return (
+      <ScrollView 
+        style={styles.tabContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={true}
+      >
+        {renderInningsCard(innings, route.title, route.key)}
+      </ScrollView>
+    );
+  };
+
+  const renderTabBar = props => (
+    <TabBar
+      {...props}
+      indicatorStyle={styles.tabIndicator}
+      style={styles.tabBar}
+      labelStyle={styles.tabLabel}
+      activeColor="#0066cc"
+      inactiveColor="#888888"
+    />
+  );
 
   const renderScorecardContent = () => {
     if (!scorecard || !scorecard.pageProps) {
@@ -163,9 +223,14 @@ const MatchDetailScreen = ({ route, navigation }) => {
 
     return (
       <View style={styles.content}>
-        {scorecardData.map((teamInnings, index) => 
-          renderInningsCard(teamInnings, teamInnings.teamName || `Team ${index + 1}`, index)
-        )}
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={renderScene}
+          onIndexChange={setIndex}
+          initialLayout={{ width: layout.width }}
+          renderTabBar={renderTabBar}
+          style={{ flex: 1 }}
+        />
       </View>
     );
   };
@@ -198,15 +263,12 @@ const MatchDetailScreen = ({ route, navigation }) => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <View style={styles.container}>
       {renderMatchHeader()}
-      {renderScorecardContent()}
-    </ScrollView>
+      <View style={styles.scorecardContainer}>
+        {renderScorecardContent()}
+      </View>
+    </View>
   );
 };
 
@@ -242,7 +304,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   content: {
-    padding: 16,
+    flex: 1,
   },
   inningsCard: {
     backgroundColor: 'white',
@@ -360,6 +422,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  tabViewContainer: {
+    flex: 1,
+    minHeight: 400,
+  },
+  tabBar: {
+    backgroundColor: '#f8f8f8',
+    elevation: 0,
+    shadowOpacity: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e1e1e1',
+  },
+  tabIndicator: {
+    backgroundColor: '#0066cc',
+    height: 3,
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'none',
+  },
+  tabContent: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    padding: 16,
+  },
   noData: {
     alignItems: 'center',
     padding: 40,
@@ -369,6 +456,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  scorecardContainer: {
+    flex: 1,
+  },
+  resultSection: {
+    marginBottom: 8,
+  },
+  matchResult: {
+    fontSize: 14,
+    color: '#FFD700',
+    fontWeight: '600',
   },
 });
 

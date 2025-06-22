@@ -224,6 +224,15 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.teamName} numberOfLines={1}>{item.team_b}</Text>
           </View>
         </View>
+        
+        {/* Show match result for past matches */}
+        {item.status === 'past' && item.match_summary?.summary && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.matchResultText} numberOfLines={2}>
+              🏆 {item.match_summary.summary}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.matchFooter}>
@@ -563,6 +572,14 @@ const styles = StyleSheet.create({
     color: '#ff4444',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  resultContainer: {
+    marginTop: 8,
+  },
+  matchResultText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 
