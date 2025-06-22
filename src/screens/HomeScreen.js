@@ -1,16 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   FlatList,
-  TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Image,
   Alert,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import {
+  Box,
+  Text,
+  Pressable,
+  VStack,
+  HStack,
+  Card,
+  Badge,
+  Heading,
+  Spinner,
+  Center,
+  Divider,
+  LinearGradient,
+} from '@gluestack-ui/themed';
 import apiService from '../services/apiService';
 
 const Tab = createMaterialTopTabNavigator();
@@ -187,8 +196,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const renderMatchItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.matchCard}
+    <Pressable 
       onPress={() => {
         // Only allow navigation to scorecard for live or past matches
         if (item.status === 'live' || item.status === 'past') {
@@ -201,101 +209,268 @@ const HomeScreen = ({ navigation }) => {
           );
         }
       }}
+      $pressed={{
+        opacity: 0.8,
+        scale: 0.98,
+      }}
     >
-      <View style={styles.matchHeader}>
-        <View style={styles.tournamentInfo}>
-          <Text style={styles.tournamentName} numberOfLines={1}>
-            {item.tournament_name}
-          </Text>
-          <Text style={styles.roundName}>{item.tournament_round_name}</Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: getMatchStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
-        </View>
-      </View>
+      <Card
+        size="md"
+        variant="elevated"
+        m="$1"
+        mx="$2"
+        mb="$3"
+        bg="$white"
+        borderRadius="$xl"
+        shadowColor="$blue600"
+        shadowOffset={{ width: 0, height: 4 }}
+        shadowOpacity={0.15}
+        shadowRadius={8}
+        elevation={6}
+        borderLeftWidth={4}
+        borderLeftColor={getMatchStatusColor(item.status)}
+      >
+        <VStack space="sm" p="$4">
+          {/* Header */}
+          <HStack justifyContent="space-between" alignItems="flex-start">
+            <VStack flex={1} space="xs" mr="$3">
+              <Heading 
+                size="sm" 
+                color="$blue600" 
+                fontWeight="$semibold"
+                numberOfLines={1}
+              >
+                {item.tournament_name && item.tournament_name.trim() !== '' 
+                  ? item.tournament_name 
+                  : 'Practice Match'
+                }
+              </Heading>
+              <Text 
+                size="xs" 
+                color="$coolGray500"
+                fontWeight="$medium"
+              >
+                {item.tournament_round_name}
+              </Text>
+            </VStack>
+            <Badge
+              size="sm"
+              variant="solid"
+              bg={getMatchStatusColor(item.status)}
+              borderRadius="$full"
+              px="$3"
+              py="$1"
+            >
+              <Text 
+                color="$white" 
+                size="xs" 
+                fontWeight="$bold"
+                textTransform="uppercase"
+              >
+                {item.status}
+              </Text>
+            </Badge>
+          </HStack>
 
-      <View style={styles.teamsContainer}>
-        <View style={styles.teamRow}>
-          <View style={styles.teamInfo}>
-            <Text style={styles.teamName} numberOfLines={1}>{item.team_a}</Text>
-          </View>
-          <Text style={styles.vsText}>VS</Text>
-          <View style={styles.teamInfo}>
-            <Text style={styles.teamName} numberOfLines={1}>{item.team_b}</Text>
-          </View>
-        </View>
-        
-        {/* Show match result for past matches */}
-        {item.status === 'past' && item.match_summary?.summary && (
-          <View style={styles.resultContainer}>
-            <Text style={styles.matchResultText} numberOfLines={2}>
-              🏆 {item.match_summary.summary}
-            </Text>
-          </View>
-        )}
-      </View>
+          <Divider my="$2" />
 
-      <View style={styles.matchFooter}>
-        <View style={styles.matchDetails}>
-          <Text style={styles.matchType}>{item.match_type} • {item.overs} Overs</Text>
-          <Text style={styles.groundName} numberOfLines={1}>{item.ground_name}</Text>
-        </View>
-        <Text style={styles.matchTime}>{formatMatchTime(item.match_start_time)}</Text>
-      </View>
-    </TouchableOpacity>
+          {/* Teams */}
+          <VStack space="sm">
+            <HStack justifyContent="space-between" alignItems="center">
+              <VStack flex={1} alignItems="center">
+                <Text 
+                  size="md" 
+                  fontWeight="$bold" 
+                  color="$coolGray800"
+                  textAlign="center"
+                  numberOfLines={1}
+                >
+                  {item.team_a}
+                </Text>
+              </VStack>
+              
+              <Badge
+                variant="outline"
+                borderColor="$coolGray300"
+                bg="$coolGray50"
+                borderRadius="$md"
+                mx="$4"
+                px="$2"
+                py="$1"
+              >
+                <Text 
+                  size="xs" 
+                  fontWeight="$semibold" 
+                  color="$coolGray600"
+                >
+                  VS
+                </Text>
+              </Badge>
+              
+              <VStack flex={1} alignItems="center">
+                <Text 
+                  size="md" 
+                  fontWeight="$bold" 
+                  color="$coolGray800"
+                  textAlign="center"
+                  numberOfLines={1}
+                >
+                  {item.team_b}
+                </Text>
+              </VStack>
+            </HStack>
+            
+            {/* Show match result for past matches */}
+            {item.status === 'past' && item.match_summary?.summary && (
+              <Box
+                bg="$green50"
+                borderRadius="$md"
+                p="$3"
+                mt="$2"
+                borderLeftWidth={3}
+                borderLeftColor="$green500"
+              >
+                <HStack alignItems="center" space="xs">
+                  <Text size="sm" color="$green700">🏆</Text>
+                  <Text 
+                    size="sm" 
+                    color="$green700"
+                    fontWeight="$medium"
+                    flex={1}
+                    numberOfLines={2}
+                  >
+                    {item.match_summary.summary}
+                  </Text>
+                </HStack>
+              </Box>
+            )}
+          </VStack>
+
+          <Divider my="$2" />
+
+          {/* Footer */}
+          <HStack justifyContent="space-between" alignItems="flex-end">
+            <VStack flex={1} space="xs">
+              <Text 
+                size="xs" 
+                color="$coolGray600"
+                fontWeight="$medium"
+              >
+                {item.match_type} • {item.overs} Overs
+              </Text>
+              <Text 
+                size="xs" 
+                color="$coolGray500"
+                numberOfLines={1}
+              >
+                📍 {item.ground_name}
+              </Text>
+            </VStack>
+            <Box
+              bg="$blue50"
+              borderRadius="$md"
+              px="$2"
+              py="$1"
+            >
+              <Text 
+                size="xs" 
+                color="$blue700"
+                fontWeight="$semibold"
+              >
+                {formatMatchTime(item.match_start_time)}
+              </Text>
+            </Box>
+          </HStack>
+        </VStack>
+      </Card>
+    </Pressable>
   );
 
   const renderFooter = () => {
     if (!loadingMore) return null;
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#0066cc" />
-        <Text style={styles.loadingText}>Loading more matches...</Text>
-      </View>
+      <Center py="$4">
+        <HStack space="sm" alignItems="center">
+          <Spinner size="small" color="$blue600" />
+          <Text size="sm" color="$coolGray600">Loading more matches...</Text>
+        </HStack>
+      </Center>
     );
   };
 
-  const renderEmptyState = (status) => {
-    if (!hasInitiallyLoaded) {
+  const renderEmpty = (isLoading, error, tabType) => {
+    if (isLoading) {
       return (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Pull down to load {status} matches</Text>
-          <TouchableOpacity style={styles.loadButton} onPress={() => loadMatches(null, true)}>
-            <Text style={styles.loadButtonText}>Load Matches</Text>
-          </TouchableOpacity>
-        </View>
+        <Center flex={1} py="$20">
+          <VStack space="md" alignItems="center">
+            <Spinner size="large" color="$blue600" />
+            <Text size="md" color="$coolGray600">Loading {tabType} matches...</Text>
+          </VStack>
+        </Center>
+      );
+    }
+
+    if (error) {
+      return (
+        <Center flex={1} py="$20">
+          <VStack space="md" alignItems="center" mx="$4">
+            <Box
+              w="$16"
+              h="$16"
+              bg="$red50"
+              borderRadius="$full"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text size="xl" color="$red500">⚠️</Text>
+            </Box>
+            <Heading size="sm" color="$red600" textAlign="center">
+              Failed to load matches
+            </Heading>
+            <Text size="sm" color="$coolGray600" textAlign="center">
+              {error}
+            </Text>
+            <Pressable
+              mt="$2"
+              bg="$blue600"
+              borderRadius="$md"
+              px="$4"
+              py="$2"
+              onPress={() => tabType === 'Past' ? loadPastMatches(null, true) : loadMatches(null, true)}
+              $pressed={{
+                bg: "$blue700",
+              }}
+            >
+              <Text color="$white" fontWeight="$semibold" size="sm">
+                Try Again
+              </Text>
+            </Pressable>
+          </VStack>
+        </Center>
       );
     }
 
     return (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyText}>No {status} matches found</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => loadMatches(null, true)}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const renderPastEmptyState = (status) => {
-    if (!hasPastInitiallyLoaded) {
-      return (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Pull down to load {status} matches</Text>
-          <TouchableOpacity style={styles.loadButton} onPress={() => loadPastMatches(null, true)}>
-            <Text style={styles.loadButtonText}>Load Matches</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyText}>No {status} matches found</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => loadPastMatches(null, true)}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <Center flex={1} py="$20">
+        <VStack space="md" alignItems="center" mx="$4">
+          <Box
+            w="$20"
+            h="$20"
+            bg="$coolGray50"
+            borderRadius="$full"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Text size="2xl" color="$coolGray400">🏏</Text>
+          </Box>
+          <Heading size="sm" color="$coolGray600" textAlign="center">
+            No {tabType} matches found
+          </Heading>
+          <Text size="sm" color="$coolGray500" textAlign="center">
+            Check back later for new matches
+          </Text>
+        </VStack>
+      </Center>
     );
   };
 
@@ -306,23 +481,11 @@ const HomeScreen = ({ navigation }) => {
     // No useFocusEffect - use shared data from parent component
     
     if (status === 'completed' ? pastLoading : loading && !hasInitiallyLoaded) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0066cc" />
-          <Text style={styles.loadingText}>Loading {status} matches...</Text>
-        </View>
-      );
+      return renderEmpty(true, null, status === 'completed' ? 'Past' : status.charAt(0).toUpperCase() + status.slice(1));
     }
 
     if ((status === 'completed' ? pastError : error) && !hasInitiallyLoaded) {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{status === 'completed' ? pastError : error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => status === 'completed' ? loadPastMatches(null, true) : loadMatches(null, true)}>
-            <Text style={styles.retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return renderEmpty(false, status === 'completed' ? pastError : error, status === 'completed' ? 'Past' : status.charAt(0).toUpperCase() + status.slice(1));
     }
 
     return (
@@ -330,7 +493,10 @@ const HomeScreen = ({ navigation }) => {
         data={filteredMatches}
         renderItem={renderMatchItem}
         keyExtractor={(item) => item.match_id.toString()}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 32,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -345,7 +511,7 @@ const HomeScreen = ({ navigation }) => {
         onEndReachedThreshold={0.1}
         // Only show footer loader for Upcoming tab
         ListFooterComponent={status === 'upcoming' ? renderFooter : status === 'completed' ? renderFooter : null}
-        ListEmptyComponent={() => status === 'completed' ? renderPastEmptyState(status) : renderEmptyState(status)}
+        ListEmptyComponent={() => renderEmpty(false, null, status === 'completed' ? 'Past' : status.charAt(0).toUpperCase() + status.slice(1))}
       />
     );
   };
@@ -401,186 +567,5 @@ const HomeScreen = ({ navigation }) => {
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  listContainer: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  matchCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    borderLeftWidth: 4,
-    borderLeftColor: '#0066cc',
-  },
-  matchHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  tournamentInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  tournamentName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0066cc',
-    marginBottom: 2,
-  },
-  roundName: {
-    fontSize: 12,
-    color: '#666',
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  teamsContainer: {
-    marginBottom: 12,
-  },
-  teamRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  teamInfo: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  teamName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-  },
-  vsText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-    marginHorizontal: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-  },
-  matchFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  matchDetails: {
-    flex: 1,
-  },
-  matchType: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-  },
-  groundName: {
-    fontSize: 12,
-    color: '#888',
-  },
-  matchTime: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
-  },
-  footerLoader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  loadButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  loadButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#ff4444',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  resultContainer: {
-    marginTop: 8,
-  },
-  matchResultText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-});
 
 export default HomeScreen;
