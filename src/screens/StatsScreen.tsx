@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   Alert,
   Dimensions,
+  View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import {
+  Card,
+  Text,
+  Spinner,
+  Layout,
+} from '@ui-kitten/components';
+import { Ionicons } from '@expo/vector-icons';
 import apiService from '../services/apiService';
 
 interface StatItem {
@@ -43,7 +49,7 @@ const StatsScreen = () => {
 
     try {
       const response = await apiService.getPlayerStats();
-      
+
       if (response.success) {
         setStatsData(response.data.data.statistics);
       } else {
@@ -62,11 +68,60 @@ const StatsScreen = () => {
     loadStats(true);
   };
 
+  const getStatIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('runs') || lowerTitle.includes('score')) return 'trending-up';
+    if (lowerTitle.includes('wickets') || lowerTitle.includes('wicket')) return 'flash';
+    if (lowerTitle.includes('catches') || lowerTitle.includes('catch')) return 'hand-left';
+    if (lowerTitle.includes('matches') || lowerTitle.includes('match')) return 'calendar';
+    if (lowerTitle.includes('average') || lowerTitle.includes('avg')) return 'analytics';
+    if (lowerTitle.includes('strike') || lowerTitle.includes('rate')) return 'speedometer';
+    if (lowerTitle.includes('economy') || lowerTitle.includes('eco')) return 'timer';
+    if (lowerTitle.includes('overs') || lowerTitle.includes('over')) return 'time';
+    if (lowerTitle.includes('balls') || lowerTitle.includes('ball')) return 'baseball';
+    if (lowerTitle.includes('fours') || lowerTitle.includes('4s')) return 'square';
+    if (lowerTitle.includes('sixes') || lowerTitle.includes('6s')) return 'diamond';
+    return 'stats-chart';
+  };
+
+  const getStatGradient = (index: number): [string, string] => {
+    const gradients: [string, string][] = [
+      ['#667eea', '#764ba2'],
+      ['#f093fb', '#f5576c'],
+      ['#4facfe', '#00f2fe'],
+      ['#43e97b', '#38f9d7'],
+      ['#fa709a', '#fee140'],
+      ['#a8edea', '#fed6e3'],
+      ['#ffecd2', '#fcb69f'],
+      ['#ff9a9e', '#fecfef'],
+      ['#a18cd1', '#fbc2eb'],
+      ['#fad0c4', '#ffd1ff'],
+    ];
+    return gradients[index % gradients.length];
+  };
+
   const renderStatCard = (stat: StatItem, index: number) => (
-    <View key={index} style={styles.statCard}>
-      <Text style={styles.statValue}>{stat.value}</Text>
-      <Text style={styles.statTitle}>{stat.title}</Text>
-    </View>
+    <Card key={index} style={styles.statCard}>
+      <LinearGradient
+        colors={getStatGradient(index)}
+        style={styles.statCardGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={styles.statCardContent}>
+          <View style={styles.statIconContainer}>
+            <Ionicons 
+              name={getStatIcon(stat.title)} 
+              size={24} 
+              color="white" 
+              style={styles.statIcon}
+            />
+          </View>
+          <Text category='h3' style={styles.statValue}>{stat.value}</Text>
+          <Text category='s1' style={styles.statTitle}>{stat.title}</Text>
+        </View>
+      </LinearGradient>
+    </Card>
   );
 
   const renderStatsGrid = (stats: StatItem[]) => (
@@ -78,85 +133,97 @@ const StatsScreen = () => {
       }
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.statsGrid}>
+      <Layout style={styles.statsGrid} level='1'>
         {stats.map((stat, index) => renderStatCard(stat, index))}
-      </View>
+      </Layout>
     </ScrollView>
   );
 
   // Individual tab components
   const BattingTab = () => (
     statsData?.batting ? renderStatsGrid(statsData.batting) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No batting stats available</Text>
-      </View>
+      <Layout style={styles.emptyContainer} level='1'>
+        <Text category='h6' appearance='hint' style={styles.emptyText}>No batting stats available</Text>
+      </Layout>
     )
   );
 
   const BowlingTab = () => (
     statsData?.bowling ? renderStatsGrid(statsData.bowling) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No bowling stats available</Text>
-      </View>
+      <Layout style={styles.emptyContainer} level='1'>
+        <Text category='h6' appearance='hint' style={styles.emptyText}>No bowling stats available</Text>
+      </Layout>
     )
   );
 
   const FieldingTab = () => (
     statsData?.fielding ? renderStatsGrid(statsData.fielding) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No fielding stats available</Text>
-      </View>
+      <Layout style={styles.emptyContainer} level='1'>
+        <Text category='h6' appearance='hint' style={styles.emptyText}>No fielding stats available</Text>
+      </Layout>
     )
   );
 
   const CaptainTab = () => (
     statsData?.captain ? renderStatsGrid(statsData.captain) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No captain stats available</Text>
-      </View>
+      <Layout style={styles.emptyContainer} level='1'>
+        <Text category='h6' appearance='hint' style={styles.emptyText}>No captain stats available</Text>
+      </Layout>
     )
   );
 
   if (loading && !statsData) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading statistics...</Text>
-      </View>
+      <Layout style={styles.loadingContainer} level='1'>
+        <Spinner size="large" />
+        <Text category='s1' style={styles.loadingText}>Loading statistics...</Text>
+      </Layout>
     );
   }
 
   if (!statsData) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No statistics available</Text>
-      </View>
+      <Layout style={styles.errorContainer} level='1'>
+        <Text category='h6' appearance='hint' style={styles.errorText}>No statistics available</Text>
+      </Layout>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <Layout style={styles.container} level='1'>
       <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: '#007AFF',
+          tabBarActiveTintColor: '#3366FF',
           tabBarInactiveTintColor: '#8E8E93',
           tabBarIndicatorStyle: {
-            backgroundColor: '#007AFF',
-            height: 3,
+            backgroundColor: '#3366FF',
+            height: 4,
+            borderRadius: 2,
+            marginBottom: 4,
           },
           tabBarStyle: {
-            backgroundColor: '#fff',
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 1,
-            borderBottomColor: '#E5E5EA',
+            backgroundColor: '#FFFFFF',
+            elevation: 8,
+            shadowColor: '#000',
+            shadowOffset: {
+              width: 0,
+              height: 4,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            borderTopWidth: 0,
+            paddingTop: 8,
+            paddingBottom: 8,
+            height: 60,
           },
           tabBarLabelStyle: {
             fontSize: 14,
-            fontWeight: '600',
+            fontWeight: '700',
             textTransform: 'none',
+            letterSpacing: 0.5,
           },
           tabBarScrollEnabled: false,
+          tabBarPressColor: 'rgba(51, 102, 255, 0.1)',
         }}
       >
         <Tab.Screen
@@ -180,7 +247,7 @@ const StatsScreen = () => {
           options={{ title: 'Captain' }}
         />
       </Tab.Navigator>
-    </View>
+    </Layout>
   );
 };
 
@@ -234,35 +301,72 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statCard: {
-    width: (width - 48) / 3, // 3 cards per row with padding
-    minHeight: 80,
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: (width - 48) / 2, // 2 cards per row for better visual impact
+    minHeight: 140,
+    marginBottom: 16,
+    borderRadius: 20,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+  statCardGradient: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 0,
+  },
+  statCardContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+  },
+  statIcon: {
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
+    marginBottom: 8,
     textAlign: 'center',
+    color: 'white',
+    fontWeight: '800',
+    fontSize: 24,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   statTitle: {
-    fontSize: 12,
-    color: '#8E8E93',
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '600',
+    fontSize: 12,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
 

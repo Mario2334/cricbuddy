@@ -3,6 +3,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, StackScreenProps } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as eva from '@eva-design/eva';
+import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
+import { EvaIconsPack } from '@ui-kitten/eva-icons';
 
 // Import screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -16,7 +19,7 @@ import {
   HomeScreenNavigationProp,
   MatchDetailScreenNavigationProp,
   StatsScreenNavigationProp 
-} from './src/types/navigation';
+} from '@/types/navigation';
 
 // Create stack navigator with proper typing
 const Stack = createStackNavigator<RootStackParamList>();
@@ -36,13 +39,13 @@ const HomeStack: React.FC = () => {
         options={{ 
           title: 'Matches',
           headerStyle: {
-            backgroundColor: '#0066cc',
+            backgroundColor: '#3366FF',
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
       <Stack.Screen 
         name="MatchDetail" 
@@ -50,13 +53,13 @@ const HomeStack: React.FC = () => {
         options={{ 
           title: 'Match Scorecard',
           headerStyle: {
-            backgroundColor: '#0066cc',
+            backgroundColor: '#3366FF',
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
     </Stack.Navigator>
   );
@@ -65,45 +68,50 @@ const HomeStack: React.FC = () => {
 // Define the App component with proper typing
 const App: React.FC = () => {
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
-            let iconName: keyof typeof Ionicons.glyphMap = 'help';
+    <>
+      <IconRegistry icons={EvaIconsPack} />
+      <ApplicationProvider {...eva} theme={eva.light}>
+        <NavigationContainer>
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
+                let iconName: keyof typeof Ionicons.glyphMap = 'help';
 
-            if (route.name === 'Home') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Stats') {
-              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-            }
+                if (route.name === 'Home') {
+                  iconName = focused ? 'home' : 'home-outline';
+                } else if (route.name === 'Stats') {
+                  iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+                }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#0066cc',
-          tabBarInactiveTintColor: 'gray',
-          headerShown: false,
-        })}
-      >
-        <Tab.Screen 
-          name="Home" 
-          component={HomeStack} 
-        />
-        <Tab.Screen 
-          name="Stats" 
-          component={StatsScreen}
-          options={{
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: '#0066cc',
-            },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+                return <Ionicons name={iconName} size={size} color={color} />;
+              },
+              tabBarActiveTintColor: '#3366FF',
+              tabBarInactiveTintColor: 'gray',
+              headerShown: false,
+            })}
+          >
+            <Tab.Screen 
+              name="Home" 
+              component={HomeStack} 
+            />
+            <Tab.Screen 
+              name="Stats" 
+              component={StatsScreen}
+              options={{
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#3366FF',
+                },
+                headerTintColor: '#fff',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              }}
+            />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </ApplicationProvider>
+    </>
   );
 };
 

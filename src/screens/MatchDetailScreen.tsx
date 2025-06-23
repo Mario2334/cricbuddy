@@ -4,15 +4,21 @@ import type { Match } from '../types/Match';
 import { MatchDetailScreenNavigationProp } from '../types/navigation';
 
 import {
-  View,
-  Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
-  TouchableOpacity,
   useWindowDimensions,
+  View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Layout,
+  Text,
+  Card,
+  Spinner,
+  Button,
+  Divider,
+} from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { TabView, TabBar } from 'react-native-tab-view';
 import apiService from '../services/apiService';
@@ -48,7 +54,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
   useEffect(() => {
     fetchScorecard();
   }, []);
-  
+
   // Process scorecard data into tab routes when it's loaded
   useEffect(() => {
     if (scorecard && scorecard.pageProps && Array.isArray(scorecard.pageProps.scorecard) && scorecard.pageProps.scorecard.length > 0) {
@@ -101,29 +107,51 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
   };
 
   const renderMatchHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.tournamentName}>{tournamentName}</Text>
-      <Text style={styles.matchTitle}>
-        {teamNames.team1} vs {teamNames.team2}
-      </Text>
-
-      
-      {false && (
-        <View style={styles.resultSection}>
-          <Text style={styles.matchResult}>
-            <Ionicons name="trophy-outline" size={16} color="#FFD700" />
-            {' '}Result: 
-          </Text>
+    <LinearGradient
+      colors={['#3366FF', '#5A7FFF', '#7B9AFF']}
+      style={styles.header}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <View style={styles.headerContent}>
+        <View style={styles.tournamentSection}>
+          <View style={styles.tournamentRow}>
+            <Ionicons name="trophy-outline" size={20} color="#FFD700" style={styles.headerIcon} />
+            <Text category='s1' style={styles.tournamentName}>{tournamentName}</Text>
+          </View>
         </View>
-      )}
-      
-      {false && (
-        <Text style={styles.ground}>
-          <Ionicons name="location-outline" size={14} color="#666" />
-          {' '}
-        </Text>
-      )}
-    </View>
+
+        <View style={styles.matchTitleSection}>
+          <View style={styles.teamVsContainer}>
+            <View style={styles.teamContainer}>
+              <Ionicons name="people-outline" size={18} color="rgba(255,255,255,0.9)" style={styles.teamIcon} />
+              <Text category='h6' style={styles.teamName}>{teamNames.team1}</Text>
+            </View>
+
+            <View style={styles.vsSection}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+                style={styles.vsGradient}
+              >
+                <Text category='s1' style={styles.vsText}>VS</Text>
+              </LinearGradient>
+            </View>
+
+            <View style={styles.teamContainer}>
+              <Ionicons name="people-outline" size={18} color="rgba(255,255,255,0.9)" style={styles.teamIcon} />
+              <Text category='h6' style={styles.teamName}>{teamNames.team2}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.matchInfoSection}>
+          <View style={styles.infoItem}>
+            <Ionicons name="calendar-outline" size={16} color="rgba(255,255,255,0.8)" />
+            <Text category='c1' style={styles.infoText}>Match Details</Text>
+          </View>
+        </View>
+      </View>
+    </LinearGradient>
   );
 
   const renderInningsCard = (teamInnings: Innings | null, title: string, index: number) => {
@@ -134,58 +162,118 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     const { batting = [], bowling = [], inning = {}, teamName } = teamInnings;
 
     return (
-      <View key={index} style={styles.inningsCard}>
-        <Text style={styles.inningsTitle}>{title}</Text>
-        
-        {/* Team Score */}
-        {inning.total_run !== undefined && (
-          <View style={styles.scoreSection}>
-            <Text style={styles.teamScore}>
-              {inning.total_run}/{inning.total_wicket || 0}
-              {inning.overs_played && ` (${inning.overs_played} ov)`}
-            </Text>
-            {inning.summary?.rr && (
-              <Text style={styles.runRate}>RR: {inning.summary.rr}</Text>
-            )}
+      <Card key={index} style={styles.inningsCard}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8F9FA']}
+          style={styles.inningsCardGradient}
+        >
+          <View style={styles.inningsHeader}>
+            <View style={styles.inningsTitleRow}>
+              <Ionicons name="baseball-outline" size={20} color="#3366FF" style={styles.inningsIcon} />
+              <Text category='h6' style={styles.inningsTitle}>{title}</Text>
+            </View>
           </View>
-        )}
 
-        {/* Batting Stats */}
-        {batting.length > 0 && (
-          <View style={styles.battingSection}>
-            <Text style={styles.sectionTitle}>Batting</Text>
-            {batting.map((batsman: any, index: number) => (
-              <View key={batsman.player_id || `batsman-${index}`} style={styles.batsmanRow}>
-                <Text style={styles.batsmanName} numberOfLines={1}>
-                  {batsman.name || 'Unknown'}
-                  {batsman.how_to_out === 'not out' ? '*' : ''}
-                </Text>
-                <Text style={styles.batsmanStats}>
-                  {batsman.runs || 0} ({batsman.balls || 0})
-                  {batsman.fours ? ` 4s:${batsman.fours}` : ''}
-                  {batsman.sixes ? ` 6s:${batsman.sixes}` : ''}
-                </Text>
+          {/* Team Score */}
+          {inning.total_run !== undefined && (
+            <LinearGradient
+              colors={['#E3F2FD', '#F3E5F5']}
+              style={styles.scoreSection}
+            >
+              <View style={styles.scoreContent}>
+                <View style={styles.scoreRow}>
+                  <Ionicons name="trophy-outline" size={24} color="#3366FF" />
+                  <Text category='h3' style={styles.teamScore}>
+                    {inning.total_run}/{inning.total_wicket || 0}
+                    {inning.overs_played && ` (${inning.overs_played} ov)`}
+                  </Text>
+                </View>
+                {inning.summary?.rr && (
+                  <View style={styles.runRateRow}>
+                    <Ionicons name="speedometer-outline" size={16} color="#666" />
+                    <Text category='s1' style={styles.runRate}>Run Rate: {inning.summary.rr}</Text>
+                  </View>
+                )}
               </View>
-            ))}
-          </View>
-        )}
+            </LinearGradient>
+          )}
 
-        {/* Bowling Stats */}
-        {bowling.length > 0 && (
-          <View style={styles.bowlingSection}>
-            <Text style={styles.sectionTitle}>Bowling</Text>
-            {bowling.map((bowler: any, index: number) => (
-              <View key={bowler.player_id || `bowler-${index}`} style={styles.bowlerRow}>
-                <Text style={styles.bowlerName}>{bowler.name || 'Unknown'}</Text>
-                <Text style={styles.bowlerStats}>
-                  {bowler.overs || 0}-{bowler.maidens || 0}-{bowler.runs || 0}-{bowler.wickets || 0}
-                  {bowler.economy && ` (${bowler.economy})`}
-                </Text>
+          {/* Batting Stats */}
+          {batting.length > 0 && (
+            <View style={styles.battingSection}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="baseball" size={18} color="#4CAF50" />
+                <Text category='s1' style={styles.sectionTitle}>Batting Performance</Text>
               </View>
-            ))}
-          </View>
-        )}
-      </View>
+              <Divider style={styles.divider} />
+              {batting.map((batsman: any, index: number) => (
+                <View key={batsman.player_id || `batsman-${index}`} style={styles.playerRow}>
+                  <View style={styles.playerInfo}>
+                    <View style={styles.playerNameRow}>
+                      <Ionicons name="person-circle-outline" size={16} color="#666" />
+                      <Text category='p2' style={styles.playerName} numberOfLines={1}>
+                        {batsman.name || 'Unknown'}
+                        {batsman.how_to_out === 'not out' ? ' *' : ''}
+                      </Text>
+                    </View>
+                    <Text category='c1' appearance='hint' style={styles.dismissalText}>
+                      {batsman.how_to_out !== 'not out' ? batsman.how_to_out : 'Not Out'}
+                    </Text>
+                  </View>
+                  <View style={styles.playerStats}>
+                    <Text category='p1' style={styles.runsText}>
+                      {batsman.runs || 0} ({batsman.balls || 0})
+                    </Text>
+                    <View style={styles.boundariesRow}>
+                      {batsman.fours > 0 && (
+                        <View style={styles.boundaryItem}>
+                          <Text category='c2' style={styles.boundaryText}>4s: {batsman.fours}</Text>
+                        </View>
+                      )}
+                      {batsman.sixes > 0 && (
+                        <View style={styles.boundaryItem}>
+                          <Text category='c2' style={styles.boundaryText}>6s: {batsman.sixes}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Bowling Stats */}
+          {bowling.length > 0 && (
+            <View style={styles.bowlingSection}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="football" size={18} color="#FF5722" />
+                <Text category='s1' style={styles.sectionTitle}>Bowling Figures</Text>
+              </View>
+              <Divider style={styles.divider} />
+              {bowling.map((bowler: any, index: number) => (
+                <View key={bowler.player_id || `bowler-${index}`} style={styles.playerRow}>
+                  <View style={styles.playerInfo}>
+                    <View style={styles.playerNameRow}>
+                      <Ionicons name="person-circle-outline" size={16} color="#666" />
+                      <Text category='p2' style={styles.playerName}>{bowler.name || 'Unknown'}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.bowlingStats}>
+                    <Text category='p1' style={styles.bowlingFigures}>
+                      {bowler.overs || 0}-{bowler.maidens || 0}-{bowler.runs || 0}-{bowler.wickets || 0}
+                    </Text>
+                    {bowler.economy && (
+                      <Text category='c1' appearance='hint' style={styles.economyText}>
+                        Econ: {bowler.economy}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </LinearGradient>
+      </Card>
     );
   };
 
@@ -207,7 +295,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
       indicatorStyle={styles.tabIndicator}
       style={styles.tabBar}
       labelStyle={styles.tabLabel}
-      activeColor="#0066cc"
+      activeColor="#3366FF"
       inactiveColor="#888888"
     />
   );
@@ -215,26 +303,26 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
   const renderScorecardContent = () => {
     if (!scorecard?.pageProps) {
       return (
-        <View style={styles.noData}>
+        <Layout style={styles.noData} level='1'>
           <Ionicons name="document-text-outline" size={48} color="#ccc" />
-          <Text style={styles.noDataText}>No scorecard data available</Text>
-        </View>
+          <Text category='h6' appearance='hint' style={styles.noDataText}>No scorecard data available</Text>
+        </Layout>
       );
     }
 
     const scorecardData = scorecard.pageProps.scorecard || [];
-    
+
     if (scorecardData.length === 0) {
       return (
-        <View style={styles.noData}>
-          <Ionicons name={"cricket-outline" as any} size={24} color="#3f51b5" style={{ marginRight: 8 }} />
-          <Text style={styles.noDataText}>Match scorecard will be available once the match starts</Text>
-        </View>
+        <Layout style={styles.noData} level='1'>
+          <Ionicons name={"cricket-outline" as any} size={24} color="#3366FF" style={{ marginRight: 8 }} />
+          <Text category='h6' appearance='hint' style={styles.noDataText}>Match scorecard will be available once the match starts</Text>
+        </Layout>
       );
     }
 
     return (
-      <View style={styles.content}>
+      <Layout style={styles.content} level='1'>
         <TabView
           navigationState={{ index, routes }}
           renderScene={renderScene}
@@ -243,44 +331,49 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
           renderTabBar={renderTabBar}
           style={{ flex: 1 }}
         />
-      </View>
+      </Layout>
     );
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <Layout style={styles.container} level='1'>
         {renderMatchHeader()}
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0066cc" />
-          <Text style={styles.loadingText}>Loading scorecard...</Text>
-        </View>
-      </View>
+        <Layout style={styles.loadingContainer} level='1'>
+          <Spinner size="large" />
+          <Text category='s1' style={styles.loadingText}>Loading scorecard...</Text>
+        </Layout>
+      </Layout>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <Layout style={styles.container} level='1'>
         {renderMatchHeader()}
-        <View style={styles.errorContainer}>
+        <Layout style={styles.errorContainer} level='1'>
           <Ionicons name="alert-circle-outline" size={48} color="#ff4444" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchScorecard}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          <Text category='h6' status='danger' style={styles.errorText}>{error}</Text>
+          <Button 
+            style={styles.retryButton} 
+            onPress={fetchScorecard}
+            appearance='outline'
+            status='primary'
+          >
+            Retry
+          </Button>
+        </Layout>
+      </Layout>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <Layout style={styles.container} level='1'>
       {renderMatchHeader()}
-      <View style={styles.scorecardContainer}>
+      <Layout style={styles.scorecardContainer} level='1'>
         {renderScorecardContent()}
-      </View>
-    </View>
+      </Layout>
+    </Layout>
   );
 };
 
@@ -290,114 +383,259 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#0066cc',
-    padding: 16,
-    paddingTop: 20,
+    padding: 20,
+    paddingTop: 24,
+  },
+  headerContent: {
+    paddingVertical: 8,
+  },
+  tournamentSection: {
+    marginBottom: 16,
+  },
+  tournamentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    marginRight: 8,
   },
   tournamentName: {
     color: 'white',
-    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    fontSize: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  matchTitle: {
+  matchTitleSection: {
+    marginBottom: 12,
+  },
+  teamVsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  teamContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  teamIcon: {
+    marginRight: 8,
+  },
+  teamName: {
     color: 'white',
+    fontWeight: '700',
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    flex: 1,
   },
-  matchStatus: {
-    color: 'rgba(255, 255, 255, 0.9)',
+  vsSection: {
+    marginHorizontal: 16,
+  },
+  vsGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    elevation: 2,
+  },
+  vsText: {
+    color: 'white',
+    fontWeight: '800',
     fontSize: 14,
-    marginBottom: 4,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  ground: {
+  matchInfoSection: {
+    marginTop: 8,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoText: {
     color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
+    marginLeft: 6,
+    fontSize: 14,
   },
   content: {
     flex: 1,
   },
   inningsCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
     marginBottom: 16,
+    borderRadius: 16,
+    elevation: 8,
     shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+  inningsCardGradient: {
+    padding: 16,
+    borderRadius: 16,
+  },
+  inningsHeader: {
+    marginBottom: 16,
+  },
+  inningsTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inningsIcon: {
+    marginRight: 8,
+  },
+  inningsTitle: {
+    fontWeight: '700',
+    color: '#2C3E50',
+    fontSize: 18,
+  },
+  scoreSection: {
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 3,
+    shadowColor: '#3366FF',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  inningsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
+  scoreContent: {
+    alignItems: 'center',
   },
-  scoreSection: {
-    marginBottom: 16,
+  scoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   teamScore: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0066cc',
+    color: '#2C3E50',
     textAlign: 'center',
+    fontWeight: '800',
+    fontSize: 28,
+    marginLeft: 12,
+  },
+  runRateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   runRate: {
-    fontSize: 16,
-    color: '#666',
     textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 16,
+    color: '#666',
     fontWeight: '600',
-    color: '#333',
+    marginLeft: 6,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
     marginTop: 16,
   },
+  sectionTitle: {
+    marginLeft: 8,
+    fontWeight: '700',
+    color: '#2C3E50',
+    fontSize: 16,
+  },
+  divider: {
+    marginVertical: 8,
+    backgroundColor: '#E8E8E8',
+  },
   battingSection: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 8,
-  },
-  batsmanRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  batsmanName: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
-  },
-  batsmanStats: {
-    fontSize: 14,
-    color: '#666',
-    fontFamily: 'monospace',
+    borderTopColor: '#E8F5E8',
+    paddingTop: 12,
+    backgroundColor: 'rgba(76, 175, 80, 0.05)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
   },
   bowlingSection: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 8,
+    borderTopColor: '#FFEBEE',
+    paddingTop: 12,
+    backgroundColor: 'rgba(255, 87, 34, 0.05)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
   },
-  bowlerRow: {
+  playerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  bowlerName: {
+  playerInfo: {
     flex: 1,
-    fontSize: 14,
-    color: '#333',
+    marginRight: 12,
   },
-  bowlerStats: {
-    fontSize: 14,
-    color: '#666',
+  playerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  playerName: {
+    fontWeight: '600',
+    color: '#2C3E50',
+    marginLeft: 6,
+    flex: 1,
+  },
+  dismissalText: {
+    fontSize: 12,
+    color: '#7F8C8D',
+    marginLeft: 22,
+  },
+  playerStats: {
+    alignItems: 'flex-end',
+  },
+  runsText: {
+    fontWeight: '700',
+    color: '#2C3E50',
+    fontSize: 16,
     fontFamily: 'monospace',
+  },
+  boundariesRow: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  boundaryItem: {
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 4,
+  },
+  boundaryText: {
+    color: '#4CAF50',
+    fontWeight: '600',
+    fontSize: 10,
+  },
+  bowlingStats: {
+    alignItems: 'flex-end',
+  },
+  bowlingFigures: {
+    fontWeight: '700',
+    color: '#2C3E50',
+    fontSize: 16,
+    fontFamily: 'monospace',
+  },
+  economyText: {
+    fontSize: 12,
+    color: '#FF5722',
+    fontWeight: '600',
+    marginTop: 2,
   },
   loadingContainer: {
     flex: 1,
@@ -407,8 +645,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
-    color: '#666',
   },
   errorContainer: {
     flex: 1,
@@ -417,22 +653,12 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   errorText: {
-    fontSize: 16,
-    color: '#ff4444',
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 6,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: 8,
   },
 
   tabBar: {
@@ -443,7 +669,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e1e1e1',
   },
   tabIndicator: {
-    backgroundColor: '#0066cc',
+    backgroundColor: '#3366FF',
     height: 3,
   },
   tabLabel: {
