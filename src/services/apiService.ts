@@ -263,7 +263,7 @@ class ApiService {
     extractData: (data: any) => T,
     cacheMaxAge = 15000,
     requestOptions: RequestOptions = { method: 'GET', headers: this.cricHeroesHeaders },
-  ): Promise<{ success: boolean; data?: T; error?: string; status?: number; [key: string]: any }> {
+  ): Promise<ApiResponse<T>> {
     // Check cache first
     const cached = this.getCachedResponse(cacheKey, cacheMaxAge);
     if (cached) return cached;
@@ -273,9 +273,7 @@ class ApiService {
       const result = {
         success: true,
         data: extractData(data),
-        page: data.page || null,
         status: response.status,
-        config: data.config,
       };
       this.setCachedResponse(cacheKey, result);
       return result;
@@ -351,12 +349,6 @@ class ApiService {
    * @param {string} playerId - Player ID (default: 33835174)
    * @param {number} pageSize - Number of stats per page (default: 12)
    * @returns {Promise} - API response with player statistics
-   */
-  /**
-   * Fetch player statistics from CricHeroes API
-   * @param playerId - Player ID (default: '33835174')
-   * @param pageSize - Number of stats per page (default: 12)
-   * @returns Promise with player statistics
    */
   async getPlayerStats(playerId = '33835174', pageSize = 12) {
     const url = `${this.baseApiUrl}/player/get-player-statistic/${playerId}?pagesize=${pageSize}`;
@@ -576,9 +568,19 @@ class ApiService {
     if (!pageUrl) {
       throw new Error('No URL provided');
     }
-    const cleanUrl = pageUrl.startsWith('/') ? pageUrl.substring(1) : pageUrl;
-    const fullUrl = `${this.baseApiUrl}/${cleanUrl}`;
-    const cacheKey = `matches_url_${encodeURIComponent(cleanUrl)}`;
+    
+    // Handle both relative and absolute URLs
+    let fullUrl: string;
+    if (pageUrl.startsWith('http')) {
+      // Already a full URL
+      fullUrl = pageUrl;
+    } else {
+      // Relative URL - construct full URL
+      const cleanUrl = pageUrl.startsWith('/') ? pageUrl.substring(1) : pageUrl;
+      fullUrl = `${this.baseApiUrl}/${cleanUrl}`;
+    }
+    
+    const cacheKey = `matches_url_${encodeURIComponent(pageUrl)}`;
     const result = await this._fetchAndCache(
       fullUrl,
       cacheKey,
@@ -600,6 +602,129 @@ class ApiService {
     }
     
     return result.data;
+  }
+
+  /**
+   * Unified method to get upcoming and live matches with shared caching
+   * This prevents duplicate API calls when switching between Upcoming and Live tabs
+   * @param {number} pageNo - Page number (1-based)
+   * @param {number} pageSize - Number of matches per page
+   * @returns {Promise} - API response with both upcoming and live matches
+   */
+  async getUpcomingAndLiveMatches(pageNo = 1, pageSize = 60) {
+    const datetime = Date.now();
+    const url = `${this.baseApiUrl}/match/get-my-web-Matches?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetime}`;
+    const cacheKey = `upcoming_live_matches_${pageNo}_${pageSize}`;
+    
+    return this._fetchAndCache(
+      url,
+      cacheKey,
+      (data) => {
+        // Map the API response to our expected format
+        const allMatches = (data.data || []).map((match: any) => ({
+          id: match.match_id,
+          match_id: match.match_id,
+          tournament_name: match.tournament_name || '',
+          tournament_round_name: match.tournament_round_name,
+          round_name: match.tournament_round_name,
+          status: match.status,
+          team_a: match.team_a,
+          team_b: match.team_b,
+          team1_name: match.team_a,
+          team2_name: match.team_b,
+          match_summary: match.match_summary,
+          match_type: match.match_type,
+          match_format: match.match_type,
+          overs: match.overs,
+          ground_name: match.ground_name,
+          match_start_time: match.match_start_time,
+          start_time: match.match_start_time,
+          match_result: match.match_result,
+          team1: match.team_a_id ? {
+            id: match.team_a_id,
+            name: match.team_a,
+            short_name: match.team_a
+          } : undefined,
+          team2: match.team_b_id ? {
+            id: match.team_b_id,
+            name: match.team_b,
+            short_name: match.team_b
+          } : undefined,
+        }));
+        
+        // Separate upcoming and live matches
+        const upcomingMatches = allMatches.filter((match: any) => match.status === 'upcoming');
+        const liveMatches = allMatches.filter((match: any) => match.status === 'live');
+        
+        return {
+          allMatches,
+          upcomingMatches,
+          liveMatches,
+          page: data.page || null,
+          status: data.status || 'success',
+          config: data.config || {}
+        };
+      },
+      30000, // 30 second cache to avoid 429 errors
+      {
+        method: 'GET',
+        headers: { ...this.cricHeroesHeaders, 'cookie': this.cookies },
+      }
+    );
+  }
+
+  /**
+   * Get upcoming matches from cached data
+   * @param {number} pageNo - Page number (1-based)  
+   * @param {number} pageSize - Number of matches per page
+   * @returns {Promise} - API response with upcoming matches only
+   */
+  async getUpcomingMatches(pageNo = 1, pageSize = 60) {
+    const result = await this.getUpcomingAndLiveMatches(pageNo, pageSize);
+    if (result.success && result.data) {
+      return {
+        success: true,
+        data: {
+          matches: result.data.upcomingMatches,
+          page: result.data.page
+        },
+        status: result.status
+      };
+    }
+    return { success: false, error: result.error || 'Failed to load upcoming matches', status: 500 };
+  }
+
+  /**
+   * Get live matches from cached data
+   * @param {number} pageNo - Page number (1-based)
+   * @param {number} pageSize - Number of matches per page  
+   * @returns {Promise} - API response with live matches only
+   */
+  async getLiveMatches(pageNo = 1, pageSize = 60) {
+    const result = await this.getUpcomingAndLiveMatches(pageNo, pageSize);
+    if (result.success && result.data) {
+      return {
+        success: true,
+        data: {
+          matches: result.data.liveMatches,
+          page: result.data.page
+        },
+        status: result.status
+      };
+    }
+    return { success: false, error: result.error || 'Failed to load live matches', status: 500 };
+  }
+
+  /**
+   * Clear the cache for upcoming and live matches
+   * Useful for manual refresh or when encountering errors
+   */
+  clearUpcomingLiveCache() {
+    const keysToDelete = Array.from(this.requestCache.keys()).filter(key => 
+      key.startsWith('upcoming_live_matches_')
+    );
+    keysToDelete.forEach(key => this.requestCache.delete(key));
+    console.log('🗑️ Cleared upcoming/live matches cache');
   }
 
   /**
@@ -654,13 +779,13 @@ class ApiService {
   /**
    * Get player past matches using the player-specific endpoint
    * @param pageNo - Page number (default: 1)
-   * @param pageSize - Number of matches per page (default: 12)
+   * @param pageSize - Number of matches per page (default: 60)
    * @param datetime - Timestamp for consistency (default: current time)
    * @returns Promise with past matches data
    */
   public async getPlayerPastMatches(
     pageNo: number = 1,
-    pageSize: number = 12,
+    pageSize: number = 60,
     datetime: number = Date.now()
   ): Promise<MatchResponse> {
     const playerId = '33835174'; // Default player ID from memory

@@ -219,6 +219,8 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
   const loadMatches = useCallback(async (pageUrl: string | null = null, isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
+      // Clear cache on manual refresh to get fresh data
+      apiService.clearUpcomingLiveCache();
     } else if (pageUrl) {
       setLoadingMore(true);
     } else {
@@ -226,16 +228,25 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
     }
 
     try {
-      // Extract page number from URL if provided, otherwise default to page 1
-      const pageNo = pageUrl ? new URL(pageUrl).searchParams.get('pageno') || '1' : '1';
-      const response = await apiService.getMatches(parseInt(pageNo), 12);
-      
-      // The API service now returns { matches, page } with properly mapped data
-      const apiMatches = response.data?.matches || [];
-      const page = response.data?.page || null;
+      let response;
+      let upcomingMatches: Match[] = [];
+      let nextPageUrl: string | null = null;
 
-      // Filter for upcoming matches
-      const upcomingMatches = apiMatches.filter((match: Match) => match.status === 'upcoming');
+      if (pageUrl) {
+        // If we have a full URL, use fetchMatchesFromUrl
+        const result = await apiService.fetchMatchesFromUrl(pageUrl);
+        upcomingMatches = result.matches.filter((match: Match) => match.status === 'upcoming');
+        nextPageUrl = result.page?.next || null;
+      } else {
+        // Use the new unified cached method for upcoming matches
+        const result = await apiService.getUpcomingMatches(1, 60);
+        if (result.success && result.data) {
+          upcomingMatches = result.data.matches || [];
+          nextPageUrl = result.data.page?.next || null;
+        } else {
+          throw new Error(result.error || 'Failed to load upcoming matches');
+        }
+      }
       
       if (isRefresh || !pageUrl) {
         setMatches(upcomingMatches);
@@ -244,11 +255,11 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
       }
       
       // Set next page URL if available
-      setNextPageUrl(page?.next || null);
+      setNextPageUrl(nextPageUrl);
       setError(null);
       setHasInitiallyLoaded(true);
     } catch (err) {
-      console.error('Error loading matches:', err);
+      console.error('Error loading upcoming matches:', err);
       setError('Failed to load upcoming matches');
     } finally {
       setLoading(false);
@@ -301,6 +312,8 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
   const loadMatches = useCallback(async (pageUrl: string | null = null, isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
+      // Clear cache on manual refresh to get fresh data
+      apiService.clearUpcomingLiveCache();
     } else if (pageUrl) {
       setLoadingMore(true);
     } else {
@@ -308,7 +321,6 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
     }
 
     try {
-      let response;
       let liveMatches: Match[] = [];
       let nextPageUrl: string | null = null;
 
@@ -318,11 +330,14 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
         liveMatches = result.matches.filter((match: Match) => match.status === 'live');
         nextPageUrl = result.page?.next || null;
       } else {
-        // Initial load or refresh without a page URL
-        const result = await apiService.getMatches(1, 12);
-        const apiMatches = result.data?.matches || [];
-        liveMatches = apiMatches.filter((match: Match) => match.status === 'live');
-        nextPageUrl = result.data?.page?.next || null;
+        // Use the new unified cached method for live matches
+        const result = await apiService.getLiveMatches(1, 60);
+        if (result.success && result.data) {
+          liveMatches = result.data.matches || [];
+          nextPageUrl = result.data.page?.next || null;
+        } else {
+          throw new Error(result.error || 'Failed to load live matches');
+        }
       }
 
       if (isRefresh || !pageUrl) {
