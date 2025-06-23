@@ -67,12 +67,12 @@ class ApiService {
   constructor() {
     this.baseApiUrl = 'https://api.cricheroes.in/api/v1';
     this.baseSiteUrl = 'https://cricheroes.com';
-    
+
     // Request throttling and caching
     this.requestCache = new Map();
     this.lastRequestTime = 0;
     this.minRequestInterval = 500; // Minimum 500ms between requests
-    
+
     // Rate limit tracking
     this.rateLimitInfo = {
       limit: null,
@@ -81,7 +81,7 @@ class ApiService {
       retryAfter: null,
       lastUpdated: null
     };
-    
+
     // Common headers for CricHeroes API
     this.cricHeroesHeaders = {
       'accept': 'application/json, text/plain, */*',
@@ -117,12 +117,12 @@ class ApiService {
   async throttleRequest() {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
-    
+
     if (timeSinceLastRequest < this.minRequestInterval) {
       const delay = this.minRequestInterval - timeSinceLastRequest;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
+
     this.lastRequestTime = Date.now();
   }
 
@@ -153,14 +153,14 @@ class ApiService {
    */
   generateCurlCommand(url: string, options: { method?: string; headers?: Record<string,string>; body?: any }): string {
     const { method = 'GET', headers = {}, body } = options;
-    
+
     let curlCommand = `curl -X ${method.toUpperCase()}`;
-    
+
     // Add headers
     Object.entries(headers).forEach(([key, value]) => {
       curlCommand += ` \\\n  -H "${key}: ${value}"`;
     });
-    
+
     // Add body if present
     if (body) {
       if (typeof body === 'string') {
@@ -169,10 +169,10 @@ class ApiService {
         curlCommand += ` \\\n  -d '${JSON.stringify(body)}'`;
       }
     }
-    
+
     // Add URL
     curlCommand += ` \\\n  "${url}"`;
-    
+
     return curlCommand;
   }
 
@@ -182,17 +182,17 @@ class ApiService {
   async makeRequestWithRetry(url: string, options: RequestOptions, retryCount = 0): Promise<Response> {
     try {
       await this.throttleRequest();
-      
+
       const response = await fetch(url, options);
-      
+
       if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please wait and use the refresh button to try again.');
       }
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       // Log response details
       console.log(`📡 API Response [${response.status}]:`, {
         url: url.split('?')[0], // Show base URL without query params
@@ -200,10 +200,10 @@ class ApiService {
         headers: Object.fromEntries(response.headers.entries()),
         timestamp: new Date().toISOString()
       });
-      
+
       // Update rate limit info
       this.updateRateLimitInfo(response.headers);
-      
+
       return response;
     } catch (error) {
       // No automatic retries - let user manually refresh
@@ -219,25 +219,25 @@ class ApiService {
     const rateLimitRemainingHeader = headers.get('x-ratelimit-remaining');
     const rateLimitResetHeader = headers.get('x-ratelimit-reset');
     const retryAfterHeader = headers.get('retry-after');
-    
+
     if (rateLimitHeader) {
       this.rateLimitInfo.limit = parseInt(rateLimitHeader);
     }
-    
+
     if (rateLimitRemainingHeader) {
       this.rateLimitInfo.remaining = parseInt(rateLimitRemainingHeader);
     }
-    
+
     if (rateLimitResetHeader) {
       this.rateLimitInfo.reset = parseInt(rateLimitResetHeader);
     }
-    
+
     if (retryAfterHeader) {
       this.rateLimitInfo.retryAfter = parseInt(retryAfterHeader);
     }
-    
+
     this.rateLimitInfo.lastUpdated = Date.now();
-    
+
     // Log rate limit info for debugging
     console.log('📊 Rate Limit Info:', {
       limit: this.rateLimitInfo.limit,
@@ -285,6 +285,31 @@ class ApiService {
   }
 
   /**
+   * Private unified method to fetch matches from the API with shared caching
+   * This ensures the API is only called once for the same parameters regardless of which public method is used
+   * @param {number} pageNo - Page number (1-based)
+   * @param {number} pageSize - Number of matches per page
+   * @param {number} datetime - Timestamp for consistency
+   * @returns {Promise} - Raw API response
+   */
+  private async _getMatchesUnified(pageNo = 1, pageSize = 60, datetime = Date.now()) {
+    const url = `${this.baseApiUrl}/match/get-my-web-Matches?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetime}`;
+    // Use unified cache key based on actual API parameters to prevent duplicate calls
+    const cacheKey = `unified_matches_${pageNo}_${pageSize}_${Math.floor(datetime / 30000)}`; // 30s cache window
+
+    return this._fetchAndCache(
+      url,
+      cacheKey,
+      (data) => data, // Return raw data for processing by individual methods
+      30000, // 30 second cache to avoid 429 errors
+      {
+        method: 'GET',
+        headers: { ...this.cricHeroesHeaders, 'cookie': this.cookies },
+      }
+    );
+  }
+
+  /**
    * Fetch matches with pagination and caching
    * @param {number} pageNo - Page number (1-based)
    * @param {number} pageSize - Number of matches per page
@@ -292,56 +317,52 @@ class ApiService {
    */
   async getMatches(pageNo = 1, pageSize = 60) {
     const datetime = Date.now();
-    const url = `${this.baseApiUrl}/match/get-my-web-Matches?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetime}`;
-    const cacheKey = `matches_${pageNo}_${pageSize}`;
-    
-    return this._fetchAndCache(
-      url,
-      cacheKey,
-      (data) => {
-        // Map the API response to our expected format
-        const matches = (data.data || []).map((match: any) => ({
-          id: match.match_id,
-          match_id: match.match_id,
-          tournament_name: match.tournament_name || '',
-          tournament_round_name: match.tournament_round_name,
-          round_name: match.tournament_round_name,
-          status: match.status,
-          team_a: match.team_a,
-          team_b: match.team_b,
-          team1_name: match.team_a,
-          team2_name: match.team_b,
-          match_summary: match.match_summary,
-          match_type: match.match_type,
-          match_format: match.match_type,
-          overs: match.overs,
-          ground_name: match.ground_name,
-          match_start_time: match.match_start_time,
-          start_time: match.match_start_time,
-          match_result: match.match_result,
-          team1: match.team_a_id ? {
-            id: match.team_a_id,
-            name: match.team_a,
-            short_name: match.team_a
-          } : undefined,
-          team2: match.team_b_id ? {
-            id: match.team_b_id,
-            name: match.team_b,
-            short_name: match.team_b
-          } : undefined,
-        }));
-        
-        return {
-          matches,
-          page: data.page || null
-        };
+    const result = await this._getMatchesUnified(pageNo, pageSize, datetime);
+
+    if (!result.success) {
+      return result;
+    }
+
+    // Map the API response to our expected format
+    const matches = (result.data.data || []).map((match: any) => ({
+      id: match.match_id,
+      match_id: match.match_id,
+      tournament_name: match.tournament_name || '',
+      tournament_round_name: match.tournament_round_name,
+      round_name: match.tournament_round_name,
+      status: match.status,
+      team_a: match.team_a,
+      team_b: match.team_b,
+      team1_name: match.team_a,
+      team2_name: match.team_b,
+      match_summary: match.match_summary,
+      match_type: match.match_type,
+      match_format: match.match_type,
+      overs: match.overs,
+      ground_name: match.ground_name,
+      match_start_time: match.match_start_time,
+      start_time: match.match_start_time,
+      match_result: match.match_result,
+      team1: match.team_a_id ? {
+        id: match.team_a_id,
+        name: match.team_a,
+        short_name: match.team_a
+      } : undefined,
+      team2: match.team_b_id ? {
+        id: match.team_b_id,
+        name: match.team_b,
+        short_name: match.team_b
+      } : undefined,
+    }));
+
+    return {
+      success: true,
+      data: {
+        matches,
+        page: result.data.page || null
       },
-      15000,
-      {
-        method: 'GET',
-        headers: { ...this.cricHeroesHeaders, 'cookie': this.cookies },
-      }
-    );
+      status: result.status
+    };
   }
 
   /**
@@ -353,7 +374,7 @@ class ApiService {
   async getPlayerStats(playerId = '33835174', pageSize = 12) {
     const url = `${this.baseApiUrl}/player/get-player-statistic/${playerId}?pagesize=${pageSize}`;
     const cacheKey = `player_stats_${playerId}_${pageSize}`;
-    
+
     return this._fetchAndCache(
       url,
       cacheKey,
@@ -389,7 +410,7 @@ class ApiService {
 
       const html = await response.text();
       const buildIdMatch = html.match(/\/_next\/static\/([^/]+)\/_buildManifest\.js/);
-      
+
       if (!buildIdMatch || !buildIdMatch[1]) {
         throw new Error('Could not extract build ID from HTML');
       }
@@ -434,7 +455,7 @@ class ApiService {
 
     const url = `${this.baseSiteUrl}/_next/data/${buildId}/scorecard/${matchId}/${pathTournamentName}/${pathTeamNames}/scorecard.json?${queryParams}`;
     const cacheKey = `match_scorecard_${matchId}_${tournamentName}_${teamNames}`;
-    
+
     // Headers from the latest cURL
     const scorecardHeaders = {
       'accept': '*/*',
@@ -483,7 +504,7 @@ class ApiService {
 
     try {
       console.log('Fetching match scorecard:', { matchId, tournamentName, teamNames, url });
-      
+
       const response = await this.makeRequestWithRetry(url, {
         method: 'GET',
         headers: {
@@ -491,7 +512,7 @@ class ApiService {
           'cookie': cookies,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -502,10 +523,10 @@ class ApiService {
         data,
         status: response.status,
       };
-      
+
       // Cache the response
       this.setCachedResponse(cacheKey, result);
-      
+
       return result;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -534,29 +555,18 @@ class ApiService {
    */
   async getPlayerMatches(pageNo = 1, pageSize = 60, datetime = null): Promise<MatchResponse> {
     const datetimeParam = datetime || Date.now();
-    const url = `${this.baseApiUrl}/match/get-my-web-Matches?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetimeParam}`;
-    const cacheKey = `player_matches_${pageNo}_${pageSize}`;
-    const result = await this._fetchAndCache(
-      url,
-      cacheKey,
-      (data) => ({
-        matches: data?.data || [],
-        page: data?.page || null,
-        status: data?.status || 'success',
-        config: data?.config || {}
-      }),
-      15000,
-      {
-        method: 'GET',
-        headers: this.cricHeroesHeaders,
-      }
-    );
-    
-    if (!result.data) {
-      throw new Error('Failed to fetch matches: No data returned from API');
+    const result = await this._getMatchesUnified(pageNo, pageSize, datetimeParam);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch matches');
     }
-    
-    return result.data;
+
+    return {
+      matches: result.data.data || [],
+      page: result.data.page || null,
+      status: result.data.status || 'success',
+      config: result.data.config || {}
+    };
   }
 
   /**
@@ -568,7 +578,7 @@ class ApiService {
     if (!pageUrl) {
       throw new Error('No URL provided');
     }
-    
+
     // Handle both relative and absolute URLs
     let fullUrl: string;
     if (pageUrl.startsWith('http')) {
@@ -579,7 +589,7 @@ class ApiService {
       const cleanUrl = pageUrl.startsWith('/') ? pageUrl.substring(1) : pageUrl;
       fullUrl = `${this.baseApiUrl}/${cleanUrl}`;
     }
-    
+
     const cacheKey = `matches_url_${encodeURIComponent(pageUrl)}`;
     const result = await this._fetchAndCache(
       fullUrl,
@@ -596,11 +606,11 @@ class ApiService {
         headers: this.cricHeroesHeaders,
       }
     );
-    
+
     if (!result.data) {
       throw new Error('Failed to fetch matches from URL: No data returned from API');
     }
-    
+
     return result.data;
   }
 
@@ -613,64 +623,60 @@ class ApiService {
    */
   async getUpcomingAndLiveMatches(pageNo = 1, pageSize = 60) {
     const datetime = Date.now();
-    const url = `${this.baseApiUrl}/match/get-my-web-Matches?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetime}`;
-    const cacheKey = `upcoming_live_matches_${pageNo}_${pageSize}`;
-    
-    return this._fetchAndCache(
-      url,
-      cacheKey,
-      (data) => {
-        // Map the API response to our expected format
-        const allMatches = (data.data || []).map((match: any) => ({
-          id: match.match_id,
-          match_id: match.match_id,
-          tournament_name: match.tournament_name || '',
-          tournament_round_name: match.tournament_round_name,
-          round_name: match.tournament_round_name,
-          status: match.status,
-          team_a: match.team_a,
-          team_b: match.team_b,
-          team1_name: match.team_a,
-          team2_name: match.team_b,
-          match_summary: match.match_summary,
-          match_type: match.match_type,
-          match_format: match.match_type,
-          overs: match.overs,
-          ground_name: match.ground_name,
-          match_start_time: match.match_start_time,
-          start_time: match.match_start_time,
-          match_result: match.match_result,
-          team1: match.team_a_id ? {
-            id: match.team_a_id,
-            name: match.team_a,
-            short_name: match.team_a
-          } : undefined,
-          team2: match.team_b_id ? {
-            id: match.team_b_id,
-            name: match.team_b,
-            short_name: match.team_b
-          } : undefined,
-        }));
-        
-        // Separate upcoming and live matches
-        const upcomingMatches = allMatches.filter((match: any) => match.status === 'upcoming');
-        const liveMatches = allMatches.filter((match: any) => match.status === 'live');
-        
-        return {
-          allMatches,
-          upcomingMatches,
-          liveMatches,
-          page: data.page || null,
-          status: data.status || 'success',
-          config: data.config || {}
-        };
+    const result = await this._getMatchesUnified(pageNo, pageSize, datetime);
+
+    if (!result.success) {
+      return result;
+    }
+
+    // Map the API response to our expected format
+    const allMatches = (result.data.data || []).map((match: any) => ({
+      id: match.match_id,
+      match_id: match.match_id,
+      tournament_name: match.tournament_name || '',
+      tournament_round_name: match.tournament_round_name,
+      round_name: match.tournament_round_name,
+      status: match.status,
+      team_a: match.team_a,
+      team_b: match.team_b,
+      team1_name: match.team_a,
+      team2_name: match.team_b,
+      match_summary: match.match_summary,
+      match_type: match.match_type,
+      match_format: match.match_type,
+      overs: match.overs,
+      ground_name: match.ground_name,
+      match_start_time: match.match_start_time,
+      start_time: match.match_start_time,
+      match_result: match.match_result,
+      team1: match.team_a_id ? {
+        id: match.team_a_id,
+        name: match.team_a,
+        short_name: match.team_a
+      } : undefined,
+      team2: match.team_b_id ? {
+        id: match.team_b_id,
+        name: match.team_b,
+        short_name: match.team_b
+      } : undefined,
+    }));
+
+    // Separate upcoming and live matches
+    const upcomingMatches = allMatches.filter((match: any) => match.status === 'upcoming');
+    const liveMatches = allMatches.filter((match: any) => match.status === 'live');
+
+    return {
+      success: true,
+      data: {
+        allMatches,
+        upcomingMatches,
+        liveMatches,
+        page: result.data.page || null,
+        status: result.data.status || 'success',
+        config: result.data.config || {}
       },
-      30000, // 30 second cache to avoid 429 errors
-      {
-        method: 'GET',
-        headers: { ...this.cricHeroesHeaders, 'cookie': this.cookies },
-      }
-    );
+      status: result.status
+    };
   }
 
   /**
@@ -721,10 +727,10 @@ class ApiService {
    */
   clearUpcomingLiveCache() {
     const keysToDelete = Array.from(this.requestCache.keys()).filter(key => 
-      key.startsWith('upcoming_live_matches_')
+      key.startsWith('upcoming_live_matches_') || key.startsWith('unified_matches_')
     );
     keysToDelete.forEach(key => this.requestCache.delete(key));
-    console.log('🗑️ Cleared upcoming/live matches cache');
+    console.log('🗑️ Cleared upcoming/live matches cache and unified matches cache');
   }
 
   /**
@@ -791,7 +797,7 @@ class ApiService {
     const playerId = '33835174'; // Default player ID from memory
     const url = `${this.baseApiUrl}/player/get-player-match/${playerId}?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetime}`;
     const cacheKey = `player_past_matches_${playerId}_${pageNo}_${pageSize}_${datetime}`;
-    
+
     const result = await this._fetchAndCache(
       url,
       cacheKey,
@@ -807,11 +813,11 @@ class ApiService {
         headers: this.cricHeroesHeaders,
       }
     );
-    
+
     if (!result.data) {
       throw new Error('Failed to fetch player past matches: No data returned from API');
     }
-    
+
     return result.data;
   }
 }

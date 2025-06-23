@@ -5,7 +5,16 @@ export const formatMatchTime = (timeString: string): string => {
   if (!timeString) return 'Time TBD';
   try {
     const date = new Date(timeString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = date.toLocaleDateString([], { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+    const timeStr = date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    return `${dateStr} at ${timeStr}`;
   } catch (error) {
     console.error('Error formatting match time:', error);
     return 'Time TBD';

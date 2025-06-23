@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import apiService from '../services/apiService';
 import type { Match } from '../types/Match';
 import { HomeScreenNavigationProp } from '../types/navigation';
@@ -79,7 +80,7 @@ const MatchList: React.FC<MatchListProps> = ({
   const renderMatch = ({ item }: { item: Match }) => {
     const team1Name = item.team1_name || item.team_a || 'Team 1';
     const team2Name = item.team2_name || item.team_b || 'Team 2';
-    
+
     return (
       <TouchableOpacity 
         style={styles.matchCard}
@@ -121,7 +122,7 @@ const MatchList: React.FC<MatchListProps> = ({
               {formatMatchTime(item.start_time || item.match_start_time)}
             </Text>
           </View>
-          
+
           {item.status === 'past' && item.match_result && (
             <View style={styles.resultContainer}>
               <Text style={styles.matchResultText} numberOfLines={2}>
@@ -247,13 +248,13 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
           throw new Error(result.error || 'Failed to load upcoming matches');
         }
       }
-      
+
       if (isRefresh || !pageUrl) {
         setMatches(upcomingMatches);
       } else {
         setMatches(prev => [...prev, ...upcomingMatches]);
       }
-      
+
       // Set next page URL if available
       setNextPageUrl(nextPageUrl);
       setError(null);
@@ -268,11 +269,13 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!hasInitiallyLoaded) {
-      loadMatches();
-    }
-  }, [hasInitiallyLoaded, loadMatches]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasInitiallyLoaded) {
+        loadMatches();
+      }
+    }, [hasInitiallyLoaded, loadMatches])
+  );
 
   const handleRefresh = useCallback(() => {
     loadMatches(null, true);
@@ -345,7 +348,7 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
       } else {
         setMatches(prev => [...prev, ...liveMatches]);
       }
-      
+
       setNextPageUrl(nextPageUrl);
       setError(null);
       setHasInitiallyLoaded(true);
@@ -359,11 +362,13 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!hasInitiallyLoaded) {
-      loadMatches();
-    }
-  }, [hasInitiallyLoaded, loadMatches]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasInitiallyLoaded) {
+        loadMatches();
+      }
+    }, [hasInitiallyLoaded, loadMatches])
+  );
 
   const handleRefresh = useCallback(() => {
     loadMatches(null, true);
@@ -413,16 +418,16 @@ const CompletedTab: React.FC<TabComponentProps> = ({ navigation }) => {
       // Extract page number from URL if provided, otherwise default to page 1
       const pageNo = pageUrl ? new URL(pageUrl).searchParams.get('pageno') || '1' : '1';
       const response = await apiService.getPlayerPastMatches(parseInt(pageNo), 12);
-      
+
       // The API service returns { matches, page } with properly mapped data
       const { matches: pastMatches, page } = response;
-      
+
       if (isRefresh || !pageUrl) {
         setMatches(pastMatches);
       } else {
         setMatches(prev => [...prev, ...pastMatches]);
       }
-      
+
       // Set next page URL if available
       setNextPageUrl(page?.next || null);
       setError(null);
@@ -436,11 +441,13 @@ const CompletedTab: React.FC<TabComponentProps> = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!hasInitiallyLoaded) {
-      loadMatches();
-    }
-  }, [hasInitiallyLoaded, loadMatches]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasInitiallyLoaded) {
+        loadMatches();
+      }
+    }, [hasInitiallyLoaded, loadMatches])
+  );
 
   const handleRefresh = useCallback(() => {
     loadMatches(null, true);
