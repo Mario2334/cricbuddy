@@ -59,20 +59,20 @@ const MatchList: React.FC<MatchListProps> = ({
     if (onMatchPress) {
       onMatchPress(item);
     } else {
-      // Default behavior - navigate to match detail for live/past matches
-      if (item.status === 'live' || item.status === 'past') {
-        // Use item.id or item.match_id with fallback to ensure we have a valid ID
-        const matchId = item.id || item.match_id;
-        if (matchId) {
-          navigation.navigate('MatchDetail', {
-            matchId: matchId.toString(),
-            tournamentName: item.tournament_name || 'Match',
-            teamNames: {
-              team1: item.team1_name || item.team_a || 'Team 1',
-              team2: item.team2_name || item.team_b || 'Team 2',
-            },
-          });
-        }
+      // Default behavior - navigate to match detail for all matches (upcoming, live, past)
+      // Use item.id or item.match_id with fallback to ensure we have a valid ID
+      const matchId = item.id || item.match_id;
+      if (matchId) {
+        navigation.navigate('MatchDetail', {
+          matchId: matchId.toString(),
+          tournamentName: item.tournament_name || 'Match',
+          teamNames: {
+            team1: item.team1_name || item.team_a || 'Team 1',
+            team2: item.team2_name || item.team_b || 'Team 2',
+          },
+          groundName: item.ground_name,
+          city: undefined, // Add city field to Match type if available
+        });
       }
     }
   }, [onMatchPress, navigation]);

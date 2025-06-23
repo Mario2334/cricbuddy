@@ -6,6 +6,7 @@
  */
 
 import type { Match } from '../types/Match';
+import type { Ground, GroundDetailResponse } from '../types/Ground';
 
 // Core interfaces
 export interface ApiResponse<T = unknown> {
@@ -819,6 +820,27 @@ class ApiService {
     }
 
     return result.data;
+  }
+
+  /**
+   * Get ground details by ground ID
+   * @param {number} groundId - Ground ID to fetch details for
+   * @returns {Promise<ApiResponse<Ground>>} - API response with ground details
+   */
+  async getGroundDetail(groundId: number): Promise<ApiResponse<Ground>> {
+    const url = `${this.baseApiUrl}/booking/get-ground-detail/${groundId}`;
+    const cacheKey = `ground_detail_${groundId}`;
+
+    return this._fetchAndCache(
+      url,
+      cacheKey,
+      (data: GroundDetailResponse) => data.data, // Extract the ground data from the response
+      300000, // 5 minute cache for ground details
+      {
+        method: 'GET',
+        headers: this.cricHeroesHeaders,
+      }
+    );
   }
 }
 

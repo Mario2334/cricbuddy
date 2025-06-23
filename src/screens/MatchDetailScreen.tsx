@@ -36,19 +36,24 @@ interface MatchDetailScreenProps {
 }
 
 const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation }) => {
-  const { matchId, tournamentName, teamNames } = route.params;
+  const { matchId, tournamentName, teamNames, groundName, city } = route.params;
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [index, setIndex] = useState<number>(0);
-  const [routes, setRoutes] = useState<Array<{ key: string; title: string; innings: Innings }>>([]);
+  const [mainTabIndex, setMainTabIndex] = useState<number>(0);
+  const [scorecardTabIndex, setScorecardTabIndex] = useState<number>(0);
+  const [mainTabRoutes] = useState([
+    { key: 'info', title: 'Info' },
+    { key: 'scorecard', title: 'Scorecard' }
+  ]);
+  const [scorecardRoutes, setScorecardRoutes] = useState<Array<{ key: string; title: string; innings: Innings }>>([]);
   const layout = useWindowDimensions();
 
   useEffect(() => {
     fetchScorecard();
   }, []);
-  
+
   // Process scorecard data into tab routes when it's loaded
   useEffect(() => {
     if (scorecard && scorecard.pageProps && Array.isArray(scorecard.pageProps.scorecard) && scorecard.pageProps.scorecard.length > 0) {
@@ -59,7 +64,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
           title: innings.teamName || `Innings ${idx + 1}`,
           innings: innings
         }));
-        setRoutes(newRoutes);
+        setScorecardRoutes(newRoutes);
       }
     }
   }, [scorecard]);
@@ -107,7 +112,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
         {teamNames.team1} vs {teamNames.team2}
       </Text>
 
-      
+
       {false && (
         <View style={styles.resultSection}>
           <Text style={styles.matchResult}>
@@ -116,7 +121,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
           </Text>
         </View>
       )}
-      
+
       {false && (
         <Text style={styles.ground}>
           <Ionicons name="location-outline" size={14} color="#666" />
@@ -136,7 +141,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     return (
       <View key={index} style={styles.inningsCard}>
         <Text style={styles.inningsTitle}>{title}</Text>
-        
+
         {/* Team Score */}
         {inning.total_run !== undefined && (
           <View style={styles.scoreSection}>
@@ -189,7 +194,59 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     );
   };
 
-  const renderScene = ({ route }: { route: { key: string; title: string; innings: Innings } }) => (
+  const renderInfoTab = () => (
+    <ScrollView 
+      style={styles.tabContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      showsVerticalScrollIndicator={true}
+    >
+      <View style={styles.infoContainer}>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoSectionTitle}>Match Information</Text>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="trophy-outline" size={20} color="#0066cc" />
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Tournament</Text>
+              <Text style={styles.infoValue}>{tournamentName}</Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="people-outline" size={20} color="#0066cc" />
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Teams</Text>
+              <Text style={styles.infoValue}>{teamNames.team1} vs {teamNames.team2}</Text>
+            </View>
+          </View>
+
+          {groundName && (
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Ground</Text>
+                <Text style={styles.infoValue}>{groundName}</Text>
+              </View>
+            </View>
+          )}
+
+          {city && (
+            <View style={styles.infoRow}>
+              <Ionicons name="business-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>City</Text>
+                <Text style={styles.infoValue}>{city}</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
+    </ScrollView>
+  );
+
+  const renderScorecardScene = ({ route }: { route: { key: string; title: string; innings: Innings } }) => (
     <ScrollView 
       style={styles.tabContent}
       refreshControl={
@@ -212,7 +269,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     />
   );
 
-  const renderScorecardContent = () => {
+  const renderScorecardTab = () => {
     if (!scorecard?.pageProps) {
       return (
         <View style={styles.noData}>
@@ -223,7 +280,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     }
 
     const scorecardData = scorecard.pageProps.scorecard || [];
-    
+
     if (scorecardData.length === 0) {
       return (
         <View style={styles.noData}>
@@ -236,15 +293,26 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     return (
       <View style={styles.content}>
         <TabView
-          navigationState={{ index, routes }}
-          renderScene={renderScene}
-          onIndexChange={setIndex}
+          navigationState={{ index: scorecardTabIndex, routes: scorecardRoutes }}
+          renderScene={renderScorecardScene}
+          onIndexChange={setScorecardTabIndex}
           initialLayout={{ width: layout.width }}
           renderTabBar={renderTabBar}
           style={{ flex: 1 }}
         />
       </View>
     );
+  };
+
+  const renderMainScene = ({ route }: { route: { key: string; title: string } }) => {
+    switch (route.key) {
+      case 'info':
+        return renderInfoTab();
+      case 'scorecard':
+        return renderScorecardTab();
+      default:
+        return null;
+    }
   };
 
   if (loading) {
@@ -278,7 +346,14 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     <View style={styles.container}>
       {renderMatchHeader()}
       <View style={styles.scorecardContainer}>
-        {renderScorecardContent()}
+        <TabView
+          navigationState={{ index: mainTabIndex, routes: mainTabRoutes }}
+          renderScene={renderMainScene}
+          onIndexChange={setMainTabIndex}
+          initialLayout={{ width: layout.width }}
+          renderTabBar={renderTabBar}
+          style={{ flex: 1 }}
+        />
       </View>
     </View>
   );
@@ -476,6 +551,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFD700',
     fontWeight: '600',
+  },
+  infoContainer: {
+    flex: 1,
+  },
+  infoCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  infoSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  infoTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
 });
 

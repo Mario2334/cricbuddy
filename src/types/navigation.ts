@@ -12,6 +12,8 @@ export type RootStackParamList = {
       team1: string;
       team2: string;
     };
+    groundName?: string;
+    city?: string;
     // Add any other params that MatchDetailScreen expects
   };
 };
