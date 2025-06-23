@@ -71,7 +71,9 @@ const MatchList: React.FC<MatchListProps> = ({
             team2: item.team2_name || item.team_b || 'Team 2',
           },
           groundName: item.ground_name,
+          groundId: item.ground_id,
           city: undefined, // Add city field to Match type if available
+          defaultTab: item.status === 'live' || item.status === 'past' ? 'scorecard' : 'info',
         });
       }
     }

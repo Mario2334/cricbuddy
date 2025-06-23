@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Match } from '../types/Match';
+import type { Ground } from '../types/Ground';
 import { MatchDetailScreenNavigationProp } from '../types/navigation';
 
 import {
@@ -16,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { TabView, TabBar } from 'react-native-tab-view';
 import apiService from '../services/apiService';
+import GroundMapView from '../components/GroundMapView';
 
 interface Innings {
   teamName: string;
@@ -36,22 +38,63 @@ interface MatchDetailScreenProps {
 }
 
 const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation }) => {
-  const { matchId, tournamentName, teamNames, groundName, city } = route.params;
+  const { matchId, tournamentName, teamNames, groundName, groundId, city, defaultTab } = route.params;
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
+  const [groundData, setGroundData] = useState<Ground | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [groundLoading, setGroundLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [mainTabIndex, setMainTabIndex] = useState<number>(0);
+  const [mainTabIndex, setMainTabIndex] = useState<number>(
+    defaultTab === 'scorecard' ? 1 : 0
+  );
   const [scorecardTabIndex, setScorecardTabIndex] = useState<number>(0);
   const [mainTabRoutes] = useState([
     { key: 'info', title: 'Info' },
     { key: 'scorecard', title: 'Scorecard' }
   ]);
   const [scorecardRoutes, setScorecardRoutes] = useState<Array<{ key: string; title: string; innings: Innings }>>([]);
+  const [matchStatus, setMatchStatus] = useState<string>('unknown');
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const layout = useWindowDimensions();
 
   useEffect(() => {
     fetchScorecard();
+    if (groundId) {
+      fetchGroundDetail();
+    }
+  }, []);
+
+  // Auto-refresh for live matches
+  useEffect(() => {
+    if (matchStatus === 'live' && mainTabIndex === 1) { // Only refresh when on scorecard tab
+      const interval = setInterval(() => {
+        fetchScorecard();
+      }, 30000); // Refresh every 30 seconds for live matches
+
+      setAutoRefreshInterval(interval);
+
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    } else {
+      // Clear interval if not on live match or not on scorecard tab
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        setAutoRefreshInterval(null);
+      }
+    }
+  }, [matchStatus, mainTabIndex]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+    };
   }, []);
 
   // Process scorecard data into tab routes when it's loaded
@@ -85,6 +128,29 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
       const response = await apiService.getMatchScorecard(matchIdParam, tournamentSlug, teamNamesSlug);
       if (response && response.data) {
         setScorecard(response.data);
+
+        // Detect match status from scorecard data
+        const scorecardData = response.data?.pageProps?.scorecard;
+        if (scorecardData && Array.isArray(scorecardData) && scorecardData.length > 0) {
+          // Check if match is live by looking for ongoing innings or incomplete match data
+          const hasIncompleteInnings = scorecardData.some((innings: any) => {
+            return innings.inning && (
+              innings.inning.is_completed === false ||
+              innings.inning.status === 'live' ||
+              (innings.inning.total_wicket < 10 && innings.inning.overs_played && 
+               parseFloat(innings.inning.overs_played) < (innings.inning.total_overs || 20))
+            );
+          });
+
+          if (hasIncompleteInnings) {
+            setMatchStatus('live');
+          } else {
+            setMatchStatus('past');
+          }
+        } else {
+          // No scorecard data available - could be upcoming or very early live match
+          setMatchStatus('upcoming');
+        }
       } else {
         setError('Failed to load scorecard');
       }
@@ -100,18 +166,56 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     }
   };
 
+  const fetchGroundDetail = async () => {
+    if (!groundId) return;
+
+    try {
+      setGroundLoading(true);
+      const response = await apiService.getGroundDetail(groundId);
+
+      if (response.success) {
+        setGroundData(response.data);
+      } else {
+        console.error('Failed to load ground details:', response.error);
+      }
+    } catch (error) {
+      console.error('Error fetching ground details:', error);
+    } finally {
+      setGroundLoading(false);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
-    fetchScorecard();
+    Promise.all([
+      fetchScorecard(),
+      groundId ? fetchGroundDetail() : Promise.resolve()
+    ]).finally(() => {
+      setRefreshing(false);
+    });
   };
 
   const renderMatchHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.tournamentName}>{tournamentName}</Text>
+      <View style={styles.headerTop}>
+        <Text style={styles.tournamentName}>{tournamentName}</Text>
+        {matchStatus === 'live' && (
+          <View style={styles.liveIndicator}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        )}
+      </View>
       <Text style={styles.matchTitle}>
         {teamNames.team1} vs {teamNames.team2}
       </Text>
 
+      {matchStatus === 'live' && autoRefreshInterval && (
+        <Text style={styles.autoRefreshText}>
+          <Ionicons name="refresh-outline" size={12} color="#FFD700" />
+          {' '}Auto-refreshing every 30s
+        </Text>
+      )}
 
       {false && (
         <View style={styles.resultSection}>
@@ -242,6 +346,115 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
             </View>
           )}
         </View>
+
+        {/* Ground Details Section */}
+        {groundData && (
+          <View style={styles.infoCard}>
+            <Text style={styles.infoSectionTitle}>Ground Details</Text>
+
+            {/* Google Maps Integration */}
+            <View style={styles.mapSection}>
+              <GroundMapView ground={groundData} showSearchButton={true} />
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Ground Name</Text>
+                <Text style={styles.infoValue}>{groundData.name}</Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="business-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>City</Text>
+                <Text style={styles.infoValue}>{groundData.city_name}</Text>
+              </View>
+            </View>
+
+            {groundData.address && (
+              <View style={styles.infoRow}>
+                <Ionicons name="home-outline" size={20} color="#0066cc" />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Address</Text>
+                  <Text style={styles.infoValue}>{groundData.address}</Text>
+                </View>
+              </View>
+            )}
+
+            {groundData.primary_mobile && (
+              <View style={styles.infoRow}>
+                <Ionicons name="call-outline" size={20} color="#0066cc" />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Contact</Text>
+                  <Text style={styles.infoValue}>{groundData.primary_mobile}</Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.infoRow}>
+              <Ionicons name="eye-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Total Views</Text>
+                <Text style={styles.infoValue}>{groundData.total_views}</Text>
+              </View>
+            </View>
+
+            {groundData.rating > 0 && (
+              <View style={styles.infoRow}>
+                <Ionicons name="star-outline" size={20} color="#0066cc" />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Rating</Text>
+                  <Text style={styles.infoValue}>{groundData.rating}/5</Text>
+                </View>
+              </View>
+            )}
+
+            {(groundData.day_price || groundData.night_price) && (
+              <View style={styles.infoRow}>
+                <Ionicons name="cash-outline" size={20} color="#0066cc" />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Pricing</Text>
+                  <Text style={styles.infoValue}>
+                    {groundData.day_price && `Day: ${groundData.day_price}`}
+                    {groundData.day_price && groundData.night_price && ' | '}
+                    {groundData.night_price && `Night: ${groundData.night_price}`}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {groundData.slot_booking_ball_type && (
+              <View style={styles.infoRow}>
+                <Ionicons name="baseball-outline" size={20} color="#0066cc" />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Ball Types</Text>
+                  <Text style={styles.infoValue}>{groundData.slot_booking_ball_type}</Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.infoRow}>
+              <Ionicons name="checkmark-circle-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Available for Booking</Text>
+                <Text style={styles.infoValue}>{groundData.is_available_for_booking ? 'Yes' : 'No'}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Loading state for ground details */}
+        {groundLoading && (
+          <View style={styles.infoCard}>
+            <Text style={styles.infoSectionTitle}>Ground Details</Text>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#0066cc" />
+              <Text style={styles.loadingText}>Loading ground details...</Text>
+            </View>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -369,17 +582,49 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 20,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   tournamentName: {
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    flex: 1,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#ff4444',
+    marginRight: 4,
+  },
+  liveText: {
+    color: '#ff4444',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   matchTitle: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
+  },
+  autoRefreshText: {
+    color: '#FFD700',
+    fontSize: 11,
+    marginTop: 4,
+    opacity: 0.9,
   },
   matchStatus: {
     color: 'rgba(255, 255, 255, 0.9)',
@@ -595,6 +840,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     fontWeight: '500',
+  },
+  mapSection: {
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
 

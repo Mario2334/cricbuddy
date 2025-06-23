@@ -12,6 +12,7 @@ import {
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import apiService from '../services/apiService';
 import type { Ground } from '../types/Ground';
+import GroundMapView from '../components/GroundMapView';
 
 interface StatItem {
   value: string | number;
@@ -182,6 +183,11 @@ const StatsScreen = () => {
           <View style={styles.groundHeader}>
             <Text style={styles.groundName}>{groundData.name}</Text>
             <Text style={styles.groundCity}>{groundData.city_name}</Text>
+          </View>
+
+          {/* Google Maps Integration */}
+          <View style={styles.mapSection}>
+            <GroundMapView ground={groundData} showSearchButton={true} />
           </View>
 
           <View style={styles.groundDetailsGrid}>
@@ -394,6 +400,19 @@ const styles = StyleSheet.create({
   groundHeader: {
     marginBottom: 20,
     alignItems: 'center',
+  },
+  mapSection: {
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   groundName: {
     fontSize: 24,

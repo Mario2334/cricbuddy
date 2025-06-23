@@ -14,6 +14,7 @@ export interface Match {
   match_format?: string;  // Alternative naming for match_type
   overs: number;
   ground_name: string;
+  ground_id?: number;
   match_start_time: string;
   start_time?: string;  // Alternative naming for match_start_time
   match_result?: string;  // Match result text

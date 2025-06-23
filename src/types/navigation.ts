@@ -13,7 +13,9 @@ export type RootStackParamList = {
       team2: string;
     };
     groundName?: string;
+    groundId?: number;
     city?: string;
+    defaultTab?: 'info' | 'scorecard';
     // Add any other params that MatchDetailScreen expects
   };
 };
