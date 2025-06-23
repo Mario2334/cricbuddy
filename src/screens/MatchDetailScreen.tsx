@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+// import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { Match } from '../types/Match';
+import { MatchDetailScreenNavigationProp } from '../types/navigation';
+
 import {
   View,
   Text,
@@ -13,14 +17,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { TabView, TabBar } from 'react-native-tab-view';
 import apiService from '../services/apiService';
 
-const MatchDetailScreen = ({ route, navigation }) => {
-  const { match } = route.params;
-  const [scorecard, setScorecard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [index, setIndex] = useState(0);
-  const [routes, setRoutes] = useState([]);
+interface Innings {
+  teamName: string;
+  [key: string]: any;
+}
+
+interface ScorecardData {
+  pageProps?: {
+    scorecard?: Innings[];
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
+interface MatchDetailScreenProps {
+  route: MatchDetailScreenNavigationProp['route'];
+  navigation: MatchDetailScreenNavigationProp['navigation'];
+}
+
+const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation }) => {
+  const { matchId, tournamentName, teamNames } = route.params;
+  const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [index, setIndex] = useState<number>(0);
+  const [routes, setRoutes] = useState<Array<{ key: string; title: string; innings: Innings }>>([]);
   const layout = useWindowDimensions();
 
   useEffect(() => {
@@ -29,43 +51,44 @@ const MatchDetailScreen = ({ route, navigation }) => {
   
   // Process scorecard data into tab routes when it's loaded
   useEffect(() => {
-    if (scorecard?.pageProps?.scorecard?.length > 0) {
-      const newRoutes = scorecard.pageProps.scorecard.map((innings, idx) => ({
-        key: String(idx),
-        title: innings.teamName || `Innings ${idx + 1}`,
-        innings: innings
-      }));
-      setRoutes(newRoutes);
+    if (scorecard && scorecard.pageProps && Array.isArray(scorecard.pageProps.scorecard) && scorecard.pageProps.scorecard.length > 0) {
+      const inningsArr = scorecard?.pageProps?.scorecard;
+      if (Array.isArray(inningsArr)) {
+        const newRoutes = inningsArr.map((innings: Innings, idx: number) => ({
+          key: String(idx),
+          title: innings.teamName || `Innings ${idx + 1}`,
+          innings: innings
+        }));
+        setRoutes(newRoutes);
+      }
     }
   }, [scorecard]);
 
   const fetchScorecard = async () => {
     try {
+      setLoading(true);
       setError(null);
-      
       // Extract match details for API call
-      const matchId = match.id || match.match_id;
-      
+      const matchIdParam: string | number = matchId ?? '';
       // Convert to slug format: lowercase, spaces to dashes, preserve parentheses and dots
-      const tournamentName = (match.tournament_name || 'tournament')
+      const tournamentSlug = (tournamentName || 'tournament')
         .toLowerCase()
-        .replace(/\s+/g, '-'); // Only replace spaces with dashes, keep dots and parentheses
-      
-      const teamNames = `${match.team_a || 'Team A'}-vs-${match.team_b || 'Team B'}`
+        .replace(/\s+/g, '-');
+      const teamNamesSlug = `${teamNames.team1 || 'Team A'}-vs-${teamNames.team2 || 'Team B'}`
         .toLowerCase()
-        .replace(/\s+/g, '-'); // Only replace spaces with dashes, keep parentheses and dots
-      
-      console.log('Fetching scorecard for match:', { matchId, tournamentName, teamNames });
-      
-      const response = await apiService.getMatchScorecard(matchId, tournamentName, teamNames);
-      
-      if (response.success) {
+        .replace(/\s+/g, '-');
+      const response = await apiService.getMatchScorecard(matchIdParam, tournamentSlug, teamNamesSlug);
+      if (response && response.data) {
         setScorecard(response.data);
       } else {
-        setError(response.error || 'Failed to fetch scorecard');
+        setError('Failed to load scorecard');
       }
-    } catch (err) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to load scorecard');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -79,33 +102,31 @@ const MatchDetailScreen = ({ route, navigation }) => {
 
   const renderMatchHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.tournamentName}>{match.tournament_name}</Text>
+      <Text style={styles.tournamentName}>{tournamentName}</Text>
       <Text style={styles.matchTitle}>
-        {match.team_a} vs {match.team_b}
+        {teamNames.team1} vs {teamNames.team2}
       </Text>
-      <Text style={styles.matchStatus}>
-        Status: {match.status || 'Unknown'}
-      </Text>
+
       
-      {match.status === 'past' && match.match_summary?.summary && (
+      {false && (
         <View style={styles.resultSection}>
           <Text style={styles.matchResult}>
             <Ionicons name="trophy-outline" size={16} color="#FFD700" />
-            {' '}Result: {match.match_summary.summary}
+            {' '}Result: 
           </Text>
         </View>
       )}
       
-      {match.ground && (
+      {false && (
         <Text style={styles.ground}>
           <Ionicons name="location-outline" size={14} color="#666" />
-          {' '}{match.ground}
+          {' '}
         </Text>
       )}
     </View>
   );
 
-  const renderInningsCard = (teamInnings, title, index) => {
+  const renderInningsCard = (teamInnings: Innings | null, title: string, index: number) => {
     if (!teamInnings) {
       return null;
     }
@@ -133,7 +154,7 @@ const MatchDetailScreen = ({ route, navigation }) => {
         {batting.length > 0 && (
           <View style={styles.battingSection}>
             <Text style={styles.sectionTitle}>Batting</Text>
-            {batting.map((batsman, index) => (
+            {batting.map((batsman: any, index: number) => (
               <View key={batsman.player_id || `batsman-${index}`} style={styles.batsmanRow}>
                 <Text style={styles.batsmanName} numberOfLines={1}>
                   {batsman.name || 'Unknown'}
@@ -153,7 +174,7 @@ const MatchDetailScreen = ({ route, navigation }) => {
         {bowling.length > 0 && (
           <View style={styles.bowlingSection}>
             <Text style={styles.sectionTitle}>Bowling</Text>
-            {bowling.map((bowler, index) => (
+            {bowling.map((bowler: any, index: number) => (
               <View key={bowler.player_id || `bowler-${index}`} style={styles.bowlerRow}>
                 <Text style={styles.bowlerName}>{bowler.name || 'Unknown'}</Text>
                 <Text style={styles.bowlerStats}>
@@ -168,7 +189,7 @@ const MatchDetailScreen = ({ route, navigation }) => {
     );
   };
 
-  const renderScene = ({ route }) => (
+  const renderScene = ({ route }: { route: { key: string; title: string; innings: Innings } }) => (
     <ScrollView 
       style={styles.tabContent}
       refreshControl={
@@ -176,11 +197,11 @@ const MatchDetailScreen = ({ route, navigation }) => {
       }
       showsVerticalScrollIndicator={true}
     >
-      {renderInningsCard(route.innings, route.title, route.key)}
+      {renderInningsCard(route.innings, route.title, parseInt(route.key, 10))} 
     </ScrollView>
   );
 
-  const renderTabBar = props => (
+  const renderTabBar = (props: any) => (
     <TabBar
       {...props}
       indicatorStyle={styles.tabIndicator}
@@ -206,7 +227,7 @@ const MatchDetailScreen = ({ route, navigation }) => {
     if (scorecardData.length === 0) {
       return (
         <View style={styles.noData}>
-          <Ionicons name="cricket-outline" size={48} color="#ccc" />
+          <Ionicons name={"cricket-outline" as any} size={24} color="#3f51b5" style={{ marginRight: 8 }} />
           <Text style={styles.noDataText}>Match scorecard will be available once the match starts</Text>
         </View>
       );

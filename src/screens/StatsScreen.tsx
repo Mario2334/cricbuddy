@@ -12,11 +12,23 @@ import {
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import apiService from '../services/apiService';
 
+interface StatItem {
+  value: string | number;
+  title: string;
+}
+interface StatsData {
+  batting?: StatItem[];
+  bowling?: StatItem[];
+  fielding?: StatItem[];
+  captain?: StatItem[];
+}
+
+
 const { width } = Dimensions.get('window');
 const Tab = createMaterialTopTabNavigator();
 
 const StatsScreen = () => {
-  const [statsData, setStatsData] = useState(null);
+  const [statsData, setStatsData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -50,14 +62,14 @@ const StatsScreen = () => {
     loadStats(true);
   };
 
-  const renderStatCard = (stat, index) => (
+  const renderStatCard = (stat: StatItem, index: number) => (
     <View key={index} style={styles.statCard}>
       <Text style={styles.statValue}>{stat.value}</Text>
       <Text style={styles.statTitle}>{stat.title}</Text>
     </View>
   );
 
-  const renderStatsGrid = (stats) => (
+  const renderStatsGrid = (stats: StatItem[]) => (
     <ScrollView
       style={styles.tabContent}
       contentContainerStyle={styles.scrollContent}
