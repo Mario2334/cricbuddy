@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator, StackScreenProps } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 
 // Import screens
@@ -12,19 +12,13 @@ import MatchDetailScreen from './src/screens/MatchDetailScreen';
 // Import navigation types
 import { 
   RootStackParamList, 
-  TabParamList,
-  HomeScreenNavigationProp,
-  MatchDetailScreenNavigationProp,
-  StatsScreenNavigationProp 
+  TabParamList
 } from './src/types/navigation';
 
 // Create stack navigator with proper typing
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// Define navigation prop types for screens
-type HomeStackNavigationProp = StackScreenProps<RootStackParamList, 'HomeList'>;
-type MatchDetailNavigationProp = StackScreenProps<RootStackParamList, 'MatchDetail'>;
 
 // Create a stack navigator for the Home tab
 const HomeStack: React.FC = () => {

@@ -49,7 +49,7 @@ const StatsScreen = () => {
       } else {
         Alert.alert('Error', 'Failed to load statistics. Please try again.');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Network error. Please check your connection.');
     } finally {
       setLoading(false);

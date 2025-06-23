@@ -1,6 +1,5 @@
 import { StackScreenProps } from '@react-navigation/stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { Match } from './Match';
 
 // Define the parameter list for the root stack
 export type RootStackParamList = {
@@ -31,9 +30,3 @@ export type HomeScreenNavigationProp = StackScreenProps<RootStackParamList, 'Hom
 export type MatchDetailScreenNavigationProp = StackScreenProps<RootStackParamList, 'MatchDetail'>;
 export type StatsScreenNavigationProp = BottomTabScreenProps<TabParamList, 'Stats'>;
 
-// Extend the navigation prop types for each screen's props
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
-}

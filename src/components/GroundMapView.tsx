@@ -7,7 +7,6 @@ import {
   Alert,
   Linking,
   Platform,
-  Dimensions,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +18,6 @@ interface GroundMapViewProps {
   showSearchButton?: boolean;
 }
 
-const { width, height } = Dimensions.get('window');
 
 const GroundMapView: React.FC<GroundMapViewProps> = ({ 
   ground, 

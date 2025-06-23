@@ -1,4 +1,3 @@
-import { Match } from '../types/Match';
 import { StyleSheet } from 'react-native';
 
 export const formatMatchTime = (timeString: string): string => {

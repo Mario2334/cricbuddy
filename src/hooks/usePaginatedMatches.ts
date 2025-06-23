@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import type { Match } from '../types/Match';
-import apiService from '../services/apiService';
 import { normalizeApiError } from '../utils/normalizeApiError';
 
 interface UsePaginatedMatchesResult {

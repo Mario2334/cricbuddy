@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -231,7 +231,6 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
     }
 
     try {
-      let response;
       let upcomingMatches: Match[] = [];
       let nextPageUrl: string | null = null;
 
@@ -434,7 +433,7 @@ const CompletedTab: React.FC<TabComponentProps> = ({ navigation }) => {
       setNextPageUrl(page?.next || null);
       setError(null);
       setHasInitiallyLoaded(true);
-    } catch (_err) {
+    } catch {
       setError('Failed to load past matches');
     } finally {
       setLoading(false);

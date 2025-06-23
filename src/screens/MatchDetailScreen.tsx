@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 // import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { Match } from '../types/Match';
 import type { Ground } from '../types/Ground';
 import { MatchDetailScreenNavigationProp } from '../types/navigation';
 
@@ -37,7 +36,7 @@ interface MatchDetailScreenProps {
   navigation: MatchDetailScreenNavigationProp['navigation'];
 }
 
-const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation }) => {
+const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const { matchId, tournamentName, teamNames, groundName, groundId, city, defaultTab } = route.params;
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
   const [groundData, setGroundData] = useState<Ground | null>(null);
@@ -217,21 +216,6 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
         </Text>
       )}
 
-      {false && (
-        <View style={styles.resultSection}>
-          <Text style={styles.matchResult}>
-            <Ionicons name="trophy-outline" size={16} color="#FFD700" />
-            {' '}Result: 
-          </Text>
-        </View>
-      )}
-
-      {false && (
-        <Text style={styles.ground}>
-          <Ionicons name="location-outline" size={14} color="#666" />
-          {' '}
-        </Text>
-      )}
     </View>
   );
 
@@ -240,7 +224,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
       return null;
     }
 
-    const { batting = [], bowling = [], inning = {}, teamName } = teamInnings;
+    const { batting = [], bowling = [], inning = {} } = teamInnings;
 
     return (
       <View key={index} style={styles.inningsCard}>
@@ -497,7 +481,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route, navigation
     if (scorecardData.length === 0) {
       return (
         <View style={styles.noData}>
-          <Ionicons name={"cricket-outline" as any} size={24} color="#3f51b5" style={{ marginRight: 8 }} />
+          <Ionicons name="baseball-outline" size={24} color="#3f51b5" style={{ marginRight: 8 }} />
           <Text style={styles.noDataText}>Match scorecard will be available once the match starts</Text>
         </View>
       );

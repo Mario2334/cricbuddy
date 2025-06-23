@@ -36,12 +36,6 @@ interface PlayerStatItem {
   value: string | number;
 }
 
-interface PlayerStats {
-  batting?: PlayerStatItem[];
-  bowling?: PlayerStatItem[];
-  fielding?: PlayerStatItem[];
-  captain?: PlayerStatItem[];
-}
 
 interface RequestOptions {
   method?: string;
@@ -180,36 +174,31 @@ class ApiService {
   /**
    * Make request with throttling but no automatic retries
    */
-  async makeRequestWithRetry(url: string, options: RequestOptions, retryCount = 0): Promise<Response> {
-    try {
-      await this.throttleRequest();
+  async makeRequestWithRetry(url: string, options: RequestOptions): Promise<Response> {
+    await this.throttleRequest();
 
-      const response = await fetch(url, options);
+    const response = await fetch(url, options);
 
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait and use the refresh button to try again.');
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Log response details
-      console.log(`📡 API Response [${response.status}]:`, {
-        url: url.split('?')[0], // Show base URL without query params
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-        timestamp: new Date().toISOString()
-      });
-
-      // Update rate limit info
-      this.updateRateLimitInfo(response.headers);
-
-      return response;
-    } catch (error) {
-      // No automatic retries - let user manually refresh
-      throw error;
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait and use the refresh button to try again.');
     }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Log response details
+    console.log(`📡 API Response [${response.status}]:`, {
+      url: url.split('?')[0], // Show base URL without query params
+      status: response.status,
+      headers: Object.fromEntries(response.headers.entries()),
+      timestamp: new Date().toISOString()
+    });
+
+    // Update rate limit info
+    this.updateRateLimitInfo(response.headers);
+
+    return response;
   }
 
   /**
