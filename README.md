@@ -55,6 +55,40 @@ mycoach/
 └── README.md
 ```
 
+## Google Maps Configuration
+
+This app uses `react-native-maps` with Google Maps provider for iOS. To enable Google Maps functionality:
+
+1. **Get a Google Maps API Key:**
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the "Maps SDK for iOS" API
+   - Create credentials (API Key)
+   - Restrict the API key to iOS apps (recommended for security)
+
+2. **Configure the API Key:**
+   - Open `app.json`
+   - Add your Google Maps API key to the iOS configuration:
+   ```json
+   "ios": {
+     "supportsTablet": true,
+     "bundleIdentifier": "com.sanket.django.cricbuddy",
+     "infoPlist": {
+       "ITSAppUsesNonExemptEncryption": false
+     },
+     "config": {
+       "googleMapsApiKey": "YOUR_ACTUAL_API_KEY_HERE"
+     }
+   }
+   ```
+
+3. **Rebuild the app:**
+   ```bash
+   expo prebuild --clean
+   ```
+
+**Note:** The Google Maps API key is required for the map functionality to work on iOS devices.
+
 ## API Service
 
 The `apiService.js` module is designed to replicate cURL requests with the same parameters, headers, and cookies. It includes:

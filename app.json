@@ -16,7 +16,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sanket.django.cricbuddy",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "This app uses location services to show your position on the map and provide directions to cricket grounds.",
+        "LSApplicationQueriesSchemes": ["comgooglemaps"]
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
       }
     },
     "android": {
