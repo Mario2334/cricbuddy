@@ -344,6 +344,29 @@ class ApiService {
         name: match.team_b,
         short_name: match.team_b
       } : undefined,
+      // Add score data for live and past matches - improved logic to handle more field variations
+      team1_score: (match.status === 'live' || match.status === 'past') && (
+        match.team_a_score || match.team1_score || 
+        match.team_a_runs !== undefined || match.team1_runs !== undefined ||
+        (match.team_a_runs !== null && match.team_a_runs !== undefined) ||
+        (match.team1_runs !== null && match.team1_runs !== undefined)
+      ) ? {
+        runs: match.team_a_runs || match.team1_runs || match.team_a_score?.runs || 0,
+        wickets: match.team_a_wickets || match.team1_wickets || match.team_a_score?.wickets || 0,
+        overs: match.team_a_overs || match.team1_overs || match.team_a_score?.overs || match.overs || '20.0',
+        summary: match.team_a_score_summary || match.team1_score_summary || match.team_a_score?.summary
+      } : undefined,
+      team2_score: (match.status === 'live' || match.status === 'past') && (
+        match.team_b_score || match.team2_score || 
+        match.team_b_runs !== undefined || match.team2_runs !== undefined ||
+        (match.team_b_runs !== null && match.team_b_runs !== undefined) ||
+        (match.team2_runs !== null && match.team2_runs !== undefined)
+      ) ? {
+        runs: match.team_b_runs || match.team2_runs || match.team_b_score?.runs || 0,
+        wickets: match.team_b_wickets || match.team2_wickets || match.team_b_score?.wickets || 0,
+        overs: match.team_b_overs || match.team2_overs || match.team_b_score?.overs || match.overs || '20.0',
+        summary: match.team_b_score_summary || match.team2_score_summary || match.team_b_score?.summary
+      } : undefined,
     }));
 
     return {
@@ -691,6 +714,19 @@ class ApiService {
         name: match.team_b,
         short_name: match.team_b
       } : undefined,
+      // Add score data for live and past matches
+      team1_score: (match.status === 'live' || match.status === 'past') && (match.team_a_score || match.team1_score || match.team_a_runs !== undefined) ? {
+        runs: match.team_a_runs || match.team1_runs || match.team_a_score?.runs || 0,
+        wickets: match.team_a_wickets || match.team1_wickets || match.team_a_score?.wickets || 0,
+        overs: match.team_a_overs || match.team1_overs || match.team_a_score?.overs || match.overs || '20.0',
+        summary: match.team_a_score_summary || match.team1_score_summary || match.team_a_score?.summary
+      } : undefined,
+      team2_score: (match.status === 'live' || match.status === 'past') && (match.team_b_score || match.team2_score || match.team_b_runs !== undefined) ? {
+        runs: match.team_b_runs || match.team2_runs || match.team_b_score?.runs || 0,
+        wickets: match.team_b_wickets || match.team2_wickets || match.team_b_score?.wickets || 0,
+        overs: match.team_b_overs || match.team2_overs || match.team_b_score?.overs || match.overs || '20.0',
+        summary: match.team_b_score_summary || match.team2_score_summary || match.team_b_score?.summary
+      } : undefined,
     }));
 
     // Separate upcoming and live matches
@@ -833,12 +869,7 @@ class ApiService {
     const result = await this._fetchAndCache(
       url,
       cacheKey,
-      (data: any) => ({
-        matches: data?.data?.filter((match: any) => match.status === 'past') || [],
-        page: data?.page || null,
-        status: data?.status || 'success',
-        config: data?.config || {}
-      }),
+      (data: any) => data, // Return raw data for processing
       15000,
       {
         method: 'GET',
@@ -846,11 +877,152 @@ class ApiService {
       }
     );
 
-    if (!result.data) {
-      throw new Error('Failed to fetch player past matches: No data returned from API');
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch player past matches');
     }
 
-    return result.data;
+    // Map the API response to our expected format with score data
+    const rawMatches = result.data?.data || [];
+    const pastMatches = rawMatches
+      .filter((match: any) => match.status === 'past')
+      .map((match: any) => ({
+        id: match.match_id,
+        match_id: match.match_id,
+        tournament_name: match.tournament_name || '',
+        tournament_round_name: match.tournament_round_name,
+        round_name: match.tournament_round_name,
+        status: match.status,
+        team_a: match.team_a,
+        team_b: match.team_b,
+        team1_name: match.team_a,
+        team2_name: match.team_b,
+        match_summary: match.match_summary,
+        match_type: match.match_type,
+        match_format: match.match_type,
+        overs: match.overs,
+        ground_name: match.ground_name,
+        ground_id: match.ground_id,
+        match_start_time: match.match_start_time,
+        start_time: match.match_start_time,
+        match_result: match.match_result,
+        team1: match.team_a_id ? {
+          id: match.team_a_id,
+          name: match.team_a,
+          short_name: match.team_a
+        } : undefined,
+        team2: match.team_b_id ? {
+          id: match.team_b_id,
+          name: match.team_b,
+          short_name: match.team_b
+        } : undefined,
+        // Add score data for past matches
+        team1_score: (match.team_a_score || match.team1_score || match.team_a_runs !== undefined) ? {
+          runs: match.team_a_runs || match.team1_runs || match.team_a_score?.runs || 0,
+          wickets: match.team_a_wickets || match.team1_wickets || match.team_a_score?.wickets || 0,
+          overs: match.team_a_overs || match.team1_overs || match.team_a_score?.overs || match.overs || '20.0',
+          summary: match.team_a_score_summary || match.team1_score_summary || match.team_a_score?.summary
+        } : undefined,
+        team2_score: (match.team_b_score || match.team2_score || match.team_b_runs !== undefined) ? {
+          runs: match.team_b_runs || match.team2_runs || match.team_b_score?.runs || 0,
+          wickets: match.team_b_wickets || match.team2_wickets || match.team_b_score?.wickets || 0,
+          overs: match.team_b_overs || match.team2_overs || match.team_b_score?.overs || match.overs || '20.0',
+          summary: match.team_b_score_summary || match.team2_score_summary || match.team_b_score?.summary
+        } : undefined,
+      }));
+
+    return {
+      matches: pastMatches,
+      page: result.data?.page || null,
+      status: result.data?.status || 'success',
+      config: result.data?.config || {}
+    };
+  }
+
+  /**
+   * Get team matches by team ID
+   * @param {string} teamId - Team ID to fetch matches for (default: 5179117)
+   * @param {number} pageNo - Page number (default: 1)
+   * @param {number} pageSize - Number of matches per page (default: 12)
+   * @param {number} datetime - Timestamp for consistency (default: current time)
+   * @returns {Promise<MatchResponse>} - API response with team matches
+   */
+  async getTeamMatches(
+    teamId: string = '5179117',
+    pageNo: number = 1,
+    pageSize: number = 12,
+    datetime: number = Date.now()
+  ): Promise<MatchResponse> {
+    const url = `${this.baseApiUrl}/team/get-team-match/${teamId}?pagesize=${pageSize}&teamId=${teamId}&pageno=${pageNo}&datetime=${datetime}`;
+    const cacheKey = `team_matches_${teamId}_${pageNo}_${pageSize}_${Math.floor(datetime / 30000)}`;
+
+    const result = await this._fetchAndCache(
+      url,
+      cacheKey,
+      (data: any) => data, // Return raw data for processing
+      30000, // 30 second cache
+      {
+        method: 'GET',
+        headers: this.cricHeroesHeaders,
+      }
+    );
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch team matches');
+    }
+
+    // Map the API response to our expected format
+    const rawMatches = result.data?.data || [];
+    const matches = rawMatches.map((match: any) => ({
+      id: match.match_id,
+      match_id: match.match_id,
+      tournament_name: match.tournament_name || '',
+      tournament_round_name: match.tournament_round_name,
+      round_name: match.tournament_round_name,
+      status: match.status,
+      team_a: match.team_a,
+      team_b: match.team_b,
+      team1_name: match.team_a,
+      team2_name: match.team_b,
+      match_summary: match.match_summary,
+      match_type: match.match_type,
+      match_format: match.match_type,
+      overs: match.overs,
+      ground_name: match.ground_name,
+      ground_id: match.ground_id,
+      match_start_time: match.match_start_time,
+      start_time: match.match_start_time,
+      match_result: match.match_result,
+      team1: match.team_a_id ? {
+        id: match.team_a_id,
+        name: match.team_a,
+        short_name: match.team_a
+      } : undefined,
+      team2: match.team_b_id ? {
+        id: match.team_b_id,
+        name: match.team_b,
+        short_name: match.team_b
+      } : undefined,
+      // Add score data for live and past matches
+      team1_score: (match.status === 'live' || match.status === 'past') && (match.team_a_score || match.team1_score || match.team_a_runs !== undefined) ? {
+        runs: match.team_a_runs || match.team1_runs || match.team_a_score?.runs || 0,
+        wickets: match.team_a_wickets || match.team1_wickets || match.team_a_score?.wickets || 0,
+        overs: match.team_a_overs || match.team1_overs || match.team_a_score?.overs || match.overs || '20.0',
+        summary: match.team_a_score_summary || match.team1_score_summary || match.team_a_score?.summary
+      } : undefined,
+      team2_score: (match.status === 'live' || match.status === 'past') && (match.team_b_score || match.team2_score || match.team_b_runs !== undefined) ? {
+        runs: match.team_b_runs || match.team2_runs || match.team_b_score?.runs || 0,
+        wickets: match.team_b_wickets || match.team2_wickets || match.team_b_score?.wickets || 0,
+        overs: match.team_b_overs || match.team2_overs || match.team_b_score?.overs || match.overs || '20.0',
+        summary: match.team_b_score_summary || match.team2_score_summary || match.team_b_score?.summary
+      } : undefined,
+    }));
+
+    return {
+      matches,
+      page: result.data?.page || null,
+      status: result.data?.status || 'success',
+      config: result.data?.config || {}
+    };
   }
 
   /**

@@ -103,15 +103,39 @@ const MatchList: React.FC<MatchListProps> = ({
         </View>
 
         <View style={styles.teamsContainer}>
-          <View style={styles.teamRow}>
-            <View style={styles.teamInfo}>
-              <Text style={styles.teamName} numberOfLines={1}>{team1Name}</Text>
+          {(item.status === 'live' || item.status === 'past') && (item.team1_score || item.team2_score) ? (
+            // Show mini scores for live and past matches
+            <View style={styles.teamRowWithScores}>
+              <View style={styles.teamWithScore}>
+                <Text style={styles.teamName} numberOfLines={1}>{team1Name}</Text>
+                {item.team1_score && (
+                  <Text style={styles.miniScore} numberOfLines={1}>
+                    {item.team1_score.summary || `${item.team1_score.runs}/${item.team1_score.wickets} (${item.team1_score.overs})`}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.vsText}>VS</Text>
+              <View style={styles.teamWithScore}>
+                <Text style={styles.teamName} numberOfLines={1}>{team2Name}</Text>
+                {item.team2_score && (
+                  <Text style={styles.miniScore} numberOfLines={1}>
+                    {item.team2_score.summary || `${item.team2_score.runs}/${item.team2_score.wickets} (${item.team2_score.overs})`}
+                  </Text>
+                )}
+              </View>
             </View>
-            <Text style={styles.vsText}>VS</Text>
-            <View style={styles.teamInfo}>
-              <Text style={styles.teamName} numberOfLines={1}>{team2Name}</Text>
+          ) : (
+            // Show regular team names for upcoming matches or when no scores available
+            <View style={styles.teamRow}>
+              <View style={styles.teamInfo}>
+                <Text style={styles.teamName} numberOfLines={1}>{team1Name}</Text>
+              </View>
+              <Text style={styles.vsText}>VS</Text>
+              <View style={styles.teamInfo}>
+                <Text style={styles.teamName} numberOfLines={1}>{team2Name}</Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
         <View style={styles.matchFooter}>
@@ -417,7 +441,24 @@ const CompletedTab: React.FC<TabComponentProps> = ({ navigation }) => {
 
     try {
       // Extract page number from URL if provided, otherwise default to page 1
-      const pageNo = pageUrl ? new URL(pageUrl).searchParams.get('pageno') || '1' : '1';
+      let pageNo = '1';
+      if (pageUrl) {
+        try {
+          // Try to parse as complete URL first
+          const url = new URL(pageUrl);
+          pageNo = url.searchParams.get('pageno') || '1';
+        } catch {
+          // If URL parsing fails, check if it's just a page number
+          const numericPageUrl = parseInt(pageUrl);
+          if (!isNaN(numericPageUrl)) {
+            pageNo = pageUrl;
+          } else {
+            // Try to extract page number from relative URL or query string
+            const pageMatch = pageUrl.match(/pageno=(\d+)/);
+            pageNo = pageMatch ? pageMatch[1] : '1';
+          }
+        }
+      }
       const response = await apiService.getPlayerPastMatches(parseInt(pageNo), 12);
 
       // The API service returns { matches, page } with properly mapped data
@@ -628,6 +669,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  // Mini score styles
+  teamRowWithScores: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  teamWithScore: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  miniScore: {
+    fontSize: 12,
+    color: '#2c3e50',
+    fontWeight: '600',
+    marginTop: 4,
     textAlign: 'center',
   },
 });

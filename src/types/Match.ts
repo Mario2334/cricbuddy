@@ -29,5 +29,18 @@ export interface Match {
     name: string;
     short_name: string;
   };
+  // Mini score information for live and past matches
+  team1_score?: {
+    runs: number;
+    wickets: number;
+    overs: string;
+    summary?: string;  // e.g., "150/5 (18.2 ov)"
+  };
+  team2_score?: {
+    runs: number;
+    wickets: number;
+    overs: string;
+    summary?: string;  // e.g., "120/8 (20.0 ov)"
+  };
   // Add more properties as needed
 }

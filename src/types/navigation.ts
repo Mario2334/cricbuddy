@@ -4,6 +4,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 // Define the parameter list for the root stack
 export type RootStackParamList = {
   HomeList: undefined;
+  MyTeamList: undefined;
   MatchDetail: { 
     matchId: string; 
     tournamentName: string; 
@@ -23,10 +24,11 @@ export type RootStackParamList = {
 export type TabParamList = {
   Home: undefined;
   Stats: undefined;
+  MyTeam: undefined;
 };
 
 // Navigation props for each screen
 export type HomeScreenNavigationProp = StackScreenProps<RootStackParamList, 'HomeList'>;
 export type MatchDetailScreenNavigationProp = StackScreenProps<RootStackParamList, 'MatchDetail'>;
 export type StatsScreenNavigationProp = BottomTabScreenProps<TabParamList, 'Stats'>;
-
+export type MyTeamScreenNavigationProp = StackScreenProps<RootStackParamList, 'MyTeamList'>;

@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from './src/screens/HomeScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import MatchDetailScreen from './src/screens/MatchDetailScreen';
+import MyTeamScreen from './src/screens/MyTeamScreen';
 
 // Import navigation types
 import { 
@@ -56,6 +57,42 @@ const HomeStack: React.FC = () => {
   );
 };
 
+// Create a stack navigator for the MyTeam tab
+const MyTeamStack: React.FC = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="MyTeamList" 
+        component={MyTeamScreen} 
+        options={{ 
+          title: 'My Team',
+          headerStyle: {
+            backgroundColor: '#0066cc',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }} 
+      />
+      <Stack.Screen 
+        name="MatchDetail" 
+        component={MatchDetailScreen}
+        options={{ 
+          title: 'Match Scorecard',
+          headerStyle: {
+            backgroundColor: '#0066cc',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }} 
+      />
+    </Stack.Navigator>
+  );
+};
+
 // Define the App component with proper typing
 const App: React.FC = () => {
   return (
@@ -69,6 +106,8 @@ const App: React.FC = () => {
               iconName = focused ? 'home' : 'home-outline';
             } else if (route.name === 'Stats') {
               iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+            } else if (route.name === 'MyTeam') {
+              iconName = focused ? 'people' : 'people-outline';
             }
 
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -94,6 +133,14 @@ const App: React.FC = () => {
             headerTitleStyle: {
               fontWeight: 'bold',
             },
+          }}
+        />
+        <Tab.Screen 
+          name="MyTeam" 
+          component={MyTeamStack}
+          options={{
+            title: 'My Team',
+            headerShown: false,
           }}
         />
       </Tab.Navigator>
