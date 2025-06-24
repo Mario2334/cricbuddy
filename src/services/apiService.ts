@@ -416,10 +416,10 @@ class ApiService {
   }
 
   /**
-   * Fetch match scorecard from CricHeroes website
+   * Fetch match scorecard from CricHeroes API
    * @param matchId - Match ID
-   * @param tournamentName - Tournament name
-   * @param teamNames - Team names in format "Team A vs Team B"
+   * @param tournamentName - Tournament name (not used in new API)
+   * @param teamNames - Team names (not used in new API)
    * @returns Promise with match scorecard data
    */
   public async getMatchScorecard(
@@ -427,91 +427,131 @@ class ApiService {
     tournamentName: string,
     teamNames: string
   ): Promise<ApiResponse<unknown>> {
-    // Convert team names to URL-friendly format (lowercase, replace spaces with hyphens)
-    const pathTournamentName = tournamentName.toLowerCase().replace(/\s+/g, '-');
-    const pathTeamNames = teamNames
-      .toLowerCase()
-      .replace(/\(/g, '%28')  // Encode parentheses
-      .replace(/\)/g, '%29')
-      .replace(/\s+/g, '-');
+    // Use the new API endpoint
+    const url = `https://api.cricheroes.in/api/v1/scorecard/get-scorecard/${matchId}`;
+    const cacheKey = `match_scorecard_${matchId}`;
 
-    // Construct the URL with the latest build ID from the cURL
-    const buildId = '3lZSsO4Y198VrvIsAf8dt'; // From the latest cURL
-    const queryParams = new URLSearchParams({
-      matchId: matchId.toString(),
-      tournamentName: tournamentName,
-      teamNames: teamNames,
-      tab: 'scorecard'
-    });
-
-    const url = `${this.baseSiteUrl}/_next/data/${buildId}/scorecard/${matchId}/${pathTournamentName}/${pathTeamNames}/scorecard.json?${queryParams}`;
-    const cacheKey = `match_scorecard_${matchId}_${tournamentName}_${teamNames}`;
-
-    // Headers from the latest cURL
+    // Headers from the new API curl command
     const scorecardHeaders = {
-      'accept': '*/*',
+      'accept': 'application/json, text/plain, */*',
       'accept-language': 'en-US,en;q=0.9,gu;q=0.8,ja;q=0.7',
+      'api-key': 'cr!CkH3r0s',
+      'authorization': '167a0e60-4ecf-11f0-9aaf-65c0aaccdb8b',
+      'device-type': 'Chrome: 137.0.0.0',
       'dnt': '1',
+      'origin': 'https://cricheroes.com',
       'priority': 'u=1, i',
-      'referer': `${this.baseSiteUrl}/scorecard/${matchId}/${pathTournamentName}/${pathTeamNames}/summary`,
+      'referer': 'https://cricheroes.com/',
       'sec-ch-ua': '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-      'sec-ch-ua-arch': '"arm"',
-      'sec-ch-ua-bitness': '"64"',
-      'sec-ch-ua-full-version': '"137.0.7151.120"',
-      'sec-ch-ua-full-version-list': '"Google Chrome";v="137.0.7151.120", "Chromium";v="137.0.7151.120", "Not/A)Brand";v="24.0.0.0"',
       'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-model': '""',
       'sec-ch-ua-platform': '"macOS"',
-      'sec-ch-ua-platform-version': '"15.5.0"',
       'sec-fetch-dest': 'empty',
       'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
+      'sec-fetch-site': 'cross-site',
+      'udid': 'b06d1d63f90cf3493b39e534c59b6935',
       'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-      'x-nextjs-data': '1',
     };
 
-    // Essential cookies from the latest cURL
-    const cookies = [
-      '__gads=ID=4dde36bfd39898ae:T=1747037706:RT=1747038115:S=ALNI_MbN6ramj9aFRgeOFXfskUwTCLlHRQ',
-      '__gpi=UID=000010be5c799e2c:T=1747037706:RT=1747038115:S=ALNI_MZ7mbKy55Ytj9zpWLu6gUVX79dB5g',
-      '__eoi=ID=38a21732c874f103:T=1747037706:RT=1747038115:S=AA-AfjYewt6QzaJX6vyXF0Bn5WgT',
-      'udid=b06d1d63f90cf3493b39e534c59b6935',
-      'Authorization=167a0e60-4ecf-11f0-9aaf-65c0aaccdb8b',
-      `current_user=${encodeURIComponent(JSON.stringify({
-        user_id: 33835174,
-        name: 'Sanket Mokashi',
-        mobile: '8484996704',
-        profile_photo: 'https://media.cricheroes.in/user_profile/1737692532056_Nd3PQTvS88mu.jpeg',
-      }))}`,
-      'city={"id":1798,"name":"Bengaluru (Bangalore)"}',
-      'isNew=0',
-      'cf_clearance=ZTFlyX6Q.NyMwc.6l9RjhANTKF9Zjv_uumbv8mXyIWU-1750674394-1.2.1.1-Uu9T9IVNhob3c.hIwvvpEaoXImbkkMTIPqLFuu.77lUFjCmwhi5cPam2lH4vg4B1CLdU9hbXbXadXYrHn57o.hsOSv17VA4kHhVJW12gIpzdUHVoeJPffXiKUk.wmyxGnehrYn2sQxi62NWo2HEoXa4YkAdVEU58fVVfLARiV_TRlQ8_QEeq9juVieMoI8NOWHMF9lOmq.eIMkP91bBc8L0wYdU5afEE3zHVNDhktxbPXIIJV3nRJ6y.ETX1D6EsZcBKpt1f6yId8rQdIFKV9b.fS1sTF3OAeLild.ZYdoExnswjhkLQrfVQm1_8SM3AQ9SG10zVWZyIYRgpj5kvgEI.G2dxeXRRsu2ex3WEdzUGpYKKaD69s0HiMufqH1QI',
-      'panoramaId=46b0e43a6507bdf4d5a079e12945a9fb927ae1b9ec035b03a2220869a3baa5d2',
-      'panoramaIdType=panoDevice',
-      'FCNEC=[["AKsRol-Nztrok0btnbBKO1uxRP8PiOQThz32guxO5SGB1rysu34m6i5OmIoDQX28n8qsRg-8Mw78iIF_pfrEmnn43AU1rfFIHfl7PElxKwOX9li_657pnH_DczX7loaxxH5MtqtPzq7fyTejTQhYnqxZVW_vNrMugw=="]]',
-      'cto_bundle=WD5yOV95VW1yM1glMkYyMWExNSUyQkZHRkpESmVza2p1cmo0b3R4QnkyNkp0bEVlMTZYY3ZXVHMxNDBXbGRLMmVPd2F6Y1QyelB2OHg1djQwVXhIZWhHaE1vRUdGWVoyVjN1V2JOY1FuT1ZtcjNGNVJ0OEZFc2w3NkJ0SXZCa3JQcHV0WFp5dSUyQjVMeXBtOUgzWmJ6a0FhejdQMUJxc3JMNGpvbDY4eVg4SVNqT3VzUTElMkZOcXRzc1IzVVElMkZOcXJiYzBnbnp5dktwZE40VVhFQnglMkZ3b2dXem1sZiUyRk8wN3clM0QlM0Q',
-      '_clsk=lvbtf7|1750675889664|27|0|l.clarity.ms/collect'
-    ].join('; ');
-
     try {
-      console.log('Fetching match scorecard:', { matchId, tournamentName, teamNames, url });
+      console.log('Fetching match scorecard from new API:', { matchId, url });
 
       const response = await this.makeRequestWithRetry(url, {
         method: 'GET',
-        headers: {
-          ...scorecardHeaders,
-          'cookie': cookies,
-        },
+        headers: scorecardHeaders,
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const apiData = await response.json();
+
+      // Transform the new API response to match the expected format
+      // The new API returns data in a different structure: { status, data: { team_a, team_b, ... } }
+      // We need to convert this to the expected pageProps.scorecard format with complete details
+      let scorecardArray = [];
+
+      if (apiData.status && apiData.data) {
+        const matchData = apiData.data;
+
+        // Extract complete scorecard data from both teams
+        if (matchData.team_a) {
+          const teamAData = {
+            teamName: matchData.team_a.name,
+            teamId: matchData.team_a.id,
+            teamLogo: matchData.team_a.logo,
+            shortName: matchData.team_a.short_name,
+            summary: matchData.team_a.summary,
+            inning: matchData.team_a.innings?.[0] || {},
+            captain: matchData.team_a.captain_info,
+            wicketKeeper: matchData.team_a.wicket_keeper_info,
+            // Complete scorecard data
+            batting: matchData.team_a.scorecard?.[0]?.batting || [],
+            bowling: matchData.team_a.scorecard?.[0]?.bowling || [],
+            extras: matchData.team_a.scorecard?.[0]?.extras || { total: 0, summary: '', data: [] },
+            toBeBat: matchData.team_a.scorecard?.[0]?.to_be_bat || [],
+            fallOfWicket: matchData.team_a.scorecard?.[0]?.fall_of_wicket || { summary: '', data: [] },
+            partnership: matchData.team_a.scorecard?.[0]?.partnership || [],
+            powerPlay: matchData.team_a.scorecard?.[0]?.power_play || [],
+          };
+          scorecardArray.push(teamAData);
+        }
+
+        if (matchData.team_b) {
+          const teamBData = {
+            teamName: matchData.team_b.name,
+            teamId: matchData.team_b.id,
+            teamLogo: matchData.team_b.logo,
+            shortName: matchData.team_b.short_name,
+            summary: matchData.team_b.summary,
+            inning: matchData.team_b.innings?.[0] || {},
+            captain: matchData.team_b.captain_info,
+            wicketKeeper: matchData.team_b.wicket_keeper_info,
+            // Complete scorecard data
+            batting: matchData.team_b.scorecard?.[0]?.batting || [],
+            bowling: matchData.team_b.scorecard?.[0]?.bowling || [],
+            extras: matchData.team_b.scorecard?.[0]?.extras || { total: 0, summary: '', data: [] },
+            toBeBat: matchData.team_b.scorecard?.[0]?.to_be_bat || [],
+            fallOfWicket: matchData.team_b.scorecard?.[0]?.fall_of_wicket || { summary: '', data: [] },
+            partnership: matchData.team_b.scorecard?.[0]?.partnership || [],
+            powerPlay: matchData.team_b.scorecard?.[0]?.power_play || [],
+          };
+          scorecardArray.push(teamBData);
+        }
+      }
+
+      const transformedData = {
+        pageProps: {
+          scorecard: scorecardArray,
+          matchData: apiData.data, // Keep original match data for additional info
+          // Additional match details
+          matchInfo: {
+            matchId: apiData.data?.match_id,
+            matchType: apiData.data?.match_type,
+            status: apiData.data?.status,
+            overs: apiData.data?.overs,
+            ballType: apiData.data?.ball_type,
+            groundName: apiData.data?.ground_name,
+            cityName: apiData.data?.city_name,
+            startDateTime: apiData.data?.start_datetime,
+            tournamentName: apiData.data?.tournament_name,
+            tournamentRound: apiData.data?.tournament_round_name,
+            tossDetails: apiData.data?.toss_details,
+            matchSummary: apiData.data?.match_summary,
+            winBy: apiData.data?.win_by,
+            winningTeam: apiData.data?.winning_team,
+            matchResult: apiData.data?.match_result,
+            currentInning: apiData.data?.current_inning,
+            matchInning: apiData.data?.match_inning,
+            isSuperOver: apiData.data?.is_super_over,
+            isDl: apiData.data?.is_dl,
+          }
+        },
+      };
+
       const result = {
         success: true,
-        data,
+        data: transformedData,
         status: response.status,
       };
 

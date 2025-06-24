@@ -194,41 +194,118 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
     });
   };
 
-  const renderMatchHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.headerTop}>
-        <Text style={styles.tournamentName}>{tournamentName}</Text>
-        {matchStatus === 'live' && (
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
+  const renderMatchHeader = () => {
+    const matchInfo = scorecard?.pageProps?.matchInfo;
+
+    return (
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <Text style={styles.tournamentName}>
+            {matchInfo?.tournamentName || tournamentName}
+          </Text>
+          {matchStatus === 'live' && (
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          )}
+        </View>
+
+        <Text style={styles.matchTitle}>
+          {teamNames.team1} vs {teamNames.team2}
+        </Text>
+
+        {/* Additional Match Details */}
+        {matchInfo?.tournamentRound && (
+          <Text style={styles.matchSubtitle}>{matchInfo.tournamentRound}</Text>
+        )}
+
+        {matchInfo?.groundName && matchInfo?.cityName && (
+          <View style={styles.venueInfo}>
+            <Ionicons name="location-outline" size={14} color="#666" />
+            <Text style={styles.venueText}>
+              {matchInfo.groundName}, {matchInfo.cityName}
+            </Text>
           </View>
         )}
+
+        {matchInfo?.startDateTime && (
+          <View style={styles.matchTimeInfo}>
+            <Ionicons name="time-outline" size={14} color="#666" />
+            <Text style={styles.matchTimeText}>
+              {new Date(matchInfo.startDateTime).toLocaleString()}
+            </Text>
+          </View>
+        )}
+
+        {matchInfo?.tossDetails && (
+          <View style={styles.tossInfo}>
+            <Ionicons name="disc-outline" size={14} color="#666" />
+            <Text style={styles.tossText}>{matchInfo.tossDetails}</Text>
+          </View>
+        )}
+
+        {matchInfo?.matchType && matchInfo?.overs && (
+          <View style={styles.matchFormatInfo}>
+            <Text style={styles.matchFormatText}>
+              {matchInfo.matchType} • {matchInfo.overs} overs • {matchInfo.ballType || 'Cricket'}
+            </Text>
+          </View>
+        )}
+
+        {matchInfo?.matchSummary?.summary && (
+          <View style={styles.matchSummaryInfo}>
+            <Text style={styles.matchSummaryText}>{matchInfo.matchSummary.summary}</Text>
+          </View>
+        )}
+
+        {matchStatus === 'live' && autoRefreshInterval && (
+          <Text style={styles.autoRefreshText}>
+            <Ionicons name="refresh-outline" size={12} color="#FFD700" />
+            {' '}Auto-refreshing every 30s
+          </Text>
+        )}
       </View>
-      <Text style={styles.matchTitle}>
-        {teamNames.team1} vs {teamNames.team2}
-      </Text>
-
-      {matchStatus === 'live' && autoRefreshInterval && (
-        <Text style={styles.autoRefreshText}>
-          <Ionicons name="refresh-outline" size={12} color="#FFD700" />
-          {' '}Auto-refreshing every 30s
-        </Text>
-      )}
-
-    </View>
-  );
+    );
+  };
 
   const renderInningsCard = (teamInnings: Innings | null, title: string, index: number) => {
     if (!teamInnings) {
       return null;
     }
 
-    const { batting = [], bowling = [], inning = {} } = teamInnings;
+    const { 
+      batting = [], 
+      bowling = [], 
+      inning = {}, 
+      extras = { total: 0, summary: '', data: [] },
+      fallOfWicket = { summary: '', data: [] },
+      partnership = [],
+      toBeBat = [],
+      teamLogo,
+      captain,
+      wicketKeeper
+    } = teamInnings;
 
     return (
-      <View key={index} style={styles.inningsCard}>
-        <Text style={styles.inningsTitle}>{title}</Text>
+      <ScrollView key={index} style={styles.inningsCard} showsVerticalScrollIndicator={false}>
+        {/* Team Header with Logo */}
+        <View style={styles.teamHeader}>
+          {teamLogo && (
+            <View style={styles.teamLogoContainer}>
+              {/* Note: You might want to use Image component here if logos are to be displayed */}
+              <Text style={styles.teamLogoPlaceholder}>🏏</Text>
+            </View>
+          )}
+          <View style={styles.teamTitleContainer}>
+            <Text style={styles.inningsTitle}>{title}</Text>
+            {captain && (
+              <Text style={styles.captainInfo}>
+                Captain: {captain.player_name} {captain.is_wicket_keeper ? '(wk)' : ''}
+              </Text>
+            )}
+          </View>
+        </View>
 
         {/* Team Score */}
         {inning.total_run !== undefined && (
@@ -240,6 +317,9 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
             {inning.summary?.rr && (
               <Text style={styles.runRate}>RR: {inning.summary.rr}</Text>
             )}
+            {extras.total > 0 && (
+              <Text style={styles.extrasText}>Extras: {extras.total}</Text>
+            )}
           </View>
         )}
 
@@ -247,19 +327,58 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         {batting.length > 0 && (
           <View style={styles.battingSection}>
             <Text style={styles.sectionTitle}>Batting</Text>
+            <View style={styles.battingHeader}>
+              <Text style={styles.battingHeaderText}>Batsman</Text>
+              <Text style={styles.battingHeaderText}>R(B)</Text>
+              <Text style={styles.battingHeaderText}>4s</Text>
+              <Text style={styles.battingHeaderText}>6s</Text>
+              <Text style={styles.battingHeaderText}>SR</Text>
+            </View>
             {batting.map((batsman: any, index: number) => (
               <View key={batsman.player_id || `batsman-${index}`} style={styles.batsmanRow}>
-                <Text style={styles.batsmanName} numberOfLines={1}>
-                  {batsman.name || 'Unknown'}
-                  {batsman.how_to_out === 'not out' ? '*' : ''}
-                </Text>
-                <Text style={styles.batsmanStats}>
-                  {batsman.runs || 0} ({batsman.balls || 0})
-                  {batsman.fours ? ` 4s:${batsman.fours}` : ''}
-                  {batsman.sixes ? ` 6s:${batsman.sixes}` : ''}
-                </Text>
+                <View style={styles.batsmanNameContainer}>
+                  <Text style={styles.batsmanName} numberOfLines={1}>
+                    {batsman.name || 'Unknown'}
+                    {batsman.how_to_out === 'not out' ? '*' : ''}
+                  </Text>
+                  {batsman.how_to_out && batsman.how_to_out !== 'not out' && (
+                    <Text style={styles.dismissalText} numberOfLines={1}>
+                      {batsman.how_to_out}
+                    </Text>
+                  )}
+                </View>
+                <Text style={styles.batsmanStat}>{batsman.runs || 0}({batsman.balls || 0})</Text>
+                <Text style={styles.batsmanStat}>{batsman['4s'] || 0}</Text>
+                <Text style={styles.batsmanStat}>{batsman['6s'] || 0}</Text>
+                <Text style={styles.batsmanStat}>{batsman.SR || '0.00'}</Text>
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Extras Breakdown */}
+        {extras.total > 0 && (
+          <View style={styles.extrasSection}>
+            <Text style={styles.sectionTitle}>Extras ({extras.total})</Text>
+            <Text style={styles.extrasDetail}>{extras.summary || `Total: ${extras.total}`}</Text>
+          </View>
+        )}
+
+        {/* Fall of Wickets */}
+        {fallOfWicket.data && fallOfWicket.data.length > 0 && (
+          <View style={styles.fallOfWicketsSection}>
+            <Text style={styles.sectionTitle}>Fall of Wickets</Text>
+            <Text style={styles.fallOfWicketsText}>{fallOfWicket.summary}</Text>
+          </View>
+        )}
+
+        {/* Yet to Bat */}
+        {toBeBat.length > 0 && (
+          <View style={styles.toBeBatSection}>
+            <Text style={styles.sectionTitle}>Yet to Bat</Text>
+            <Text style={styles.toBeBatText}>
+              {toBeBat.map((player: any) => player.name).join(', ')}
+            </Text>
           </View>
         )}
 
@@ -267,18 +386,39 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         {bowling.length > 0 && (
           <View style={styles.bowlingSection}>
             <Text style={styles.sectionTitle}>Bowling</Text>
+            <View style={styles.bowlingHeader}>
+              <Text style={styles.bowlingHeaderText}>Bowler</Text>
+              <Text style={styles.bowlingHeaderText}>O</Text>
+              <Text style={styles.bowlingHeaderText}>M</Text>
+              <Text style={styles.bowlingHeaderText}>R</Text>
+              <Text style={styles.bowlingHeaderText}>W</Text>
+              <Text style={styles.bowlingHeaderText}>Econ</Text>
+            </View>
             {bowling.map((bowler: any, index: number) => (
               <View key={bowler.player_id || `bowler-${index}`} style={styles.bowlerRow}>
-                <Text style={styles.bowlerName}>{bowler.name || 'Unknown'}</Text>
-                <Text style={styles.bowlerStats}>
-                  {bowler.overs || 0}-{bowler.maidens || 0}-{bowler.runs || 0}-{bowler.wickets || 0}
-                  {bowler.economy && ` (${bowler.economy})`}
-                </Text>
+                <Text style={styles.bowlerName} numberOfLines={1}>{bowler.name || 'Unknown'}</Text>
+                <Text style={styles.bowlerStat}>{bowler.overs || 0}</Text>
+                <Text style={styles.bowlerStat}>{bowler.maidens || 0}</Text>
+                <Text style={styles.bowlerStat}>{bowler.runs || 0}</Text>
+                <Text style={styles.bowlerStat}>{bowler.wickets || 0}</Text>
+                <Text style={styles.bowlerStat}>{bowler.economy_rate || '0.00'}</Text>
               </View>
             ))}
           </View>
         )}
-      </View>
+
+        {/* Partnership Details */}
+        {partnership.length > 0 && (
+          <View style={styles.partnershipSection}>
+            <Text style={styles.sectionTitle}>Partnerships</Text>
+            {partnership.map((p: any, index: number) => (
+              <Text key={index} style={styles.partnershipText}>
+                {p.summary || `Partnership ${index + 1}`}
+              </Text>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     );
   };
 
@@ -610,6 +750,56 @@ const styles = StyleSheet.create({
     marginTop: 4,
     opacity: 0.9,
   },
+  matchSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  venueInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  venueText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  matchTimeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  matchTimeText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  tossInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  tossText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  matchFormatInfo: {
+    marginBottom: 4,
+  },
+  matchFormatText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+  },
+  matchSummaryInfo: {
+    marginBottom: 4,
+  },
+  matchSummaryText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 13,
+    fontWeight: '500',
+  },
   matchStatus: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 14,
@@ -656,6 +846,31 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
+  extrasText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  teamHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  teamLogoContainer: {
+    marginRight: 12,
+  },
+  teamLogoPlaceholder: {
+    fontSize: 24,
+  },
+  teamTitleContainer: {
+    flex: 1,
+  },
+  captainInfo: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -668,15 +883,48 @@ const styles = StyleSheet.create({
     borderTopColor: '#eee',
     paddingTop: 8,
   },
+  battingHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  battingHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    flex: 1,
+  },
   batsmanRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  batsmanNameContainer: {
+    flex: 2,
   },
   batsmanName: {
-    flex: 1,
     fontSize: 14,
     color: '#333',
+    fontWeight: '500',
+  },
+  dismissalText: {
+    fontSize: 11,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  batsmanStat: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+    flex: 1,
+    fontFamily: 'monospace',
   },
   batsmanStats: {
     fontSize: 14,
@@ -688,20 +936,99 @@ const styles = StyleSheet.create({
     borderTopColor: '#eee',
     paddingTop: 8,
   },
+  bowlingHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  bowlingHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    flex: 1,
+  },
   bowlerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  bowlerStat: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+    flex: 1,
+    fontFamily: 'monospace',
   },
   bowlerName: {
-    flex: 1,
+    flex: 2,
     fontSize: 14,
     color: '#333',
+    fontWeight: '500',
   },
   bowlerStats: {
     fontSize: 14,
     color: '#666',
     fontFamily: 'monospace',
+  },
+  extrasSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  extrasDetail: {
+    fontSize: 14,
+    color: '#666',
+    backgroundColor: '#f8f9fa',
+    padding: 8,
+    borderRadius: 4,
+  },
+  fallOfWicketsSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  fallOfWicketsText: {
+    fontSize: 14,
+    color: '#666',
+    backgroundColor: '#f8f9fa',
+    padding: 8,
+    borderRadius: 4,
+  },
+  toBeBatSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  toBeBatText: {
+    fontSize: 14,
+    color: '#666',
+    backgroundColor: '#f8f9fa',
+    padding: 8,
+    borderRadius: 4,
+    lineHeight: 20,
+  },
+  partnershipSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  partnershipText: {
+    fontSize: 14,
+    color: '#666',
+    backgroundColor: '#f8f9fa',
+    padding: 8,
+    borderRadius: 4,
+    marginBottom: 4,
   },
   loadingContainer: {
     flex: 1,
