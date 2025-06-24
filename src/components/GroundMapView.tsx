@@ -8,7 +8,7 @@ import {
   Linking,
   Platform,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import type { Ground } from '../types/Ground';
@@ -167,7 +167,7 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
+        provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
         region={region}
         showsUserLocation={locationPermission}
         showsMyLocationButton={locationPermission}

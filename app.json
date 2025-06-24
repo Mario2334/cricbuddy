@@ -29,7 +29,10 @@
         "foregroundImage": "./assets/cricbuddy_icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
