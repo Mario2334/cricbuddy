@@ -8,12 +8,15 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { TabView, TabBar } from 'react-native-tab-view';
 import apiService from '../services/apiService';
 import type { Match } from '../types/Match';
 import { MyTeamScreenNavigationProp } from '../types/navigation';
 import { formatMatchTime, getMatchStatusColor } from '../utils/matchUtils';
+import MatchCalendar from '../components/MatchCalendar';
 
 interface MyTeamScreenProps {
   navigation: MyTeamScreenNavigationProp['navigation'];
@@ -28,6 +31,12 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
   const [error, setError] = useState<string | null>(null);
   const [pageNo, setPageNo] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
+  const [tabIndex, setTabIndex] = useState(0);
+  const [tabRoutes] = useState([
+    { key: 'matches', title: 'Matches' },
+    { key: 'calendar', title: 'Calendar' }
+  ]);
+  const layout = useWindowDimensions();
 
   const teamId = '5179117'; // Default team ID from the API URL
 
@@ -207,35 +216,85 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
     );
   };
 
-  if (loading && matches.length === 0) {
+  const renderTabBar = (props: any) => (
+    <TabBar
+      {...props}
+      indicatorStyle={styles.tabIndicator}
+      style={styles.tabBar}
+      labelStyle={styles.tabLabel}
+      activeColor="#0066cc"
+      inactiveColor="#666"
+    />
+  );
+
+  const renderMatchesTab = () => {
+    if (loading && matches.length === 0) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0066cc" />
+          <Text style={styles.loadingText}>Loading team matches...</Text>
+        </View>
+      );
+    }
+
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={styles.loadingText}>Loading team matches...</Text>
+      <View style={styles.tabContent}>
+        <FlatList
+          data={matches}
+          renderItem={renderMatch}
+          keyExtractor={(item) => (item.id || item.match_id || Math.random()).toString()}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#0066cc']}
+              tintColor="#0066cc"
+            />
+          }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmpty}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={matches.length === 0 ? styles.emptyListContainer : undefined}
+        />
       </View>
     );
-  }
+  };
+
+  const renderCalendarTab = () => {
+    return (
+      <View style={styles.tabContent}>
+        <MatchCalendar
+          matches={matches}
+          loading={loading}
+          onMatchPress={handleMatchPress}
+          onRefresh={handleRefresh}
+        />
+      </View>
+    );
+  };
+
+  const renderScene = ({ route }: { route: { key: string; title: string } }) => {
+    switch (route.key) {
+      case 'matches':
+        return renderMatchesTab();
+      case 'calendar':
+        return renderCalendarTab();
+      default:
+        return null;
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={matches}
-        renderItem={renderMatch}
-        keyExtractor={(item) => (item.id || item.match_id || Math.random()).toString()}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#0066cc']}
-            tintColor="#0066cc"
-          />
-        }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmpty}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={matches.length === 0 ? styles.emptyListContainer : undefined}
+      <TabView
+        navigationState={{ index: tabIndex, routes: tabRoutes }}
+        renderScene={renderScene}
+        onIndexChange={setTabIndex}
+        initialLayout={{ width: layout.width }}
+        renderTabBar={renderTabBar}
+        style={{ flex: 1 }}
       />
     </View>
   );
@@ -243,6 +302,26 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  tabBar: {
+    backgroundColor: '#fff',
+    elevation: 0,
+    shadowOpacity: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  tabIndicator: {
+    backgroundColor: '#0066cc',
+    height: 3,
+  },
+  tabLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    textTransform: 'none',
+  },
+  tabContent: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
