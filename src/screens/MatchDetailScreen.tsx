@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Ground } from '../types/Ground';
+import type { Match } from '../types/Match';
 import { MatchDetailScreenNavigationProp } from '../types/navigation';
 
 import {
@@ -21,6 +22,7 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import Clipboard from '@react-native-clipboard/clipboard';
 import apiService from '../services/apiService';
 import GroundMapView from '../components/GroundMapView';
+import googleMapsService, { GoogleMapsPlace } from '../services/googleMapsService';
 
 interface Innings {
   teamName: string;
@@ -43,6 +45,7 @@ interface MatchDetailScreenProps {
 const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const { matchId, tournamentName, teamNames, groundName, groundId, city, defaultTab } = route.params;
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
+  const [matchData, setMatchData] = useState<Match | null>(null);
   const [groundData, setGroundData] = useState<Ground | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [groundLoading, setGroundLoading] = useState<boolean>(false);
@@ -62,9 +65,21 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const [showGroundDropdown, setShowGroundDropdown] = useState<boolean>(false);
   const [selectedGroundForWhatsApp, setSelectedGroundForWhatsApp] = useState<Ground | null>(null);
   const [availableGrounds, setAvailableGrounds] = useState<Ground[]>([]);
+  const [showGoogleMapsModal, setShowGoogleMapsModal] = useState<boolean>(false);
+  const [googleMapsPlaces, setGoogleMapsPlaces] = useState<GoogleMapsPlace[]>([]);
+  const [selectedGoogleMapsPlace, setSelectedGoogleMapsPlace] = useState<GoogleMapsPlace | null>(null);
+  const [searchingPlaces, setSearchingPlaces] = useState<boolean>(false);
+  const [selectedBallJersey, setSelectedBallJersey] = useState<string>('White ball, Coloured Jersey');
+  const [showBallJerseyDropdown, setShowBallJerseyDropdown] = useState<boolean>(false);
   const layout = useWindowDimensions();
 
+  const ballJerseyOptions = [
+    'White ball, Coloured Jersey',
+    'Red Ball, White Jersey'
+  ];
+
   useEffect(() => {
+    fetchMatchData();
     fetchScorecard();
     if (groundId) {
       fetchGroundDetail();
@@ -117,6 +132,39 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
       }
     }
   }, [scorecard]);
+
+  const fetchMatchData = async () => {
+    try {
+      // Fetch matches from the team matches API to get match details
+      const response = await apiService.getTeamMatches('5179117', 1, 100); // Get first 100 matches
+      if (response.status && response.data) {
+        // Find the specific match by ID
+        const match = response.data.find((m: Match) => 
+          m.match_id?.toString() === matchId || m.id?.toString() === matchId
+        );
+        if (match) {
+          setMatchData(match);
+        } else {
+          console.log('Match not found in current page, trying more pages...');
+          // If not found in first page, try a few more pages
+          for (let page = 2; page <= 5; page++) {
+            const pageResponse = await apiService.getTeamMatches('5179117', page, 100);
+            if (pageResponse.status && pageResponse.data) {
+              const foundMatch = pageResponse.data.find((m: Match) => 
+                m.match_id?.toString() === matchId || m.id?.toString() === matchId
+              );
+              if (foundMatch) {
+                setMatchData(foundMatch);
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching match data:', error);
+    }
+  };
 
   const fetchScorecard = async () => {
     try {
@@ -208,30 +256,44 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   };
 
   const generateWhatsAppMessage = () => {
-    const matchInfo = scorecard?.pageProps?.matchInfo;
     const selectedGround = selectedGroundForWhatsApp || groundData;
 
-    // Format date
-    const matchDate = matchInfo?.startDateTime 
-      ? new Date(matchInfo.startDateTime).toLocaleDateString('en-GB', {
+    // Format date - use matchData instead of scorecard
+    const matchDate = matchData?.match_start_time || matchData?.start_time
+      ? new Date(matchData.match_start_time || matchData.start_time || '').toLocaleDateString('en-GB', {
           day: 'numeric',
           month: 'long',
           weekday: 'long'
         })
       : 'TBD';
 
-    // Format time
-    const reportingTime = matchInfo?.startDateTime 
-      ? new Date(matchInfo.startDateTime).toLocaleTimeString('en-US', {
+    // Format match time
+    const matchTime = matchData?.match_start_time || matchData?.start_time
+      ? new Date(matchData.match_start_time || matchData.start_time || '').toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           hour12: true
         })
       : 'TBD';
 
+    // Format time - reporting time is 30 minutes before match time
+    const reportingTime = matchData?.match_start_time || matchData?.start_time
+      ? (() => {
+          const matchDateTime = new Date(matchData.match_start_time || matchData.start_time || '');
+          const reportingDateTime = new Date(matchDateTime.getTime() - 30 * 60 * 1000); // Subtract 30 minutes
+          return reportingDateTime.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+        })()
+      : 'TBD';
+
     // Generate Google Maps link
     let locationLink = '';
-    if (selectedGround?.latitude && selectedGround?.longitude) {
+    if (selectedGoogleMapsPlace) {
+      locationLink = googleMapsService.generateMapsUrl(selectedGoogleMapsPlace);
+    } else if (selectedGround?.latitude && selectedGround?.longitude) {
       locationLink = `https://maps.google.com/?q=${selectedGround.latitude},${selectedGround.longitude}`;
     } else if (selectedGround?.place_id) {
       locationLink = `https://maps.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
@@ -246,9 +308,10 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
 ${teamNames.team1} VS ${teamNames.team2}
 
 📅 Match Date: ${matchDate}
+🕐 Match Time: ${matchTime}
 ⌚ Reporting Time: ${reportingTime}
-🏏 Overs: ${matchInfo?.overs || '20'} Overs
-👕 Ball & Jersey: ${matchInfo?.ballType || 'White ball'}, Colored jersey
+🏏 Overs: ${matchData?.overs || '20'} Overs
+👕 Ball & Jersey: ${selectedBallJersey}
 📍Location: ${locationLink}
 
 Cricheroes : ${cricHeroesLink}
@@ -258,10 +321,35 @@ Cricheroes : ${cricHeroesLink}
     return message;
   };
 
+  const searchGoogleMapsPlaces = async () => {
+    setSearchingPlaces(true);
+    try {
+      const searchQuery = groundName || selectedGroundForWhatsApp?.name || 'Cricket Ground';
+      const places = await googleMapsService.searchPlaces(searchQuery);
+      setGoogleMapsPlaces(places);
+      setShowGoogleMapsModal(true);
+    } catch (error) {
+      console.error('Error searching Google Maps places:', error);
+      Alert.alert(
+        'Error',
+        'Failed to search for places. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setSearchingPlaces(false);
+    }
+  };
+
   const copyToWhatsApp = () => {
+    // First search for Google Maps places
+    searchGoogleMapsPlaces();
+  };
+
+  const copyToWhatsAppWithSelectedPlace = () => {
     try {
       const message = generateWhatsAppMessage();
       Clipboard.setString(message);
+      setShowGoogleMapsModal(false);
       Alert.alert(
         'Success',
         'WhatsApp message copied to clipboard! You can now paste it in WhatsApp.',
@@ -279,6 +367,7 @@ Cricheroes : ${cricHeroesLink}
   const onRefresh = () => {
     setRefreshing(true);
     Promise.all([
+      fetchMatchData(),
       fetchScorecard(),
       groundId ? fetchGroundDetail() : Promise.resolve()
     ]).finally(() => {
@@ -287,13 +376,11 @@ Cricheroes : ${cricHeroesLink}
   };
 
   const renderMatchHeader = () => {
-    const matchInfo = scorecard?.pageProps?.matchInfo;
-
     return (
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.tournamentName}>
-            {matchInfo?.tournamentName || tournamentName}
+            {matchData?.tournament_name || tournamentName}
           </Text>
           {matchStatus === 'live' && (
             <View style={styles.liveIndicator}>
@@ -308,46 +395,39 @@ Cricheroes : ${cricHeroesLink}
         </Text>
 
         {/* Additional Match Details */}
-        {matchInfo?.tournamentRound && (
-          <Text style={styles.matchSubtitle}>{matchInfo.tournamentRound}</Text>
+        {matchData?.tournament_round_name && (
+          <Text style={styles.matchSubtitle}>{matchData.tournament_round_name}</Text>
         )}
 
-        {matchInfo?.groundName && matchInfo?.cityName && (
+        {matchData?.ground_name && (
           <View style={styles.venueInfo}>
             <Ionicons name="location-outline" size={14} color="#666" />
             <Text style={styles.venueText}>
-              {matchInfo.groundName}, {matchInfo.cityName}
+              {matchData.ground_name}
             </Text>
           </View>
         )}
 
-        {matchInfo?.startDateTime && (
+        {(matchData?.match_start_time || matchData?.start_time) && (
           <View style={styles.matchTimeInfo}>
             <Ionicons name="time-outline" size={14} color="#666" />
             <Text style={styles.matchTimeText}>
-              {new Date(matchInfo.startDateTime).toLocaleString()}
+              {new Date(matchData.match_start_time || matchData.start_time || '').toLocaleString()}
             </Text>
           </View>
         )}
 
-        {matchInfo?.tossDetails && (
-          <View style={styles.tossInfo}>
-            <Ionicons name="disc-outline" size={14} color="#666" />
-            <Text style={styles.tossText}>{matchInfo.tossDetails}</Text>
-          </View>
-        )}
-
-        {matchInfo?.matchType && matchInfo?.overs && (
+        {matchData?.match_type && matchData?.overs && (
           <View style={styles.matchFormatInfo}>
             <Text style={styles.matchFormatText}>
-              {matchInfo.matchType} • {matchInfo.overs} overs • {matchInfo.ballType || 'Cricket'}
+              {matchData.match_type} • {matchData.overs} overs • Cricket
             </Text>
           </View>
         )}
 
-        {matchInfo?.matchSummary?.summary && (
+        {matchData?.match_result && (
           <View style={styles.matchSummaryInfo}>
-            <Text style={styles.matchSummaryText}>{matchInfo.matchSummary.summary}</Text>
+            <Text style={styles.matchSummaryText}>{matchData.match_result}</Text>
           </View>
         )}
 
@@ -696,6 +776,23 @@ Cricheroes : ${cricHeroesLink}
             </View>
           </View>
 
+          {/* Ball & Jersey Selection */}
+          <View style={styles.infoRow}>
+            <Ionicons name="shirt-outline" size={20} color="#0066cc" />
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Ball & Jersey</Text>
+              <TouchableOpacity 
+                style={styles.groundSelector}
+                onPress={() => setShowBallJerseyDropdown(true)}
+              >
+                <Text style={styles.groundSelectorText}>
+                  {selectedBallJersey}
+                </Text>
+                <Ionicons name="chevron-down-outline" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Copy to WhatsApp Button */}
           <TouchableOpacity style={styles.whatsappButton} onPress={copyToWhatsApp}>
             <Ionicons name="logo-whatsapp" size={20} color="#fff" />
@@ -749,6 +846,119 @@ Cricheroes : ${cricHeroesLink}
                   <Text style={styles.emptyGroundsText}>No grounds available</Text>
                 </View>
               }
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Google Maps Place Selection Modal */}
+      <Modal
+        visible={showGoogleMapsModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowGoogleMapsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Location from Google Maps</Text>
+              <TouchableOpacity onPress={() => setShowGoogleMapsModal(false)}>
+                <Ionicons name="close-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {searchingPlaces ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#0066cc" />
+                <Text style={styles.loadingText}>Searching places...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={googleMapsPlaces}
+                keyExtractor={(item) => item.place_id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.groundOption,
+                      selectedGoogleMapsPlace?.place_id === item.place_id && styles.selectedGroundOption
+                    ]}
+                    onPress={() => {
+                      setSelectedGoogleMapsPlace(item);
+                    }}
+                  >
+                    <View style={styles.groundOptionContent}>
+                      <Text style={styles.groundOptionName}>{item.name}</Text>
+                      <Text style={styles.groundOptionAddress}>{item.formatted_address}</Text>
+                      <Text style={styles.groundOptionCity}>
+                        {item.types.join(', ')}
+                      </Text>
+                    </View>
+                    {selectedGoogleMapsPlace?.place_id === item.place_id && (
+                      <Ionicons name="checkmark-circle" size={20} color="#0066cc" />
+                    )}
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={styles.emptyGroundsList}>
+                    <Text style={styles.emptyGroundsText}>No places found</Text>
+                  </View>
+                }
+              />
+            )}
+
+            {selectedGoogleMapsPlace && (
+              <View style={styles.modalFooter}>
+                <TouchableOpacity 
+                  style={styles.confirmButton} 
+                  onPress={copyToWhatsAppWithSelectedPlace}
+                >
+                  <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+                  <Text style={styles.confirmButtonText}>Copy to WhatsApp</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Ball & Jersey Selection Modal */}
+      <Modal
+        visible={showBallJerseyDropdown}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowBallJerseyDropdown(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Ball & Jersey</Text>
+              <TouchableOpacity onPress={() => setShowBallJerseyDropdown(false)}>
+                <Ionicons name="close-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={ballJerseyOptions}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.groundOption,
+                    selectedBallJersey === item && styles.selectedGroundOption
+                  ]}
+                  onPress={() => {
+                    setSelectedBallJersey(item);
+                    setShowBallJerseyDropdown(false);
+                  }}
+                >
+                  <View style={styles.groundOptionContent}>
+                    <Text style={styles.groundOptionName}>{item}</Text>
+                  </View>
+                  {selectedBallJersey === item && (
+                    <Ionicons name="checkmark-circle" size={20} color="#0066cc" />
+                  )}
+                </TouchableOpacity>
+              )}
             />
           </View>
         </View>
@@ -1530,6 +1740,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  confirmButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#25D366',
+    borderRadius: 8,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
 

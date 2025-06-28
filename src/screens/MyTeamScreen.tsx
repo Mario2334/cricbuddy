@@ -51,7 +51,7 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
 
       const response = await apiService.getTeamMatches(teamId, page, 12);
 
-      const newMatches = response.matches || [];
+      const newMatches = response.data || [];
 
       if (isRefresh || page === 1) {
         setMatches(newMatches);

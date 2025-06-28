@@ -5,7 +5,7 @@
  * with the same parameters, headers, and cookies.
  */
 
-import type { Match } from '../types/Match';
+import type { Match, TeamMatchResponse, MatchSummary, TeamInnings } from '../types/Match';
 import type { Ground, GroundDetailResponse } from '../types/Ground';
 
 // Core interfaces
@@ -944,14 +944,14 @@ class ApiService {
    * @param {number} pageNo - Page number (default: 1)
    * @param {number} pageSize - Number of matches per page (default: 12)
    * @param {number} datetime - Timestamp for consistency (default: current time)
-   * @returns {Promise<MatchResponse>} - API response with team matches
+   * @returns {Promise<TeamMatchResponse>} - API response with team matches
    */
   async getTeamMatches(
     teamId: string = '5179117',
     pageNo: number = 1,
     pageSize: number = 12,
     datetime: number = Date.now()
-  ): Promise<MatchResponse> {
+  ): Promise<TeamMatchResponse> {
     const url = `${this.baseApiUrl}/team/get-team-match/${teamId}?pagesize=${pageSize}&teamId=${teamId}&pageno=${pageNo}&datetime=${datetime}`;
     const cacheKey = `team_matches_${teamId}_${pageNo}_${pageSize}_${Math.floor(datetime / 30000)}`;
 
@@ -970,28 +970,119 @@ class ApiService {
       throw new Error(result.error || 'Failed to fetch team matches');
     }
 
-    // Map the API response to our expected format
+    // Map the API response to our expected format with complete field mapping
     const rawMatches = result.data?.data || [];
-    const matches = rawMatches.map((match: any) => ({
-      id: match.match_id,
+    const matches: Match[] = rawMatches.map((match: any) => ({
+      // Basic match identification
       match_id: match.match_id,
+      id: match.match_id, // Alternative naming
+
+      // Match type and format
+      match_type: match.match_type,
+      match_format: match.match_type, // Alternative naming for match_type
+      match_type_id: match.match_type_id,
+      is_super_over: match.is_super_over,
+      match_event_type: match.match_event_type || '',
+      match_event: match.match_event || '',
+      match_inning: match.match_inning,
+      ball_type: match.ball_type,
+      current_inning: match.current_inning,
+
+      // Match timing
+      match_start_time: match.match_start_time,
+      start_time: match.match_start_time, // Alternative naming for match_start_time
+      match_end_time: match.match_end_time || '',
+      created_date: match.created_date,
+      created_by: match.created_by,
+
+      // Location details
+      city_id: match.city_id,
+      city_name: match.city_name,
+      ground_id: match.ground_id,
+      ground_name: match.ground_name,
+      latitude: match.latitude,
+      longitude: match.longitude,
+
+      // Match format details
+      overs: match.overs,
+      balls: match.balls,
+      over_reduce: match.over_reduce || '',
+      is_dl: match.is_dl,
+      is_vjd: match.is_vjd,
+      type: match.type,
+
+      // Match status and result
+      status: match.status,
+      winning_team_id: match.winning_team_id || '',
+      winning_team: match.winning_team || '',
+      match_result: match.match_result || '',
+      win_by: match.win_by || '',
+
+      // Team A details
+      team_a_id: match.team_a_id,
+      team_a: match.team_a,
+      team1_name: match.team_a, // Alternative naming convention
+      team_a_logo: match.team_a_logo || '',
+      is_a_home_team: match.is_a_home_team,
+
+      // Team B details
+      team_b_id: match.team_b_id,
+      team_b: match.team_b,
+      team2_name: match.team_b, // Alternative naming convention
+      team_b_logo: match.team_b_logo || '',
+      is_b_home_team: match.is_b_home_team,
+
+      // Player awards
+      pom_player_id: match.pom_player_id, // Player of the Match
+      bba_player_id: match.bba_player_id, // Best Batsman
+      bbo_player_id: match.bbo_player_id, // Best Bowler
+
+      // Tournament details
+      tournament_id: match.tournament_id || '',
       tournament_name: match.tournament_name || '',
       tournament_round_name: match.tournament_round_name,
-      round_name: match.tournament_round_name,
-      status: match.status,
-      team_a: match.team_a,
-      team_b: match.team_b,
-      team1_name: match.team_a,
-      team2_name: match.team_b,
-      match_summary: match.match_summary,
-      match_type: match.match_type,
-      match_format: match.match_type,
-      overs: match.overs,
-      ground_name: match.ground_name,
-      ground_id: match.ground_id,
-      match_start_time: match.match_start_time,
-      start_time: match.match_start_time,
-      match_result: match.match_result,
+      round_name: match.tournament_round_name, // Alternative naming
+      tournament_category_id: match.tournament_category_id || '',
+      tournament_round_id: match.tournament_round_id || '',
+
+      // Association details
+      association_id: match.association_id,
+      association_year_id: match.association_year_id,
+      association_name: match.association_name || '',
+      association_logo: match.association_logo || '',
+
+      // Streaming and media
+      steaming_url: match.steaming_url || '',
+      is_ticker: match.is_ticker,
+      is_enable_tournament_streaming: match.is_enable_tournament_streaming,
+      is_enable_match_streaming: match.is_enable_match_streaming,
+      is_video_analyst: match.is_video_analyst,
+      is_backend_match: match.is_backend_match,
+
+      // Match settings
+      is_fake_match: match.is_fake_match,
+      is_live_match_enable_in_web: match.is_live_match_enable_in_web,
+      is_live_match_enable_in_app: match.is_live_match_enable_in_app,
+      match_category_name: match.match_category_name || '',
+      is_having_ai_commentary: match.is_having_ai_commentary,
+      index: match.index,
+
+      // Match summary and scores
+      match_summary: match.match_summary || {
+        team_id: -1,
+        summary: '',
+        short_summary: '',
+        full_summary: '',
+        rrr: '0.00',
+        target: '-'
+      },
+      team_a_summary: match.team_a_summary || '',
+      team_a_innings: match.team_a_innings || [],
+      team_b_summary: match.team_b_summary || '',
+      team_b_innings: match.team_b_innings || [],
+      toss_details: match.toss_details || '',
+
+      // Legacy support for existing code
       team1: match.team_a_id ? {
         id: match.team_a_id,
         name: match.team_a,
@@ -1002,7 +1093,7 @@ class ApiService {
         name: match.team_b,
         short_name: match.team_b
       } : undefined,
-      // Add score data for live and past matches
+      // Mini score information for live and past matches
       team1_score: (match.status === 'live' || match.status === 'past') && (match.team_a_score || match.team1_score || match.team_a_runs !== undefined) ? {
         runs: match.team_a_runs || match.team1_runs || match.team_a_score?.runs || 0,
         wickets: match.team_a_wickets || match.team1_wickets || match.team_a_score?.wickets || 0,
@@ -1018,10 +1109,10 @@ class ApiService {
     }));
 
     return {
-      matches,
-      page: result.data?.page || null,
-      status: result.data?.status || 'success',
-      config: result.data?.config || {}
+      status: result.data?.status || false,
+      page: result.data?.page || { next: '' },
+      data: matches,
+      config: result.data?.config || { sponsor_data: [] }
     };
   }
 
