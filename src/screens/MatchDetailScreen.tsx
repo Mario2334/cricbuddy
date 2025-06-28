@@ -12,9 +12,13 @@ import {
   RefreshControl,
   TouchableOpacity,
   useWindowDimensions,
+  Alert,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TabView, TabBar } from 'react-native-tab-view';
+import Clipboard from '@react-native-clipboard/clipboard';
 import apiService from '../services/apiService';
 import GroundMapView from '../components/GroundMapView';
 
@@ -55,6 +59,9 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const [scorecardRoutes, setScorecardRoutes] = useState<Array<{ key: string; title: string; innings: Innings }>>([]);
   const [matchStatus, setMatchStatus] = useState<string>('unknown');
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [showGroundDropdown, setShowGroundDropdown] = useState<boolean>(false);
+  const [selectedGroundForWhatsApp, setSelectedGroundForWhatsApp] = useState<Ground | null>(null);
+  const [availableGrounds, setAvailableGrounds] = useState<Ground[]>([]);
   const layout = useWindowDimensions();
 
   useEffect(() => {
@@ -176,6 +183,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
 
       if (response.success && response.data) {
         setGroundData(response.data);
+        // Set current ground as default selection for WhatsApp
+        setSelectedGroundForWhatsApp(response.data);
       } else {
         console.error('Failed to load ground details:', response.error);
       }
@@ -183,6 +192,87 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
       console.error('Error fetching ground details:', error);
     } finally {
       setGroundLoading(false);
+    }
+  };
+
+  const fetchAvailableGrounds = async () => {
+    try {
+      // This is a placeholder - you might need to implement a grounds search API
+      // For now, we'll use the current ground data if available
+      if (groundData) {
+        setAvailableGrounds([groundData]);
+      }
+    } catch (error) {
+      console.error('Error fetching available grounds:', error);
+    }
+  };
+
+  const generateWhatsAppMessage = () => {
+    const matchInfo = scorecard?.pageProps?.matchInfo;
+    const selectedGround = selectedGroundForWhatsApp || groundData;
+
+    // Format date
+    const matchDate = matchInfo?.startDateTime 
+      ? new Date(matchInfo.startDateTime).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'long',
+          weekday: 'long'
+        })
+      : 'TBD';
+
+    // Format time
+    const reportingTime = matchInfo?.startDateTime 
+      ? new Date(matchInfo.startDateTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        })
+      : 'TBD';
+
+    // Generate Google Maps link
+    let locationLink = '';
+    if (selectedGround?.latitude && selectedGround?.longitude) {
+      locationLink = `https://maps.google.com/?q=${selectedGround.latitude},${selectedGround.longitude}`;
+    } else if (selectedGround?.place_id) {
+      locationLink = `https://maps.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
+    } else {
+      locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
+    }
+
+    // Generate Cricheroes link
+    const cricHeroesLink = `https://cricheroes.com/scorecard/${matchId}/${tournamentName?.toLowerCase().replace(/\s+/g, '-')}/${teamNames.team1?.toLowerCase().replace(/\s+/g, '-')}-vs-${teamNames.team2?.toLowerCase().replace(/\s+/g, '-')}`;
+
+    const message = `${tournamentName || 'Cricket Tournament'} match
+${teamNames.team1} VS ${teamNames.team2}
+
+📅 Match Date: ${matchDate}
+⌚ Reporting Time: ${reportingTime}
+🏏 Overs: ${matchInfo?.overs || '20'} Overs
+👕 Ball & Jersey: ${matchInfo?.ballType || 'White ball'}, Colored jersey
+📍Location: ${locationLink}
+
+Cricheroes : ${cricHeroesLink}
+
+ 1.⁠ ⁠Sanket`;
+
+    return message;
+  };
+
+  const copyToWhatsApp = () => {
+    try {
+      const message = generateWhatsAppMessage();
+      Clipboard.setString(message);
+      Alert.alert(
+        'Success',
+        'WhatsApp message copied to clipboard! You can now paste it in WhatsApp.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to copy message to clipboard. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -581,7 +671,88 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
             </View>
           </View>
         )}
+
+        {/* WhatsApp Copy Section */}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoSectionTitle}>Share Match Details</Text>
+
+          {/* Ground Selection */}
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={20} color="#0066cc" />
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Selected Ground</Text>
+              <TouchableOpacity 
+                style={styles.groundSelector}
+                onPress={() => {
+                  fetchAvailableGrounds();
+                  setShowGroundDropdown(true);
+                }}
+              >
+                <Text style={styles.groundSelectorText}>
+                  {selectedGroundForWhatsApp?.name || groundName || 'Select Ground'}
+                </Text>
+                <Ionicons name="chevron-down-outline" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Copy to WhatsApp Button */}
+          <TouchableOpacity style={styles.whatsappButton} onPress={copyToWhatsApp}>
+            <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+            <Text style={styles.whatsappButtonText}>Copy to WhatsApp</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Ground Selection Modal */}
+      <Modal
+        visible={showGroundDropdown}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowGroundDropdown(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Ground</Text>
+              <TouchableOpacity onPress={() => setShowGroundDropdown(false)}>
+                <Ionicons name="close-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={availableGrounds}
+              keyExtractor={(item) => item.ground_id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.groundOption,
+                    selectedGroundForWhatsApp?.ground_id === item.ground_id && styles.selectedGroundOption
+                  ]}
+                  onPress={() => {
+                    setSelectedGroundForWhatsApp(item);
+                    setShowGroundDropdown(false);
+                  }}
+                >
+                  <View style={styles.groundOptionContent}>
+                    <Text style={styles.groundOptionName}>{item.name}</Text>
+                    <Text style={styles.groundOptionAddress}>{item.address}</Text>
+                    <Text style={styles.groundOptionCity}>{item.city_name}</Text>
+                  </View>
+                  {selectedGroundForWhatsApp?.ground_id === item.ground_id && (
+                    <Ionicons name="checkmark-circle" size={20} color="#0066cc" />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View style={styles.emptyGroundsList}>
+                  <Text style={styles.emptyGroundsText}>No grounds available</Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 
@@ -1256,6 +1427,109 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  // WhatsApp Copy Styles
+  groundSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    marginTop: 4,
+  },
+  groundSelectorText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+  },
+  whatsappButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#25D366',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  whatsappButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  groundOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  selectedGroundOption: {
+    backgroundColor: '#f0f8ff',
+  },
+  groundOptionContent: {
+    flex: 1,
+  },
+  groundOptionName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  groundOptionAddress: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  groundOptionCity: {
+    fontSize: 12,
+    color: '#999',
+  },
+  emptyGroundsList: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyGroundsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 

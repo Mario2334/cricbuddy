@@ -18,7 +18,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "This app uses location services to show your position on the map and provide directions to cricket grounds.",
-        "LSApplicationQueriesSchemes": ["comgooglemaps"]
+        "LSApplicationQueriesSchemes": [
+          "comgooglemaps"
+        ]
       },
       "config": {
         "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
@@ -32,7 +34,8 @@
       "edgeToEdgeEnabled": true,
       "config": {
         "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
-      }
+      },
+      "package": "com.sanket.django.cricbuddy"
     },
     "web": {
       "favicon": "./assets/favicon.png"
