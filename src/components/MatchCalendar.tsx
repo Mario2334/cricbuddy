@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Match } from '../types/Match';
@@ -16,6 +19,7 @@ interface MatchCalendarProps {
   loading: boolean;
   onMatchPress: (match: Match) => void;
   onRefresh: () => void;
+  onRemoveMatch?: (match: Match) => void;
 }
 
 interface CalendarDay {
@@ -24,11 +28,133 @@ interface CalendarDay {
   isCurrentMonth: boolean;
 }
 
+interface SwipeableMatchItemProps {
+  match: Match;
+  onPress: () => void;
+  onRemove?: () => void;
+}
+
+const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
+  match,
+  onPress,
+  onRemove,
+}) => {
+  const screenWidth = Dimensions.get('window').width;
+  const swipeThreshold = screenWidth * 0.3; // 30% of screen width
+  const deleteButtonWidth = 80;
+
+  const translateX = new Animated.Value(0);
+  const [isSwipeActive, setIsSwipeActive] = useState(false);
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      // Only respond to horizontal swipes and if onRemove is provided
+      return onRemove && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
+    },
+    onPanResponderGrant: () => {
+      setIsSwipeActive(true);
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      // Only allow left swipe (negative dx)
+      if (gestureState.dx < 0) {
+        const clampedDx = Math.max(gestureState.dx, -deleteButtonWidth);
+        translateX.setValue(clampedDx);
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      setIsSwipeActive(false);
+
+      if (gestureState.dx < -swipeThreshold) {
+        // Swipe far enough to show delete button
+        Animated.spring(translateX, {
+          toValue: -deleteButtonWidth,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        // Snap back to original position
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
+
+  const resetSwipe = () => {
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePress = () => {
+    if (isSwipeActive) {
+      resetSwipe();
+    } else {
+      onPress();
+    }
+  };
+
+  const handleRemove = () => {
+    if (onRemove) {
+      onRemove();
+      resetSwipe();
+    }
+  };
+
+  return (
+    <View style={styles.swipeableContainer}>
+      {/* Delete button (behind the item) */}
+      {onRemove && (
+        <View style={styles.deleteButtonContainer}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleRemove}
+          >
+            <Ionicons name="trash-outline" size={20} color="#fff" />
+            <Text style={styles.deleteButtonText}>Remove</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Main match item */}
+      <Animated.View
+        style={[
+          styles.swipeableItem,
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+        {...(onRemove ? panResponder.panHandlers : {})}
+      >
+        <TouchableOpacity
+          style={styles.matchItem}
+          onPress={handlePress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.matchInfo}>
+            <Text style={styles.matchTeams}>
+              {match.team1_name || match.team_a} vs {match.team2_name || match.team_b}
+            </Text>
+            <Text style={styles.matchTime}>
+              {formatMatchTime(match.match_start_time || match.start_time || '')}
+            </Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getMatchStatusColor(match.status) }]}>
+            <Text style={styles.statusText}>{match.status.toUpperCase()}</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+};
+
 const MatchCalendar: React.FC<MatchCalendarProps> = ({
   matches,
   loading,
   onMatchPress,
   onRefresh,
+  onRemoveMatch,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
@@ -47,19 +173,19 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
+
     // Get first day of the month
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
+
     // Get the day of week for the first day (0 = Sunday)
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
+
     // Generate 42 days (6 weeks) for the calendar grid
     const days: CalendarDay[] = [];
     const currentDateObj = new Date(startDate);
-    
+
     for (let i = 0; i < 42; i++) {
       const dayMatches = matches.filter(match => {
         const matchDate = new Date(match.match_start_time || match.start_time || '');
@@ -100,11 +226,11 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       >
         <Ionicons name="chevron-back" size={24} color="#0066cc" />
       </TouchableOpacity>
-      
+
       <Text style={styles.monthYear}>
         {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
       </Text>
-      
+
       <TouchableOpacity
         style={styles.navButton}
         onPress={() => navigateMonth('next')}
@@ -154,7 +280,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
         >
           {day.date.getDate()}
         </Text>
-        
+
         {day.matches.length > 0 && (
           <View style={styles.matchIndicators}>
             {day.matches.slice(0, 3).map((match, matchIndex) => (
@@ -212,23 +338,12 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
           <View style={styles.matchSection}>
             <Text style={styles.sectionTitle}>Today's Matches</Text>
             {todayMatches.map((match, index) => (
-              <TouchableOpacity
+              <SwipeableMatchItem
                 key={index}
-                style={styles.matchItem}
+                match={match}
                 onPress={() => onMatchPress(match)}
-              >
-                <View style={styles.matchInfo}>
-                  <Text style={styles.matchTeams}>
-                    {match.team1_name || match.team_a} vs {match.team2_name || match.team_b}
-                  </Text>
-                  <Text style={styles.matchTime}>
-                    {formatMatchTime(match.match_start_time || match.start_time || '')}
-                  </Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: getMatchStatusColor(match.status) }]}>
-                  <Text style={styles.statusText}>{match.status.toUpperCase()}</Text>
-                </View>
-              </TouchableOpacity>
+                onRemove={onRemoveMatch ? () => onRemoveMatch(match) : undefined}
+              />
             ))}
           </View>
         )}
@@ -237,23 +352,12 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
           <View style={styles.matchSection}>
             <Text style={styles.sectionTitle}>Upcoming Matches</Text>
             {upcomingMatches.map((match, index) => (
-              <TouchableOpacity
+              <SwipeableMatchItem
                 key={index}
-                style={styles.matchItem}
+                match={match}
                 onPress={() => onMatchPress(match)}
-              >
-                <View style={styles.matchInfo}>
-                  <Text style={styles.matchTeams}>
-                    {match.team1_name || match.team_a} vs {match.team2_name || match.team_b}
-                  </Text>
-                  <Text style={styles.matchTime}>
-                    {formatMatchTime(match.match_start_time || match.start_time || '')}
-                  </Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: getMatchStatusColor(match.status) }]}>
-                  <Text style={styles.statusText}>{match.status.toUpperCase()}</Text>
-                </View>
-              </TouchableOpacity>
+                onRemove={onRemoveMatch ? () => onRemoveMatch(match) : undefined}
+              />
             ))}
           </View>
         )}
@@ -435,6 +539,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  // Swipeable styles
+  swipeableContainer: {
+    position: 'relative',
+    marginBottom: 8,
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ff4444',
+    borderRadius: 8,
+  },
+  deleteButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  swipeableItem: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
   },
 });
 

@@ -1065,6 +1065,8 @@ class ApiService {
       is_live_match_enable_in_app: match.is_live_match_enable_in_app,
       match_category_name: match.match_category_name || '',
       is_having_ai_commentary: match.is_having_ai_commentary,
+      is_watch_live: match.is_watch_live || 0,
+      is_in_review: match.is_in_review || 0,
       index: match.index,
 
       // Match summary and scores

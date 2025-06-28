@@ -73,6 +73,7 @@ const MatchList: React.FC<MatchListProps> = ({
           groundName: item.ground_name,
           groundId: item.ground_id,
           city: undefined, // Add city field to Match type if available
+          matchStartTime: item.match_start_time || item.start_time,
           defaultTab: item.status === 'live' || item.status === 'past' ? 'scorecard' : 'info',
         });
       }

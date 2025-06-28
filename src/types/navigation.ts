@@ -15,6 +15,7 @@ export type RootStackParamList = {
     groundName?: string;
     groundId?: number;
     city?: string;
+    matchStartTime?: string;
     defaultTab?: 'info' | 'scorecard';
     // Add any other params that MatchDetailScreen expects
   };
@@ -25,6 +26,7 @@ export type TabParamList = {
   Home: undefined;
   Stats: undefined;
   MyTeam: undefined;
+  Calendar: undefined;
 };
 
 // Navigation props for each screen

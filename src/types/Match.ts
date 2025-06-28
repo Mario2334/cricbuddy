@@ -146,6 +146,8 @@ export interface Match {
   is_live_match_enable_in_app: number;
   match_category_name: string;
   is_having_ai_commentary: number;
+  is_watch_live: number;
+  is_in_review: number;
   index: number;
 
   // Match summary and scores

@@ -3,12 +3,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 
 // Import screens
 import HomeScreen from './src/screens/HomeScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import MatchDetailScreen from './src/screens/MatchDetailScreen';
 import MyTeamScreen from './src/screens/MyTeamScreen';
+import CalendarScreen from './src/screens/CalendarScreen';
 
 // Import navigation types
 import { 
@@ -96,55 +98,75 @@ const MyTeamStack: React.FC = () => {
 // Define the App component with proper typing
 const App: React.FC = () => {
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
-            let iconName: keyof typeof Ionicons.glyphMap = 'help';
+    <>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
+              let iconName: keyof typeof Ionicons.glyphMap = 'help';
 
-            if (route.name === 'Home') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Stats') {
-              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-            } else if (route.name === 'MyTeam') {
-              iconName = focused ? 'people' : 'people-outline';
-            }
+              if (route.name === 'Home') {
+                iconName = focused ? 'home' : 'home-outline';
+              } else if (route.name === 'Stats') {
+                iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+              } else if (route.name === 'MyTeam') {
+                iconName = focused ? 'people' : 'people-outline';
+              } else if (route.name === 'Calendar') {
+                iconName = focused ? 'calendar' : 'calendar-outline';
+              }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#0066cc',
-          tabBarInactiveTintColor: 'gray',
-          headerShown: false,
-        })}
-      >
-        <Tab.Screen 
-          name="Home" 
-          component={HomeStack} 
-        />
-        <Tab.Screen 
-          name="Stats" 
-          component={StatsScreen}
-          options={{
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: '#0066cc',
+              return <Ionicons name={iconName} size={size} color={color} />;
             },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }}
-        />
-        <Tab.Screen 
-          name="MyTeam" 
-          component={MyTeamStack}
-          options={{
-            title: 'My Team',
+            tabBarActiveTintColor: '#0066cc',
+            tabBarInactiveTintColor: 'gray',
             headerShown: false,
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+          })}
+        >
+          <Tab.Screen 
+            name="Home" 
+            component={HomeStack} 
+          />
+          <Tab.Screen 
+            name="Stats" 
+            component={StatsScreen}
+            options={{
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#0066cc',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+            }}
+          />
+          <Tab.Screen 
+            name="MyTeam" 
+            component={MyTeamStack}
+            options={{
+              title: 'My Team',
+              headerShown: false,
+            }}
+          />
+          <Tab.Screen 
+            name="Calendar" 
+            component={CalendarScreen}
+            options={{
+              title: 'Calendar',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#0066cc',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+        <Toast />
+    </>
   );
 };
 

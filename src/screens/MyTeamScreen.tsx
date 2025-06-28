@@ -97,6 +97,7 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
         groundName: item.ground_name,
         groundId: item.ground_id,
         city: undefined,
+        matchStartTime: item.match_start_time || item.start_time,
         defaultTab: item.status === 'live' || item.status === 'past' ? 'scorecard' : 'info',
       });
     }

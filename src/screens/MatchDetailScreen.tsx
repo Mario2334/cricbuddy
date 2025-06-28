@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import type { Ground } from '../types/Ground';
 import type { Match } from '../types/Match';
 import { MatchDetailScreenNavigationProp } from '../types/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 import {
   View,
@@ -43,7 +45,7 @@ interface MatchDetailScreenProps {
 }
 
 const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
-  const { matchId, tournamentName, teamNames, groundName, groundId, city, defaultTab } = route.params;
+  const { matchId, tournamentName, teamNames, groundName, groundId, city, matchStartTime, defaultTab } = route.params;
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
   const [matchData, setMatchData] = useState<Match | null>(null);
   const [groundData, setGroundData] = useState<Ground | null>(null);
@@ -71,6 +73,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const [searchingPlaces, setSearchingPlaces] = useState<boolean>(false);
   const [selectedBallJersey, setSelectedBallJersey] = useState<string>('White ball, Coloured Jersey');
   const [showBallJerseyDropdown, setShowBallJerseyDropdown] = useState<boolean>(false);
+  const [isScheduled, setIsScheduled] = useState<boolean>(false);
+  const [schedulingLoading, setSchedulingLoading] = useState<boolean>(false);
   const layout = useWindowDimensions();
 
   const ballJerseyOptions = [
@@ -84,6 +88,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
     if (groundId) {
       fetchGroundDetail();
     }
+    checkIfMatchIsScheduled();
   }, []);
 
   // Auto-refresh for live matches
@@ -144,6 +149,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         );
         if (match) {
           setMatchData(match);
+          return;
         } else {
           console.log('Match not found in current page, trying more pages...');
           // If not found in first page, try a few more pages
@@ -155,14 +161,47 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
               );
               if (foundMatch) {
                 setMatchData(foundMatch);
-                break;
+                return;
               }
             }
           }
         }
       }
+
+      // If match not found in API, create fallback data from route parameters
+      console.log('Match not found in API, creating fallback data from route parameters');
+      const fallbackMatchData: Partial<Match> = {
+        match_id: parseInt(matchId) || 0,
+        tournament_name: tournamentName,
+        team_a: teamNames.team1,
+        team_b: teamNames.team2,
+        ground_name: groundName,
+        ground_id: groundId || 0,
+        city_name: city,
+        match_type: 'T20', // Default match type
+        overs: 20, // Default overs
+        status: 'upcoming', // Default status
+        match_start_time: matchStartTime || undefined // Use actual match start time if available
+      };
+      setMatchData(fallbackMatchData as Match);
     } catch (error) {
       console.error('Error fetching match data:', error);
+      // Create fallback data even on error
+      console.log('Creating fallback data due to API error');
+      const fallbackMatchData: Partial<Match> = {
+        match_id: parseInt(matchId) || 0,
+        tournament_name: tournamentName,
+        team_a: teamNames.team1,
+        team_b: teamNames.team2,
+        ground_name: groundName,
+        ground_id: groundId || 0,
+        city_name: city,
+        match_type: 'T20', // Default match type
+        overs: 20, // Default overs
+        status: 'upcoming', // Default status
+        match_start_time: matchStartTime || undefined // Use actual match start time if available
+      };
+      setMatchData(fallbackMatchData as Match);
     }
   };
 
@@ -373,6 +412,124 @@ Cricheroes : ${cricHeroesLink}
     ]).finally(() => {
       setRefreshing(false);
     });
+  };
+
+  // Scheduling functions
+  const checkIfMatchIsScheduled = async () => {
+    try {
+      const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
+      if (scheduledMatches) {
+        const matches = JSON.parse(scheduledMatches);
+        const isCurrentMatchScheduled = matches.some((match: any) => match.matchId === matchId);
+        setIsScheduled(isCurrentMatchScheduled);
+      }
+    } catch (error) {
+      console.error('Error checking scheduled matches:', error);
+    }
+  };
+
+  const scheduleMatch = async () => {
+    console.log('scheduleMatch called, matchData:', matchData);
+
+    if (!matchData) {
+      console.log('matchData is null, showing toast');
+      Toast.show({
+        type: 'info',
+        text1: 'Loading',
+        text2: 'Match data is still loading. Please wait a moment and try again.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+      return;
+    }
+
+    setSchedulingLoading(true);
+    try {
+      const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
+      let matches = scheduledMatches ? JSON.parse(scheduledMatches) : [];
+
+      const matchToSchedule = {
+        matchId: matchId,
+        tournamentName: matchData.tournament_name || tournamentName,
+        teamNames: teamNames,
+        groundName: matchData.ground_name || groundName,
+        groundId: groundId,
+        city: matchData.city_name || city,
+        matchStartTime: matchData.match_start_time || matchData.start_time,
+        matchType: matchData.match_type,
+        overs: matchData.overs,
+        scheduledAt: new Date().toISOString()
+      };
+
+      console.log('Scheduling match:', matchToSchedule);
+
+      // Check if already scheduled
+      const alreadyScheduled = matches.some((match: any) => match.matchId === matchId);
+      if (!alreadyScheduled) {
+        matches.push(matchToSchedule);
+        await AsyncStorage.setItem('scheduledMatches', JSON.stringify(matches));
+        setIsScheduled(true);
+        console.log('Match scheduled successfully');
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Match has been scheduled! You can view all your scheduled matches in the Calendar tab.',
+          position: 'bottom',
+          visibilityTime: 2000
+        });
+      } else {
+        console.log('Match already scheduled');
+        Toast.show({
+          type: 'info',
+          text1: 'Info',
+          text2: 'This match is already in your schedule.',
+          position: 'bottom',
+          visibilityTime: 2000
+        });
+      }
+    } catch (error) {
+      console.error('Error scheduling match:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to schedule match. Please try again.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+    } finally {
+      setSchedulingLoading(false);
+    }
+  };
+
+  const unscheduleMatch = async () => {
+    setSchedulingLoading(true);
+    try {
+      const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
+      if (scheduledMatches) {
+        let matches = JSON.parse(scheduledMatches);
+        matches = matches.filter((match: any) => match.matchId !== matchId);
+        await AsyncStorage.setItem('scheduledMatches', JSON.stringify(matches));
+        setIsScheduled(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Match has been removed from your schedule.',
+          position: 'bottom',
+          visibilityTime: 2000
+        });
+      }
+    } catch (error) {
+      console.error('Error unscheduling match:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to remove match from schedule. Please try again.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+    } finally {
+      setSchedulingLoading(false);
+    }
   };
 
   const renderMatchHeader = () => {
@@ -749,6 +906,47 @@ Cricheroes : ${cricHeroesLink}
               <ActivityIndicator size="small" color="#0066cc" />
               <Text style={styles.loadingText}>Loading ground details...</Text>
             </View>
+          </View>
+        )}
+
+        {/* Schedule Match Section - Only for upcoming matches */}
+        {matchStatus === 'upcoming' && (
+          <View style={styles.infoCard}>
+            <Text style={styles.infoSectionTitle}>Schedule Match</Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={20} color="#0066cc" />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Attend this match</Text>
+                <Text style={styles.infoValue}>
+                  {isScheduled ? 'This match is in your schedule' : 'Add this match to your schedule to get reminders'}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={[
+                styles.scheduleButton, 
+                isScheduled ? styles.unscheduleButton : styles.scheduleButtonActive,
+                (schedulingLoading || !matchData) && styles.disabledButton
+              ]} 
+              onPress={isScheduled ? unscheduleMatch : scheduleMatch}
+              disabled={schedulingLoading || !matchData}
+            >
+              {schedulingLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons 
+                    name={isScheduled ? "calendar-clear-outline" : "calendar-outline"} 
+                    size={20} 
+                    color="#fff" 
+                  />
+                  <Text style={styles.scheduleButtonText}>
+                    {!matchData ? 'Loading...' : (isScheduled ? 'Remove from Schedule' : 'Add to Schedule')}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         )}
 
@@ -1767,6 +1965,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  // Schedule Button Styles
+  scheduleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  scheduleButtonActive: {
+    backgroundColor: '#0066cc',
+  },
+  unscheduleButton: {
+    backgroundColor: '#ff6b6b',
+  },
+  scheduleButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
   },
 });
 
