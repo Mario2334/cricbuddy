@@ -493,10 +493,11 @@ class ApiService {
       // The new API returns data in a different structure: { status, data: { team_a, team_b, ... } }
       // We need to convert this to the expected pageProps.scorecard format with complete details
       let scorecardArray = [];
+      let teamAInnings = {};
+      let teamBInnings = {}
 
       if (apiData.status && apiData.data) {
         const matchData = apiData.data;
-
         // Extract complete scorecard data from both teams
         if (matchData.team_a) {
           const teamAData = {
@@ -518,6 +519,7 @@ class ApiService {
             powerPlay: matchData.team_a.scorecard?.[0]?.power_play || [],
           };
           scorecardArray.push(teamAData);
+          teamAInnings = matchData.team_a.innings?.[0] || {};
         }
 
         if (matchData.team_b) {
@@ -540,6 +542,7 @@ class ApiService {
             powerPlay: matchData.team_b.scorecard?.[0]?.power_play || [],
           };
           scorecardArray.push(teamBData);
+          teamBInnings = matchData.team_b.innings?.[0] || {};
         }
       }
 
@@ -547,6 +550,8 @@ class ApiService {
         pageProps: {
           scorecard: scorecardArray,
           matchData: apiData.data, // Keep original match data for additional info
+          teamAInnings,
+          teamBInnings,
           // Additional match details
           matchInfo: {
             matchId: apiData.data?.match_id,

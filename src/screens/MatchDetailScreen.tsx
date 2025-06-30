@@ -75,6 +75,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const [showBallJerseyDropdown, setShowBallJerseyDropdown] = useState<boolean>(false);
   const [isScheduled, setIsScheduled] = useState<boolean>(false);
   const [schedulingLoading, setSchedulingLoading] = useState<boolean>(false);
+  const [isTeam5179117Match, setIsTeam5179117Match] = useState<boolean>(false);
   const layout = useWindowDimensions();
 
   const ballJerseyOptions = [
@@ -138,6 +139,17 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
     }
   }, [scorecard]);
 
+  // Helper function to check if either team in the match is team 5179117
+  const isTeam5179117InMatch = (match: any) => {
+    const targetTeamId = 5179117;
+    return (
+      (match.team_a && match.team_a.id === targetTeamId) ||
+      (match.team_b && match.team_b.id === targetTeamId) ||
+      (match.team_a_id === targetTeamId) ||
+      (match.team_b_id === targetTeamId)
+    );
+  };
+
   const fetchMatchData = async () => {
     try {
       // Fetch matches from the team matches API to get match details
@@ -149,6 +161,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         );
         if (match) {
           setMatchData(match);
+          // Check if either team in the match is team 5179117
+          setIsTeam5179117Match(isTeam5179117InMatch(match));
           return;
         } else {
           console.log('Match not found in current page, trying more pages...');
@@ -161,6 +175,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
               );
               if (foundMatch) {
                 setMatchData(foundMatch);
+                // Check if either team in the match is team 5179117
+                setIsTeam5179117Match(isTeam5179117InMatch(foundMatch));
                 return;
               }
             }
@@ -168,8 +184,31 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         }
       }
 
-      // If match not found in API, create fallback data from route parameters
-      console.log('Match not found in API, creating fallback data from route parameters');
+      // If match not found in API, try to get match data from scorecard API
+      console.log('Match not found in team API, trying to get match data from scorecard API...');
+      try {
+        const matchIdParam: string | number = matchId ?? '';
+        const tournamentSlug = (tournamentName || 'tournament')
+          .toLowerCase()
+          .replace(/\s+/g, '-');
+        const teamNamesSlug = `${teamNames.team1 || 'Team A'}-vs-${teamNames.team2 || 'Team B'}`
+          .toLowerCase()
+          .replace(/\s+/g, '-');
+        const scorecardResponse = await apiService.getMatchScorecard(matchIdParam, tournamentSlug, teamNamesSlug);
+
+        if (scorecardResponse && scorecardResponse.data && scorecardResponse.data.data) {
+          const matchDataFromScorecard = scorecardResponse.data.data;
+          setMatchData(matchDataFromScorecard);
+          // Check if either team in the match is team 5179117
+          setIsTeam5179117Match(isTeam5179117InMatch(matchDataFromScorecard));
+          return;
+        }
+      } catch (scorecardError) {
+        console.log('Failed to get match data from scorecard API:', scorecardError);
+      }
+
+      // If match not found in any API, create fallback data from route parameters
+      console.log('Match not found in any API, creating fallback data from route parameters');
       const fallbackMatchData: Partial<Match> = {
         match_id: parseInt(matchId) || 0,
         tournament_name: tournamentName,
@@ -184,6 +223,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         match_start_time: matchStartTime || undefined // Use actual match start time if available
       };
       setMatchData(fallbackMatchData as Match);
+      // For fallback data, we can't determine team IDs, so set to false
+      setIsTeam5179117Match(false);
     } catch (error) {
       console.error('Error fetching match data:', error);
       // Create fallback data even on error
@@ -202,6 +243,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
         match_start_time: matchStartTime || undefined // Use actual match start time if available
       };
       setMatchData(fallbackMatchData as Match);
+      // For fallback data, we can't determine team IDs, so set to false
+      setIsTeam5179117Match(false);
     }
   };
 
@@ -360,6 +403,106 @@ Cricheroes : ${cricHeroesLink}
     return message;
   };
 
+  const generatePaymentWhatsAppMessage = () => {
+    const selectedGround = selectedGroundForWhatsApp || groundData;
+
+    // Format date - use matchData instead of scorecard
+    const matchDate = matchData?.match_start_time || matchData?.start_time
+      ? new Date(matchData.match_start_time || matchData.start_time || '').toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'long',
+          weekday: 'long'
+        })
+      : '22nd June, Sunday';
+
+    // Format time - reporting time is 30 minutes before match time
+    const reportingTime = matchData?.match_start_time || matchData?.start_time
+      ? (() => {
+          const matchDateTime = new Date(matchData.match_start_time || matchData.start_time || '');
+          const reportingDateTime = new Date(matchDateTime.getTime() - 30 * 60 * 1000); // Subtract 30 minutes
+          return reportingDateTime.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+        })()
+      : '7:00 AM';
+
+    // Generate Google Maps link
+    let locationLink = 'Google Maps';
+    if (selectedGoogleMapsPlace) {
+      locationLink = googleMapsService.generateMapsUrl(selectedGoogleMapsPlace);
+    } else if (selectedGround?.latitude && selectedGround?.longitude) {
+      locationLink = `https://maps.google.com/?q=${selectedGround.latitude},${selectedGround.longitude}`;
+    } else if (selectedGround?.place_id) {
+      locationLink = `https://maps.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
+    } else if (selectedGround?.name || groundName) {
+      locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
+    }
+
+    // Get players from scorecard data if available - only from team 5179117
+    let players: string[] = [];
+
+    if (matchData) {
+
+      // Determine which team corresponds to team 5179117 and extract players from scorecard
+      let targetTeamScorecard = null;
+
+      if (matchData.team_a_id && matchData.team_a_id === 5179117) {
+        targetTeamScorecard = scorecard?.pageProps?.scorecard?.[0];
+      } else if (matchData.team_b_id && matchData.team_b_id === 5179117) {
+        targetTeamScorecard = scorecard?.pageProps?.scorecard?.[1];
+      }
+      console.log('targetTeamScorecard:', scorecard);
+
+      if (targetTeamScorecard) {
+        // Add batting players
+        if (targetTeamScorecard.batting && Array.isArray(targetTeamScorecard.batting)) {
+          targetTeamScorecard.batting.forEach((batsman: any) => {
+            if (batsman.name && batsman.name !== 'Unknown') {
+              players.push(batsman.name);
+            }
+          });
+        }
+
+        // Add yet to bat players (to_be_bat)
+        if (targetTeamScorecard.toBeBat && Array.isArray(targetTeamScorecard.toBeBat)) {
+          targetTeamScorecard.toBeBat.forEach((player: any) => {
+            if (player.name && player.name !== 'Unknown') {
+              players.push(player.name);
+            }
+          });
+        }
+      }
+
+    }
+
+    // Default payment details
+    const totalFees = 8500;
+    const costPerPlayer = Math.ceil(totalFees / players.length);
+    const upiId = 'hellrazer@ybl';
+    const phone_no = "8484996704"
+    // Format players list with payment status
+    const playersListText = players.map((player, index) => {
+      return `\t${index + 1}.\t${player}`;
+    }).join('\n');
+
+    const message = `${matchData?.match_type || 'T30'} ${tournamentName || 'Sara Tournament'} Match Payment - ${matchDate}
+
+Match: ${teamNames.team1} VS ${teamNames.team2}
+Date: ${matchDate}
+Reporting Time: ${reportingTime}
+Overs: ${matchData?.overs || '30'} Overs
+Total Fees: ₹${totalFees}
+Cost PP (${totalFees} ÷ ${players.length}): ₹${costPerPlayer}
+UPI : ${upiId}
+Phone No : ${phone_no}
+Players:
+${playersListText}`;
+
+    return message;
+  };
+
   const searchGoogleMapsPlaces = async () => {
     setSearchingPlaces(true);
     try {
@@ -398,6 +541,24 @@ Cricheroes : ${cricHeroesLink}
       Alert.alert(
         'Error',
         'Failed to copy message to clipboard. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const copyPaymentMessageToWhatsApp = () => {
+    try {
+      const message = generatePaymentWhatsAppMessage();
+      Clipboard.setString(message);
+      Alert.alert(
+        'Success',
+        'Payment message copied to clipboard! You can now paste it in WhatsApp.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to copy payment message to clipboard. Please try again.',
         [{ text: 'OK' }]
       );
     }
@@ -603,10 +764,10 @@ Cricheroes : ${cricHeroesLink}
       return null;
     }
 
-    const { 
-      batting = [], 
-      bowling = [], 
-      inning = {}, 
+    const {
+      batting = [],
+      bowling = [],
+      inning = {},
       extras = { total: 0, summary: '', data: [] },
       fallOfWicket = { summary: '', data: [] },
       partnership = [],
@@ -752,7 +913,7 @@ Cricheroes : ${cricHeroesLink}
   };
 
   const renderInfoTab = () => (
-    <ScrollView 
+    <ScrollView
       style={styles.tabContent}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -923,12 +1084,12 @@ Cricheroes : ${cricHeroesLink}
               </View>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
-                styles.scheduleButton, 
+                styles.scheduleButton,
                 isScheduled ? styles.unscheduleButton : styles.scheduleButtonActive,
                 (schedulingLoading || !matchData) && styles.disabledButton
-              ]} 
+              ]}
               onPress={isScheduled ? unscheduleMatch : scheduleMatch}
               disabled={schedulingLoading || !matchData}
             >
@@ -936,10 +1097,10 @@ Cricheroes : ${cricHeroesLink}
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <>
-                  <Ionicons 
-                    name={isScheduled ? "calendar-clear-outline" : "calendar-outline"} 
-                    size={20} 
-                    color="#fff" 
+                  <Ionicons
+                    name={isScheduled ? "calendar-clear-outline" : "calendar-outline"}
+                    size={20}
+                    color="#fff"
                   />
                   <Text style={styles.scheduleButtonText}>
                     {!matchData ? 'Loading...' : (isScheduled ? 'Remove from Schedule' : 'Add to Schedule')}
@@ -959,7 +1120,7 @@ Cricheroes : ${cricHeroesLink}
             <Ionicons name="location-outline" size={20} color="#0066cc" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Selected Ground</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.groundSelector}
                 onPress={() => {
                   fetchAvailableGrounds();
@@ -979,7 +1140,7 @@ Cricheroes : ${cricHeroesLink}
             <Ionicons name="shirt-outline" size={20} color="#0066cc" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Ball & Jersey</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.groundSelector}
                 onPress={() => setShowBallJerseyDropdown(true)}
               >
@@ -996,6 +1157,14 @@ Cricheroes : ${cricHeroesLink}
             <Ionicons name="logo-whatsapp" size={20} color="#fff" />
             <Text style={styles.whatsappButtonText}>Copy to WhatsApp</Text>
           </TouchableOpacity>
+
+          {/* Write Payments Button - Only show for team 5179117 */}
+          {isTeam5179117Match && (
+            <TouchableOpacity style={styles.paymentButton} onPress={copyPaymentMessageToWhatsApp}>
+              <Ionicons name="card-outline" size={20} color="#fff" />
+              <Text style={styles.paymentButtonText}>Write Payments</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -1871,6 +2040,29 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   whatsappButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  paymentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF6B35',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  paymentButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
