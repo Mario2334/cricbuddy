@@ -18,6 +18,9 @@ import {
   Alert,
   Modal,
   FlatList,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TabView, TabBar } from 'react-native-tab-view';
@@ -76,6 +79,10 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const [isScheduled, setIsScheduled] = useState<boolean>(false);
   const [schedulingLoading, setSchedulingLoading] = useState<boolean>(false);
   const [isTeam5179117Match, setIsTeam5179117Match] = useState<boolean>(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState<boolean>(false);
+  const [paymentMessage, setPaymentMessage] = useState<string>('');
+  const [showFeesInputDialog, setShowFeesInputDialog] = useState<boolean>(false);
+  const [matchFees, setMatchFees] = useState<string>('8500');
   const layout = useWindowDimensions();
 
   const ballJerseyOptions = [
@@ -403,7 +410,7 @@ Cricheroes : ${cricHeroesLink}
     return message;
   };
 
-  const generatePaymentWhatsAppMessage = () => {
+  const generatePaymentWhatsAppMessage = (fees?: number) => {
     const selectedGround = selectedGroundForWhatsApp || groundData;
 
     // Format date - use matchData instead of scorecard
@@ -477,8 +484,8 @@ Cricheroes : ${cricHeroesLink}
 
     }
 
-    // Default payment details
-    const totalFees = 8500;
+    // Payment details - use provided fees or default
+    const totalFees = fees || parseInt(matchFees) || 8500;
     const costPerPlayer = Math.ceil(totalFees / players.length);
     const upiId = 'hellrazer@ybl';
     const phone_no = "8484996704"
@@ -546,21 +553,61 @@ ${playersListText}`;
     }
   };
 
-  const copyPaymentMessageToWhatsApp = () => {
+  const openFeesInputDialog = () => {
+    setShowFeesInputDialog(true);
+  };
+
+  const openPaymentDialog = (fees?: number) => {
     try {
-      const message = generatePaymentWhatsAppMessage();
-      Clipboard.setString(message);
-      Alert.alert(
-        'Success',
-        'Payment message copied to clipboard! You can now paste it in WhatsApp.',
-        [{ text: 'OK' }]
-      );
+      const message = generatePaymentWhatsAppMessage(fees);
+      setPaymentMessage(message);
+      setShowPaymentDialog(true);
     } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to copy payment message to clipboard. Please try again.',
-        [{ text: 'OK' }]
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to generate payment message. Please try again.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+    }
+  };
+
+  const handleFeesSubmit = () => {
+    const fees = parseInt(matchFees);
+    if (isNaN(fees) || fees <= 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Amount',
+        text2: 'Please enter a valid amount greater than 0.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+      return;
+    }
+    setShowFeesInputDialog(false);
+    openPaymentDialog(fees);
+  };
+
+  const copyPaymentMessageFromDialog = () => {
+    try {
+      Clipboard.setString(paymentMessage);
+      setShowPaymentDialog(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Payment message copied to clipboard! You can now paste it in WhatsApp.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to copy payment message to clipboard. Please try again.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
     }
   };
 
@@ -1160,7 +1207,7 @@ ${playersListText}`;
 
           {/* Write Payments Button - Only show for team 5179117 */}
           {isTeam5179117Match && (
-            <TouchableOpacity style={styles.paymentButton} onPress={copyPaymentMessageToWhatsApp}>
+            <TouchableOpacity style={styles.paymentButton} onPress={openFeesInputDialog}>
               <Ionicons name="card-outline" size={20} color="#fff" />
               <Text style={styles.paymentButtonText}>Write Payments</Text>
             </TouchableOpacity>
@@ -1327,6 +1374,87 @@ ${playersListText}`;
                 </TouchableOpacity>
               )}
             />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Fees Input Dialog Modal */}
+      <Modal
+        visible={showFeesInputDialog}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFeesInputDialog(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Enter Match Fees</Text>
+              <TouchableOpacity onPress={() => setShowFeesInputDialog(false)}>
+                <Ionicons name="close-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.feesInputContainer}>
+              <Text style={styles.feesInputLabel}>Match Fees Amount</Text>
+              <View style={styles.feesInputWrapper}>
+                <Text style={styles.currencySymbol}>₹</Text>
+                <TextInput
+                  style={styles.feesInput}
+                  value={matchFees}
+                  onChangeText={setMatchFees}
+                  placeholder="Enter amount"
+                  keyboardType="numeric"
+                  autoFocus={true}
+                />
+              </View>
+              <Text style={styles.feesInputHint}>Enter the total match fees to be split among players</Text>
+            </View>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.continueButton} 
+                onPress={handleFeesSubmit}
+              >
+                <Text style={styles.continueButtonText}>Save Match Fees</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Payment Dialog Modal */}
+      <Modal
+        visible={showPaymentDialog}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPaymentDialog(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.paymentModalContent]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Match Payment Details</Text>
+              <TouchableOpacity onPress={() => setShowPaymentDialog(false)}>
+                <Ionicons name="close-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.paymentMessageContainer} showsVerticalScrollIndicator={true}>
+              <Text style={styles.paymentMessageText}>{paymentMessage}</Text>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.copyButton} 
+                onPress={copyPaymentMessageFromDialog}
+              >
+                <Ionicons name="copy-outline" size={20} color="#fff" />
+                <Text style={styles.copyButtonText}>Copy to Clipboard</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -2190,6 +2318,124 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#ccc',
     opacity: 0.6,
+  },
+  // Payment Dialog Styles
+  paymentModalContent: {
+    maxHeight: '80%',
+  },
+  paymentMessageContainer: {
+    maxHeight: 400,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  paymentMessageText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+    fontFamily: 'monospace',
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0066cc',
+    borderRadius: 8,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  copyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  // Fees Input Dialog Styles
+  feesInputContainer: {
+    padding: 20,
+  },
+  feesInputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  feesInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  currencySymbol: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginRight: 8,
+  },
+  feesInput: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    paddingVertical: 12,
+  },
+  feesInputHint: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginRight: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  continueButton: {
+    flex: 1,
+    backgroundColor: '#0066cc',
+    borderRadius: 8,
+    padding: 16,
+    marginLeft: 8,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  continueButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
 
