@@ -7,6 +7,14 @@
     "icon": "./assets/cricbuddy_icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "The app needs to access your calendar."
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/cricbuddy_icon.png",
       "resizeMode": "contain",

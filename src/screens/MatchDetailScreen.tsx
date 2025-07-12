@@ -5,6 +5,7 @@ import type { Match } from '../types/Match';
 import { MatchDetailScreenNavigationProp } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+import * as Calendar from 'expo-calendar';
 
 import {
   View,
@@ -622,6 +623,77 @@ ${playersListText}`;
     });
   };
 
+  // Calendar helper functions
+  const getCalendarPermissions = async () => {
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Calendar Permission Required',
+        'Please grant calendar permission to add matches to your device calendar.',
+        [{ text: 'OK' }]
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const getDefaultCalendar = async () => {
+    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    return calendars.find(cal => cal.source.name === 'Default') || calendars[0];
+  };
+
+  const addEventToNativeCalendar = async (matchData: any) => {
+    try {
+      const hasPermission = await getCalendarPermissions();
+      if (!hasPermission) return null;
+
+      const defaultCalendar = await getDefaultCalendar();
+      if (!defaultCalendar) {
+        console.error('No calendar found');
+        return null;
+      }
+
+      const startDate = new Date(matchData.matchStartTime || matchData.start_time);
+      const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000); // 4 hours duration
+
+      const eventDetails = {
+        title: `${matchData.teamNames.team1} vs ${matchData.teamNames.team2}`,
+        startDate,
+        endDate,
+        location: matchData.groundName || '',
+        notes: `Tournament: ${matchData.tournamentName}\nMatch Type: ${matchData.matchType || 'T20'}\nOvers: ${matchData.overs || 20}`,
+        calendarId: defaultCalendar.id,
+        alarms: [
+          {
+            relativeOffset: -60, // 1 hour before (in minutes, negative means before)
+            method: Calendar.AlarmMethod.ALERT,
+          },
+        ],
+      };
+
+      const eventId = await Calendar.createEventAsync(defaultCalendar.id, eventDetails);
+      console.log('Event created in native calendar with 1-hour reminder:', eventId);
+      return eventId;
+    } catch (error) {
+      console.error('Error adding event to native calendar:', error);
+      return null;
+    }
+  };
+
+  const removeEventFromNativeCalendar = async (eventId: string) => {
+    try {
+      const hasPermission = await getCalendarPermissions();
+      if (!hasPermission) return false;
+
+      await Calendar.deleteEventAsync(eventId);
+      console.log('Event removed from native calendar:', eventId);
+      return true;
+    } catch (error) {
+      console.error('Error removing event from native calendar:', error);
+      return false;
+    }
+  };
+
   // Scheduling functions
   const checkIfMatchIsScheduled = async () => {
     try {
@@ -656,7 +728,7 @@ ${playersListText}`;
       const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
       let matches = scheduledMatches ? JSON.parse(scheduledMatches) : [];
 
-      const matchToSchedule = {
+      const matchToSchedule: any = {
         matchId: matchId,
         tournamentName: matchData.tournament_name || tournamentName,
         teamNames: teamNames,
@@ -666,7 +738,8 @@ ${playersListText}`;
         matchStartTime: matchData.match_start_time || matchData.start_time,
         matchType: matchData.match_type,
         overs: matchData.overs,
-        scheduledAt: new Date().toISOString()
+        scheduledAt: new Date().toISOString(),
+        calendarEventId: undefined as string | undefined
       };
 
       console.log('Scheduling match:', matchToSchedule);
@@ -674,16 +747,29 @@ ${playersListText}`;
       // Check if already scheduled
       const alreadyScheduled = matches.some((match: any) => match.matchId === matchId);
       if (!alreadyScheduled) {
+        // Add event to native calendar
+        const calendarEventId = await addEventToNativeCalendar(matchToSchedule);
+
+        // Add calendar event ID to the match data
+        if (calendarEventId) {
+          matchToSchedule.calendarEventId = calendarEventId;
+        }
+
         matches.push(matchToSchedule);
         await AsyncStorage.setItem('scheduledMatches', JSON.stringify(matches));
         setIsScheduled(true);
         console.log('Match scheduled successfully');
+
+        const successMessage = calendarEventId 
+          ? 'Match has been scheduled and added to your device calendar with a 1-hour reminder!'
+          : 'Match has been scheduled! (Note: Could not add to device calendar)';
+
         Toast.show({
           type: 'success',
           text1: 'Success',
-          text2: 'Match has been scheduled! You can view all your scheduled matches in the Calendar tab.',
+          text2: successMessage,
           position: 'bottom',
-          visibilityTime: 2000
+          visibilityTime: 3000
         });
       } else {
         console.log('Match already scheduled');
@@ -715,15 +801,33 @@ ${playersListText}`;
       const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
       if (scheduledMatches) {
         let matches = JSON.parse(scheduledMatches);
+
+        // Find the match to get its calendar event ID
+        const matchToRemove = matches.find((match: any) => match.matchId === matchId);
+
+        // Remove from native calendar if event ID exists
+        let calendarRemoved = false;
+        if (matchToRemove?.calendarEventId) {
+          calendarRemoved = await removeEventFromNativeCalendar(matchToRemove.calendarEventId);
+        }
+
+        // Remove from local storage
         matches = matches.filter((match: any) => match.matchId !== matchId);
         await AsyncStorage.setItem('scheduledMatches', JSON.stringify(matches));
         setIsScheduled(false);
+
+        const successMessage = matchToRemove?.calendarEventId
+          ? (calendarRemoved 
+              ? 'Match has been removed from your schedule and device calendar!'
+              : 'Match has been removed from your schedule! (Note: Could not remove from device calendar)')
+          : 'Match has been removed from your schedule.';
+
         Toast.show({
           type: 'success',
           text1: 'Success',
-          text2: 'Match has been removed from your schedule.',
+          text2: successMessage,
           position: 'bottom',
-          visibilityTime: 2000
+          visibilityTime: 3000
         });
       }
     } catch (error) {
