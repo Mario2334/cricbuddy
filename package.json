@@ -20,7 +20,7 @@
     "expo-calendar": "^14.1.4",
     "expo-constants": "~16.0.2",
     "expo-dev-client": "~5.2.1",
-    "expo-location": "~18.0.4",
+    "expo-location": "~18.1.6",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.4",
