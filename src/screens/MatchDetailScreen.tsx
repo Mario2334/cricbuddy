@@ -84,6 +84,8 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
   const [paymentMessage, setPaymentMessage] = useState<string>('');
   const [showFeesInputDialog, setShowFeesInputDialog] = useState<boolean>(false);
   const [matchFees, setMatchFees] = useState<string>('8500');
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [availablePlayers, setAvailablePlayers] = useState<string[]>([]);
   const layout = useWindowDimensions();
 
   const ballJerseyOptions = [
@@ -448,42 +450,8 @@ Cricheroes : ${cricHeroesLink}
       locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
     }
 
-    // Get players from scorecard data if available - only from team 5179117
-    let players: string[] = [];
-
-    if (matchData) {
-
-      // Determine which team corresponds to team 5179117 and extract players from scorecard
-      let targetTeamScorecard = null;
-
-      if (matchData.team_a_id && matchData.team_a_id === 5179117) {
-        targetTeamScorecard = scorecard?.pageProps?.scorecard?.[0];
-      } else if (matchData.team_b_id && matchData.team_b_id === 5179117) {
-        targetTeamScorecard = scorecard?.pageProps?.scorecard?.[1];
-      }
-      console.log('targetTeamScorecard:', scorecard);
-
-      if (targetTeamScorecard) {
-        // Add batting players
-        if (targetTeamScorecard.batting && Array.isArray(targetTeamScorecard.batting)) {
-          targetTeamScorecard.batting.forEach((batsman: any) => {
-            if (batsman.name && batsman.name !== 'Unknown') {
-              players.push(batsman.name);
-            }
-          });
-        }
-
-        // Add yet to bat players (to_be_bat)
-        if (targetTeamScorecard.toBeBat && Array.isArray(targetTeamScorecard.toBeBat)) {
-          targetTeamScorecard.toBeBat.forEach((player: any) => {
-            if (player.name && player.name !== 'Unknown') {
-              players.push(player.name);
-            }
-          });
-        }
-      }
-
-    }
+    // Use selected players from the checkbox list
+    const players = selectedPlayers.length > 0 ? selectedPlayers : extractPlayersFromScorecard();
 
     // Payment details - use provided fees or default
     const totalFees = fees || parseInt(matchFees) || 8500;
@@ -554,7 +522,66 @@ ${playersListText}`;
     }
   };
 
+  const extractPlayersFromScorecard = (): string[] => {
+    let players: string[] = [];
+
+    if (matchData) {
+      // Determine which team corresponds to team 5179117 and extract players from scorecard
+      let targetTeamScorecard = null;
+
+      if (matchData.team_a_id && matchData.team_a_id === 5179117) {
+        targetTeamScorecard = scorecard?.pageProps?.scorecard?.[0];
+      } else if (matchData.team_b_id && matchData.team_b_id === 5179117) {
+        targetTeamScorecard = scorecard?.pageProps?.scorecard?.[1];
+      }
+
+      if (targetTeamScorecard) {
+        // Add batting players
+        if (targetTeamScorecard.batting && Array.isArray(targetTeamScorecard.batting)) {
+          targetTeamScorecard.batting.forEach((batsman: any) => {
+            if (batsman.name && batsman.name !== 'Unknown') {
+              players.push(batsman.name);
+            }
+          });
+        }
+
+        // Add yet to bat players (to_be_bat)
+        if (targetTeamScorecard.toBeBat && Array.isArray(targetTeamScorecard.toBeBat)) {
+          targetTeamScorecard.toBeBat.forEach((player: any) => {
+            if (player.name && player.name !== 'Unknown') {
+              players.push(player.name);
+            }
+          });
+        }
+      }
+    }
+
+    // Remove duplicates
+    return [...new Set(players)];
+  };
+
+  const togglePlayerSelection = (playerName: string) => {
+    setSelectedPlayers(prev => {
+      if (prev.includes(playerName)) {
+        return prev.filter(name => name !== playerName);
+      } else {
+        return [...prev, playerName];
+      }
+    });
+  };
+
+  const selectAllPlayers = () => {
+    setSelectedPlayers(availablePlayers);
+  };
+
+  const deselectAllPlayers = () => {
+    setSelectedPlayers([]);
+  };
+
   const openFeesInputDialog = () => {
+    const players = extractPlayersFromScorecard();
+    setAvailablePlayers(players);
+    setSelectedPlayers(players); // All players are selected by default
     setShowFeesInputDialog(true);
   };
 
@@ -1517,6 +1544,45 @@ ${playersListText}`;
               </View>
               <Text style={styles.feesInputHint}>Enter the total match fees to be split among players</Text>
             </View>
+
+            {/* Player Selection */}
+            {availablePlayers.length > 0 && (
+              <View style={styles.playerSelectionContainer}>
+                <View style={styles.playerSelectionHeader}>
+                  <Text style={styles.playerSelectionTitle}>Select Players ({selectedPlayers.length}/{availablePlayers.length})</Text>
+                  <View style={styles.playerSelectionActions}>
+                    <TouchableOpacity onPress={selectAllPlayers} style={styles.selectAllButton}>
+                      <Text style={styles.selectAllButtonText}>All</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={deselectAllPlayers} style={styles.selectAllButton}>
+                      <Text style={styles.selectAllButtonText}>None</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <ScrollView style={styles.playersScrollView} showsVerticalScrollIndicator={true}>
+                  {availablePlayers.map((player, index) => (
+                    <TouchableOpacity
+                      key={`player-${index}`}
+                      style={styles.playerCheckboxRow}
+                      onPress={() => togglePlayerSelection(player)}
+                    >
+                      <View style={styles.playerCheckboxContainer}>
+                        <View style={[
+                          styles.checkbox,
+                          selectedPlayers.includes(player) && styles.checkboxChecked
+                        ]}>
+                          {selectedPlayers.includes(player) && (
+                            <Ionicons name="checkmark" size={16} color="#fff" />
+                          )}
+                        </View>
+                        <Text style={styles.playerName}>{player}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
 
             <View style={styles.modalFooter}>
               <TouchableOpacity 
@@ -2540,6 +2606,75 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  // Player Selection Styles
+  playerSelectionContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  playerSelectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  playerSelectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  playerSelectionActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  selectAllButton: {
+    backgroundColor: '#0066cc',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  selectAllButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  playersScrollView: {
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  playerCheckboxRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  playerCheckboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#0066cc',
+    borderColor: '#0066cc',
+  },
+  playerName: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
 });
 
