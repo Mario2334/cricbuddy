@@ -59,6 +59,47 @@ class GoogleMapsService {
   generateMapsUrlFromQuery(query: string): string {
     return `https://maps.google.com/maps/search/${encodeURIComponent(query)}`;
   }
+
+  /**
+   * Normalizes Google Maps URLs to ensure they work properly
+   * Converts shortened URLs and problematic formats to standard formats
+   */
+  normalizeGoogleMapsUrl(url: string): string {
+    if (!url) return url;
+
+    // Handle shortened Google Maps URLs (maps.app.goo.gl, goo.gl/maps, etc.)
+    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl/maps') || url.includes('g.co/maps')) {
+      // For shortened URLs, we can't easily extract the place_id or coordinates
+      // So we'll return a generic search URL that should work
+      console.warn('Shortened Google Maps URL detected, using fallback format:', url);
+      return 'https://www.google.com/maps/';
+    }
+
+    // Handle old problematic formats and convert to proper format
+    if (url.includes('maps.google.com/maps/place/?q=place_id:')) {
+      const placeIdMatch = url.match(/place_id:([^&]+)/);
+      if (placeIdMatch) {
+        return `https://www.google.com/maps/place/?q=place_id:${placeIdMatch[1]}`;
+      }
+    }
+
+    // Handle coordinate-based URLs
+    if (url.includes('maps.google.com/?q=') && url.match(/q=[-\d.]+,[-\d.]+/)) {
+      const coordMatch = url.match(/q=([-\d.]+,[-\d.]+)/);
+      if (coordMatch) {
+        return `https://www.google.com/maps/search/?api=1&query=${coordMatch[1]}`;
+      }
+    }
+
+    // If it's already a proper Google Maps URL, return as is
+    if (url.includes('www.google.com/maps') || url.includes('maps.google.com')) {
+      return url;
+    }
+
+    // For any other format, return as is but log a warning
+    console.warn('Unknown Google Maps URL format:', url);
+    return url;
+  }
 }
 
 export default new GoogleMapsService();

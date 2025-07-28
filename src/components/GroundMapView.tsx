@@ -12,6 +12,7 @@ import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import type { Ground } from '../types/Ground';
+import googleMapsService from '../services/googleMapsService';
 
 interface GroundMapViewProps {
   ground: Ground;
@@ -69,8 +70,8 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
       if (supported) {
         Linking.openURL(url!);
       } else {
-        // Fallback to web Google Maps
-        const webUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+        // Fallback to web Google Maps with normalization
+        const webUrl = googleMapsService.normalizeGoogleMapsUrl(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`);
         Linking.openURL(webUrl);
       }
     }).catch(() => {
@@ -91,8 +92,8 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
       if (supported) {
         Linking.openURL(url!);
       } else {
-        // Final fallback to web Google Maps
-        const webUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`;
+        // Final fallback to web Google Maps with normalization
+        const webUrl = googleMapsService.normalizeGoogleMapsUrl(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`);
         Linking.openURL(webUrl);
       }
     }).catch(error => {
@@ -125,8 +126,8 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
       if (supported) {
         Linking.openURL(url!);
       } else {
-        // Fallback to web Google Maps directions
-        const webUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.coords.latitude},${userLocation.coords.longitude}&destination=${latitude},${longitude}`;
+        // Fallback to web Google Maps directions with normalization
+        const webUrl = googleMapsService.normalizeGoogleMapsUrl(`https://www.google.com/maps/dir/?api=1&origin=${userLocation.coords.latitude},${userLocation.coords.longitude}&destination=${latitude},${longitude}`);
         Linking.openURL(webUrl);
       }
     }).catch(error => {

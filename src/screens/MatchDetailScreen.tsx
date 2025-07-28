@@ -393,6 +393,9 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
       locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
     }
 
+    // Normalize the URL to handle any problematic formats
+    locationLink = googleMapsService.normalizeGoogleMapsUrl(locationLink);
+
     // Generate Cricheroes link
     const cricHeroesLink = `https://cricheroes.com/scorecard/${matchId}/${tournamentName?.toLowerCase().replace(/\s+/g, '-')}/${teamNames.team1?.toLowerCase().replace(/\s+/g, '-')}-vs-${teamNames.team2?.toLowerCase().replace(/\s+/g, '-')}`;
 
@@ -448,6 +451,11 @@ Cricheroes : ${cricHeroesLink}
       locationLink = `https://www.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
     } else if (selectedGround?.name || groundName) {
       locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
+    }
+
+    // Normalize the URL to handle any problematic formats
+    if (locationLink !== 'Google Maps') {
+      locationLink = googleMapsService.normalizeGoogleMapsUrl(locationLink);
     }
 
     // Use selected players from the checkbox list
