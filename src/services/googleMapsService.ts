@@ -49,7 +49,7 @@ class GoogleMapsService {
   }
 
   generateMapsUrl(place: GoogleMapsPlace): string {
-    return `https://maps.google.com/maps/place/?q=place_id:${place.place_id}`;
+    return `https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
   }
 
   generateMapsUrlFromCoordinates(lat: number, lng: number): string {

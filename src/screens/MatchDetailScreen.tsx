@@ -388,7 +388,7 @@ const MatchDetailScreen: React.FC<MatchDetailScreenProps> = ({ route }) => {
     } else if (selectedGround?.latitude && selectedGround?.longitude) {
       locationLink = `https://maps.google.com/?q=${selectedGround.latitude},${selectedGround.longitude}`;
     } else if (selectedGround?.place_id) {
-      locationLink = `https://maps.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
+      locationLink = `https://www.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
     } else {
       locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
     }
@@ -445,7 +445,7 @@ Cricheroes : ${cricHeroesLink}
     } else if (selectedGround?.latitude && selectedGround?.longitude) {
       locationLink = `https://maps.google.com/?q=${selectedGround.latitude},${selectedGround.longitude}`;
     } else if (selectedGround?.place_id) {
-      locationLink = `https://maps.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
+      locationLink = `https://www.google.com/maps/place/?q=place_id:${selectedGround.place_id}`;
     } else if (selectedGround?.name || groundName) {
       locationLink = `https://maps.google.com/maps/search/${encodeURIComponent(selectedGround?.name || groundName || 'Cricket Ground')}`;
     }
