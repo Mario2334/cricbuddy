@@ -4,10 +4,13 @@ A React Native app built with Expo for personal coaching use.
 
 ## Features
 
-- Two-screen navigation structure (easily extensible)
+- Five-tab navigation structure with bottom tabs
 - API service module for replicating cURL requests
 - Clean, modern UI with React Navigation
-- Ready for custom screen implementations
+- **AI-Powered Cricket Coach Assistant** - Chat with an AI coach that has knowledge of your team data
+- Match tracking and team management
+- Calendar integration for match scheduling
+- Player statistics and performance tracking
 
 ## Getting Started
 
@@ -44,13 +47,27 @@ A React Native app built with Expo for personal coaching use.
 
 ```
 mycoach/
-├── App.js                    # Main app component with navigation
+├── App.tsx                   # Main app component with bottom tab navigation
 ├── src/
 │   ├── screens/
-│   │   ├── HomeScreen.js     # Home screen component
-│   │   └── SecondScreen.js   # Second screen component
-│   └── services/
-│       └── apiService.js     # API service for cURL-like requests
+│   │   ├── HomeScreen.tsx    # Home screen with match listings
+│   │   ├── StatsScreen.tsx   # Player statistics screen
+│   │   ├── MyTeamScreen.tsx  # Team management screen
+│   │   ├── CalendarScreen.tsx # Match calendar screen
+│   │   ├── ChatbotScreen.tsx # AI Coach Assistant chatbot
+│   │   └── MatchDetailScreen.tsx # Match details and scorecard
+│   ├── services/
+│   │   ├── apiService.ts     # API service for cricket data
+│   │   └── googleMapsService.ts # Google Maps integration
+│   ├── types/
+│   │   ├── navigation.ts     # Navigation type definitions
+│   │   ├── Match.ts          # Match data types
+│   │   └── Ground.ts         # Ground data types
+│   ├── utils/
+│   │   └── matchUtils.ts     # Match utility functions
+│   └── components/
+│       └── MatchCalendar.tsx # Calendar component
+├── .env.example              # Environment variables template
 ├── package.json
 └── README.md
 ```
@@ -88,6 +105,46 @@ This app uses `react-native-maps` with Google Maps provider for iOS. To enable G
    ```
 
 **Note:** The Google Maps API key is required for the map functionality to work on iOS devices.
+
+## AI Coach Assistant (Chatbot)
+
+The app now includes an AI-powered cricket coach assistant that can provide personalized advice based on your team's data. The chatbot uses OpenRouter's API to access advanced AI models like Claude-3-Haiku.
+
+### Features
+
+- **Team-Aware Conversations**: The AI has access to your team's recent matches, player statistics, and performance data
+- **Cricket Expertise**: Specialized in cricket coaching, strategy, and player development
+- **Real-time Chat Interface**: Modern chat UI with message history and typing indicators
+- **Contextual Advice**: Provides specific recommendations based on your team's actual performance
+
+### Setup Instructions
+
+1. **Get an OpenRouter API Key:**
+   - Visit [OpenRouter.ai](https://openrouter.ai/)
+   - Create an account and generate an API key
+   - Note: OpenRouter provides access to multiple AI models with competitive pricing
+
+2. **Configure the API Key:**
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Edit `.env` and replace `your_openrouter_api_key_here` with your actual API key:
+     ```
+     OPENROUTER_API_KEY=your_actual_api_key_here
+     ```
+
+3. **Usage:**
+   - Open the app and navigate to the "Coach Assistant" tab (chat bubble icon)
+   - Start chatting with questions like:
+     - "How did we perform in our last match?"
+     - "What areas should our team focus on improving?"
+     - "Give me a strategy for our upcoming match"
+     - "Analyze our batting performance"
+
+### Supported AI Models
+
+The chatbot currently uses `anthropic/claude-3-haiku` for fast, intelligent responses. You can modify the model in `src/screens/ChatbotScreen.tsx` if needed.
 
 ## API Service
 

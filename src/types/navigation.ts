@@ -27,6 +27,7 @@ export type TabParamList = {
   Stats: undefined;
   MyTeam: undefined;
   Calendar: undefined;
+  Chatbot: undefined;
 };
 
 // Navigation props for each screen

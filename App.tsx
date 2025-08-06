@@ -11,6 +11,7 @@ import StatsScreen from './src/screens/StatsScreen';
 import MatchDetailScreen from './src/screens/MatchDetailScreen';
 import MyTeamScreen from './src/screens/MyTeamScreen';
 import CalendarScreen from './src/screens/CalendarScreen';
+import ChatbotScreen from './src/screens/ChatbotScreen';
 
 // Import navigation types
 import { 
@@ -113,6 +114,8 @@ const App: React.FC = () => {
                 iconName = focused ? 'people' : 'people-outline';
               } else if (route.name === 'Calendar') {
                 iconName = focused ? 'calendar' : 'calendar-outline';
+              } else if (route.name === 'Chatbot') {
+                iconName = focused ? 'chatbubble' : 'chatbubble-outline';
               }
 
               return <Ionicons name={iconName} size={size} color={color} />;
@@ -153,6 +156,21 @@ const App: React.FC = () => {
             component={CalendarScreen}
             options={{
               title: 'Calendar',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#0066cc',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+            }}
+          />
+          <Tab.Screen 
+            name="Chatbot" 
+            component={ChatbotScreen}
+            options={{
+              title: 'Coach Assistant',
               headerShown: true,
               headerStyle: {
                 backgroundColor: '#0066cc',
