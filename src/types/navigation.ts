@@ -5,6 +5,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 export type RootStackParamList = {
   HomeList: undefined;
   MyTeamList: undefined;
+  CalendarList: undefined;
   MatchDetail: { 
     matchId: string; 
     tournamentName: string; 
@@ -34,3 +35,4 @@ export type HomeScreenNavigationProp = StackScreenProps<RootStackParamList, 'Hom
 export type MatchDetailScreenNavigationProp = StackScreenProps<RootStackParamList, 'MatchDetail'>;
 export type StatsScreenNavigationProp = BottomTabScreenProps<TabParamList, 'Stats'>;
 export type MyTeamScreenNavigationProp = StackScreenProps<RootStackParamList, 'MyTeamList'>;
+export type CalendarScreenNavigationProp = StackScreenProps<RootStackParamList, 'CalendarList'>;

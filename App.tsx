@@ -95,6 +95,42 @@ const MyTeamStack: React.FC = () => {
   );
 };
 
+// Create a stack navigator for the Calendar tab
+const CalendarStack: React.FC = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="CalendarList" 
+        component={CalendarScreen} 
+        options={{ 
+          title: 'Calendar',
+          headerStyle: {
+            backgroundColor: '#0066cc',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }} 
+      />
+      <Stack.Screen 
+        name="MatchDetail" 
+        component={MatchDetailScreen}
+        options={{ 
+          title: 'Match Scorecard',
+          headerStyle: {
+            backgroundColor: '#0066cc',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }} 
+      />
+    </Stack.Navigator>
+  );
+};
+
 // Define the App component with proper typing
 const App: React.FC = () => {
   return (
@@ -150,17 +186,10 @@ const App: React.FC = () => {
           />
           <Tab.Screen 
             name="Calendar" 
-            component={CalendarScreen}
+            component={CalendarStack}
             options={{
               title: 'Calendar',
-              headerShown: true,
-              headerStyle: {
-                backgroundColor: '#0066cc',
-              },
-              headerTintColor: '#fff',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
+              headerShown: false,
             }}
           />
         </Tab.Navigator>
