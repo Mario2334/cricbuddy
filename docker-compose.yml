@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  mycoach:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mycoach
+    environment:
+      - CI=true
+      - EXPO_NO_TELEMETRY=1
+      - EXPO_NO_INTERACTIVE=1
+    ports:
+      - "19000:19000"  # Expo dev server (LAN/tunnel)
+      - "19001:19001"  # Legacy manifest/packager (sometimes used)
+      - "19002:19002"  # Expo web UI (older)
+      - "19006:19006"  # Expo web (when using --web)
+      - "8081:8081"    # Metro bundler
+    # Uncomment the following volume to live-reload local changes without rebuilding
+    # volumes:
+    #   - ./:/app
+    # If you want to explicitly set the start command, uncomment below (Dockerfile already sets it)
+    # command: ["npm", "run", "start", "--", "--non-interactive"]
+    stdin_open: true  # docker run -i
+    tty: true         # docker run -t

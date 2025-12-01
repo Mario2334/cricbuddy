@@ -146,7 +146,7 @@ class ApiService {
   /**
    * Generate equivalent cURL command for debugging
    */
-  generateCurlCommand(url: string, options: { method?: string; headers?: Record<string,string>; body?: any }): string {
+  generateCurlCommand(url: string, options: { method?: string; headers?: Record<string, string>; body?: any }): string {
     const { method = 'GET', headers = {}, body } = options;
 
     let curlCommand = `curl -X ${method.toUpperCase()}`;
@@ -346,7 +346,7 @@ class ApiService {
       } : undefined,
       // Add score data for live and past matches - improved logic to handle more field variations
       team1_score: (match.status === 'live' || match.status === 'past') && (
-        match.team_a_score || match.team1_score || 
+        match.team_a_score || match.team1_score ||
         match.team_a_runs !== undefined || match.team1_runs !== undefined ||
         (match.team_a_runs !== null && match.team_a_runs !== undefined) ||
         (match.team1_runs !== null && match.team1_runs !== undefined)
@@ -357,7 +357,7 @@ class ApiService {
         summary: match.team_a_score_summary || match.team1_score_summary || match.team_a_score?.summary
       } : undefined,
       team2_score: (match.status === 'live' || match.status === 'past') && (
-        match.team_b_score || match.team2_score || 
+        match.team_b_score || match.team2_score ||
         match.team_b_runs !== undefined || match.team2_runs !== undefined ||
         (match.team_b_runs !== null && match.team_b_runs !== undefined) ||
         (match.team2_runs !== null && match.team2_runs !== undefined)
@@ -578,7 +578,7 @@ class ApiService {
       };
 
       const result = {
-        success: true,
+        success: apiData.status === true,
         data: transformedData,
         status: response.status,
       };
@@ -799,7 +799,7 @@ class ApiService {
    * Useful for manual refresh or when encountering errors
    */
   clearUpcomingLiveCache() {
-    const keysToDelete = Array.from(this.requestCache.keys()).filter(key => 
+    const keysToDelete = Array.from(this.requestCache.keys()).filter(key =>
       key.startsWith('upcoming_live_matches_') || key.startsWith('unified_matches_')
     );
     keysToDelete.forEach(key => this.requestCache.delete(key));

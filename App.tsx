@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -13,8 +14,8 @@ import MyTeamScreen from './src/screens/MyTeamScreen';
 import CalendarScreen from './src/screens/CalendarScreen';
 
 // Import navigation types
-import { 
-  RootStackParamList, 
+import {
+  RootStackParamList,
   TabParamList
 } from './src/types/navigation';
 
@@ -27,10 +28,10 @@ const Tab = createBottomTabNavigator<TabParamList>();
 const HomeStack: React.FC = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="HomeList" 
-        component={HomeScreen} 
-        options={{ 
+      <Stack.Screen
+        name="HomeList"
+        component={HomeScreen}
+        options={{
           title: 'Matches',
           headerStyle: {
             backgroundColor: '#0066cc',
@@ -39,12 +40,12 @@ const HomeStack: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
-      <Stack.Screen 
-        name="MatchDetail" 
+      <Stack.Screen
+        name="MatchDetail"
         component={MatchDetailScreen}
-        options={{ 
+        options={{
           title: 'Match Scorecard',
           headerStyle: {
             backgroundColor: '#0066cc',
@@ -53,7 +54,7 @@ const HomeStack: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
     </Stack.Navigator>
   );
@@ -63,10 +64,10 @@ const HomeStack: React.FC = () => {
 const MyTeamStack: React.FC = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="MyTeamList" 
-        component={MyTeamScreen} 
-        options={{ 
+      <Stack.Screen
+        name="MyTeamList"
+        component={MyTeamScreen}
+        options={{
           title: 'My Team',
           headerStyle: {
             backgroundColor: '#0066cc',
@@ -75,12 +76,12 @@ const MyTeamStack: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
-      <Stack.Screen 
-        name="MatchDetail" 
+      <Stack.Screen
+        name="MatchDetail"
         component={MatchDetailScreen}
-        options={{ 
+        options={{
           title: 'Match Scorecard',
           headerStyle: {
             backgroundColor: '#0066cc',
@@ -89,7 +90,7 @@ const MyTeamStack: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
     </Stack.Navigator>
   );
@@ -99,10 +100,10 @@ const MyTeamStack: React.FC = () => {
 const CalendarStack: React.FC = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="CalendarList" 
-        component={CalendarScreen} 
-        options={{ 
+      <Stack.Screen
+        name="CalendarList"
+        component={CalendarScreen}
+        options={{
           title: 'Calendar',
           headerStyle: {
             backgroundColor: '#0066cc',
@@ -111,12 +112,12 @@ const CalendarStack: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
-      <Stack.Screen 
-        name="MatchDetail" 
+      <Stack.Screen
+        name="MatchDetail"
         component={MatchDetailScreen}
-        options={{ 
+        options={{
           title: 'Match Scorecard',
           headerStyle: {
             backgroundColor: '#0066cc',
@@ -125,7 +126,7 @@ const CalendarStack: React.FC = () => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        }} 
+        }}
       />
     </Stack.Navigator>
   );
@@ -158,12 +159,12 @@ const App: React.FC = () => {
             headerShown: false,
           })}
         >
-          <Tab.Screen 
-            name="Home" 
-            component={HomeStack} 
+          <Tab.Screen
+            name="Home"
+            component={HomeStack}
           />
-          <Tab.Screen 
-            name="Stats" 
+          <Tab.Screen
+            name="Stats"
             component={StatsScreen}
             options={{
               headerShown: true,
@@ -176,16 +177,16 @@ const App: React.FC = () => {
               },
             }}
           />
-          <Tab.Screen 
-            name="MyTeam" 
+          <Tab.Screen
+            name="MyTeam"
             component={MyTeamStack}
             options={{
               title: 'My Team',
               headerShown: false,
             }}
           />
-          <Tab.Screen 
-            name="Calendar" 
+          <Tab.Screen
+            name="Calendar"
             component={CalendarStack}
             options={{
               title: 'Calendar',
@@ -194,7 +195,7 @@ const App: React.FC = () => {
           />
         </Tab.Navigator>
       </NavigationContainer>
-        <Toast />
+      <Toast />
     </>
   );
 };

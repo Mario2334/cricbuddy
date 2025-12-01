@@ -13,7 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import apiService from '../services/apiService';
 import type { Match } from '../types/Match';
 import { HomeScreenNavigationProp } from '../types/navigation';
-import { formatMatchTime, getMatchStatusColor } from '../utils/matchUtils';
+import { formatMatchTime, getMatchStatusColor, getLocalScheduledMatches } from '../utils/matchUtils';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -85,7 +85,7 @@ const MatchList: React.FC<MatchListProps> = ({
     const team2Name = item.team2_name || item.team_b || 'Team 2';
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.matchCard}
         onPress={() => handleMatchPress(item)}
       >
@@ -203,9 +203,9 @@ const MatchList: React.FC<MatchListProps> = ({
       ListEmptyComponent={
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            {status === 'upcoming' ? 'No upcoming matches' : 
-              status === 'live' ? 'No live matches' : 
-              'No past matches found'}
+            {status === 'upcoming' ? 'No upcoming matches' :
+              status === 'live' ? 'No live matches' :
+                'No past matches found'}
           </Text>
         </View>
       }
@@ -276,7 +276,17 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
       }
 
       if (isRefresh || !pageUrl) {
-        setMatches(upcomingMatches);
+        // Fetch local matches only on first page load
+        const localMatches = await getLocalScheduledMatches();
+        const localUpcomingMatches = localMatches.filter(m => m.status === 'upcoming');
+
+        const allMatches = [...localUpcomingMatches, ...upcomingMatches];
+        // Deduplicate by match_id
+        const uniqueMatches = Array.from(new Map(allMatches.map(item => [item.match_id, item])).values());
+        // Sort by start time (ascending)
+        uniqueMatches.sort((a, b) => new Date(a.match_start_time).getTime() - new Date(b.match_start_time).getTime());
+
+        setMatches(uniqueMatches);
       } else {
         setMatches(prev => [...prev, ...upcomingMatches]);
       }
@@ -370,7 +380,18 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
       }
 
       if (isRefresh || !pageUrl) {
-        setMatches(liveMatches);
+        // Fetch local matches only on first page load
+        const localMatches = await getLocalScheduledMatches();
+        const localLiveMatches = localMatches.filter(m => m.status === 'live');
+
+        const allMatches = [...localLiveMatches, ...liveMatches];
+        // Deduplicate by match_id
+        const uniqueMatches = Array.from(new Map(allMatches.map(item => [item.match_id, item])).values());
+        // Sort by start time (ascending for live matches usually, or descending?)
+        // Let's keep it ascending for now
+        uniqueMatches.sort((a, b) => new Date(a.match_start_time).getTime() - new Date(b.match_start_time).getTime());
+
+        setMatches(uniqueMatches);
       } else {
         setMatches(prev => [...prev, ...liveMatches]);
       }
@@ -466,7 +487,17 @@ const CompletedTab: React.FC<TabComponentProps> = ({ navigation }) => {
       const { matches: pastMatches, page } = response;
 
       if (isRefresh || !pageUrl) {
-        setMatches(pastMatches);
+        // Fetch local matches only on first page load
+        const localMatches = await getLocalScheduledMatches();
+        const localPastMatches = localMatches.filter(m => m.status === 'past');
+
+        const allMatches = [...localPastMatches, ...pastMatches];
+        // Deduplicate by match_id
+        const uniqueMatches = Array.from(new Map(allMatches.map(item => [item.match_id, item])).values());
+        // Sort by start time (descending for past matches)
+        uniqueMatches.sort((a, b) => new Date(b.match_start_time).getTime() - new Date(a.match_start_time).getTime());
+
+        setMatches(uniqueMatches);
       } else {
         setMatches(prev => [...prev, ...pastMatches]);
       }

@@ -191,3 +191,19 @@ export interface TeamMatchResponse {
   data: Match[];
   config: MatchConfig;
 }
+
+export interface ScheduledMatch {
+  matchId: string;
+  tournamentName: string;
+  teamNames: {
+    team1: string;
+    team2: string;
+  };
+  groundName?: string;
+  groundId?: number;
+  city?: string;
+  matchStartTime?: string;
+  matchType?: string;
+  overs?: number;
+  scheduledAt: string;
+}

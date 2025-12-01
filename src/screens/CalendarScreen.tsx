@@ -14,24 +14,11 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import MatchCalendar from '../components/MatchCalendar';
-import type { Match } from '../types/Match';
-import { ApiService } from '../services/apiService';
+import type { Match, ScheduledMatch } from '../types/Match';
+import apiService from '../services/apiService';
+import { convertScheduledMatchToMatch } from '../utils/matchUtils';
 
-interface ScheduledMatch {
-  matchId: string;
-  tournamentName: string;
-  teamNames: {
-    team1: string;
-    team2: string;
-  };
-  groundName?: string;
-  groundId?: number;
-  city?: string;
-  matchStartTime?: string;
-  matchType?: string;
-  overs?: number;
-  scheduledAt: string;
-}
+
 
 const CalendarScreen: React.FC = () => {
   const [scheduledMatches, setScheduledMatches] = useState<ScheduledMatch[]>([]);
@@ -41,94 +28,8 @@ const CalendarScreen: React.FC = () => {
   const [urlInput, setUrlInput] = useState<string>('');
   const [fetchingMatchDetails, setFetchingMatchDetails] = useState<boolean>(false);
   const navigation = useNavigation();
-  const apiService = new ApiService();
 
-  // Convert ScheduledMatch to Match format for MatchCalendar component
-  const convertScheduledMatchToMatch = (scheduledMatch: ScheduledMatch): Match => {
-    return {
-      match_id: parseInt(scheduledMatch.matchId) || 0,
-      id: parseInt(scheduledMatch.matchId) || 0,
-      tournament_name: scheduledMatch.tournamentName,
-      team_a: scheduledMatch.teamNames.team1,
-      team_b: scheduledMatch.teamNames.team2,
-      team1_name: scheduledMatch.teamNames.team1,
-      team2_name: scheduledMatch.teamNames.team2,
-      ground_name: scheduledMatch.groundName || '',
-      ground_id: scheduledMatch.groundId || 0,
-      city_name: scheduledMatch.city || '',
-      match_start_time: scheduledMatch.matchStartTime || new Date().toISOString(),
-      start_time: scheduledMatch.matchStartTime || new Date().toISOString(),
-      match_type: scheduledMatch.matchType || 'T20',
-      overs: scheduledMatch.overs || 20,
-      status: 'upcoming',
-      // Required fields with default values
-      match_type_id: 0,
-      is_super_over: 0,
-      match_event_type: '',
-      match_event: '',
-      match_inning: 0,
-      ball_type: 'White',
-      current_inning: 0,
-      match_end_time: '',
-      created_date: scheduledMatch.scheduledAt,
-      created_by: 0,
-      city_id: 0,
-      latitude: 0,
-      longitude: 0,
-      balls: null,
-      over_reduce: '',
-      is_dl: 0,
-      is_vjd: 0,
-      type: 0,
-      winning_team_id: '',
-      winning_team: '',
-      match_result: '',
-      win_by: '',
-      team_a_id: 0,
-      team_a_logo: '',
-      is_a_home_team: 0,
-      team_b_id: 0,
-      team_b_logo: '',
-      is_b_home_team: 0,
-      pom_player_id: 0,
-      bba_player_id: 0,
-      bbo_player_id: 0,
-      tournament_id: '',
-      tournament_category_id: '',
-      tournament_round_id: '',
-      association_id: null,
-      association_year_id: null,
-      association_name: '',
-      association_logo: '',
-      steaming_url: '',
-      is_ticker: 0,
-      is_enable_tournament_streaming: 0,
-      is_enable_match_streaming: 0,
-      is_video_analyst: 0,
-      is_backend_match: 0,
-      is_fake_match: 0,
-      is_live_match_enable_in_web: 0,
-      is_live_match_enable_in_app: 0,
-      match_category_name: '',
-      is_having_ai_commentary: 0,
-      is_watch_live: 0,
-      is_in_review: 0,
-      index: 0,
-      match_summary: {
-        team_id: 0,
-        summary: '',
-        short_summary: '',
-        full_summary: '',
-        rrr: '',
-        target: ''
-      },
-      team_a_summary: '',
-      team_a_innings: [],
-      team_b_summary: '',
-      team_b_innings: [],
-      toss_details: ''
-    };
-  };
+
 
   const loadScheduledMatches = async () => {
     try {
@@ -239,8 +140,9 @@ const CalendarScreen: React.FC = () => {
   // Parse CricHeroes URL to extract match information
   const parseCricHeroesUrl = (url: string) => {
     try {
-      // Expected format: https://cricheroes.com/scorecard/18599605/Virat-Cup-T30-Edition-3/Vikings-Inspired-vs-AVENGERZ-XI
-      const urlPattern = /https:\/\/cricheroes\.com\/scorecard\/(\d+)\/([^\/]+)\/([^\/]+)/;
+      // Expected format: https://cricheroes.in/scorecard/18599605/Virat-Cup-T30-Edition-3/Vikings-Inspired-vs-AVENGERZ-XI
+      // Also supports .com and other variations
+      const urlPattern = /https?:\/\/(?:www\.)?cricheroes\.(?:in|com)\/scorecard\/(\d+)\/([^\/]+)\/([^\/]+)/;
       const match = url.match(urlPattern);
 
       if (!match) {
@@ -334,8 +236,12 @@ const CalendarScreen: React.FC = () => {
         throw new Error('Failed to fetch match details from CricHeroes API');
       }
 
-      const matchData = matchDetailsResponse.data.pageProps.matchData;
-      const matchInfo = matchDetailsResponse.data.pageProps.matchInfo;
+      const matchData = (matchDetailsResponse.data as any).pageProps.matchData;
+      const matchInfo = (matchDetailsResponse.data as any).pageProps.matchInfo;
+
+      if (!matchData && !matchInfo) {
+        throw new Error('Match data not found in API response');
+      }
 
       // Create new scheduled match with real API data
       const newScheduledMatch: ScheduledMatch = {
@@ -382,8 +288,8 @@ const CalendarScreen: React.FC = () => {
       if (error instanceof Error) {
         if (error.message.includes('Invalid CricHeroes URL format')) {
           errorMessage = 'Invalid URL format. Please check the CricHeroes scorecard URL.';
-        } else if (error.message.includes('Failed to fetch match details')) {
-          errorMessage = 'Could not fetch match details from CricHeroes. The match may not exist or be unavailable.';
+        } else if (error.message.includes('Failed to fetch match details') || error.message.includes('Match data not found')) {
+          errorMessage = 'Could not fetch match details. The match may be private or restricted.';
         }
       }
 
@@ -475,7 +381,7 @@ const CalendarScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={[
-                  styles.modalButton, 
+                  styles.modalButton,
                   styles.addButton,
                   fetchingMatchDetails && styles.disabledButton
                 ]}
