@@ -6,6 +6,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
+# Preinstall ngrok tunnel helper used by Expo when --tunnel is enabled
+# Prevent interactive prompt: "The package @expo/ngrok@^4.1.0 is required to use tunnels..."
+RUN npm i -g --no-audit --no-fund @expo/ngrok@^4.1.0
+
 # Create app directory
 WORKDIR /app
 

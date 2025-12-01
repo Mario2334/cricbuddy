@@ -31,6 +31,9 @@ const CalendarScreen: React.FC = () => {
 
 
 
+  const [fetchedMatchDetails, setFetchedMatchDetails] = useState<ScheduledMatch | null>(null);
+  const [manualDate, setManualDate] = useState<string>('');
+
   const loadScheduledMatches = async () => {
     try {
       const matchesData = await AsyncStorage.getItem('scheduledMatches');
@@ -173,8 +176,8 @@ const CalendarScreen: React.FC = () => {
     }
   };
 
-  // Add match to schedule from URL by fetching match details from API
-  const scheduleMatchFromUrl = async () => {
+  // Fetch match details and show confirmation
+  const fetchMatchDetails = async () => {
     if (!urlInput.trim()) {
       Toast.show({
         type: 'error',
@@ -243,6 +246,8 @@ const CalendarScreen: React.FC = () => {
         throw new Error('Match data not found in API response');
       }
 
+      const matchStartTime = matchInfo?.startDateTime || matchInfo?.matchStartTime || matchInfo?.matchDate || matchData?.start_datetime || new Date().toISOString();
+
       // Create new scheduled match with real API data
       const newScheduledMatch: ScheduledMatch = {
         matchId: parsedMatch.matchId,
@@ -254,35 +259,25 @@ const CalendarScreen: React.FC = () => {
         groundName: matchInfo?.groundName || matchData?.ground_name,
         groundId: matchData?.ground_id,
         city: matchInfo?.cityName || matchData?.city_name,
-        matchStartTime: matchInfo?.startDateTime || matchData?.start_datetime || new Date().toISOString(),
+        matchStartTime: matchStartTime,
         matchType: matchInfo?.matchType || matchData?.match_type || 'T20',
         overs: matchInfo?.overs || matchData?.overs || 20,
         scheduledAt: new Date().toISOString(),
       };
 
-      // Add to scheduled matches
-      scheduledMatchesList.push(newScheduledMatch);
-      await AsyncStorage.setItem('scheduledMatches', JSON.stringify(scheduledMatchesList));
+      setFetchedMatchDetails(newScheduledMatch);
 
-      // Update state
-      setScheduledMatches(scheduledMatchesList);
-      const convertedMatches = scheduledMatchesList.map(convertScheduledMatchToMatch);
-      setMatches(convertedMatches);
-
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: `Match "${newScheduledMatch.teamNames.team1} vs ${newScheduledMatch.teamNames.team2}" added to schedule`,
-        position: 'bottom',
-        visibilityTime: 3000
-      });
-
-      // Close modal and clear input
-      setShowUrlModal(false);
-      setUrlInput('');
+      // Format date for manual input (YYYY-MM-DD HH:mm)
+      try {
+        const date = new Date(matchStartTime);
+        const formattedDate = date.toISOString().replace('T', ' ').substring(0, 16);
+        setManualDate(formattedDate);
+      } catch (e) {
+        setManualDate(matchStartTime);
+      }
 
     } catch (error) {
-      console.error('Error scheduling match from URL:', error);
+      console.error('Error fetching match details:', error);
       let errorMessage = 'Failed to fetch match details. Please check the URL and try again.';
 
       if (error instanceof Error) {
@@ -303,6 +298,70 @@ const CalendarScreen: React.FC = () => {
     } finally {
       setFetchingMatchDetails(false);
     }
+  };
+
+  const confirmScheduleMatch = async () => {
+    if (!fetchedMatchDetails) return;
+
+    try {
+      // Update the match start time with the manual date
+      let finalDate = fetchedMatchDetails.matchStartTime;
+      try {
+        // Try to parse the manual date
+        const parsedDate = new Date(manualDate);
+        if (!isNaN(parsedDate.getTime())) {
+          finalDate = parsedDate.toISOString();
+        }
+      } catch (e) {
+        console.warn('Invalid date format, using original fetched date');
+      }
+
+      const matchToAdd = {
+        ...fetchedMatchDetails,
+        matchStartTime: finalDate
+      };
+
+      const existingMatches = await AsyncStorage.getItem('scheduledMatches');
+      let scheduledMatchesList: ScheduledMatch[] = existingMatches ? JSON.parse(existingMatches) : [];
+
+      scheduledMatchesList.push(matchToAdd);
+      await AsyncStorage.setItem('scheduledMatches', JSON.stringify(scheduledMatchesList));
+
+      setScheduledMatches(scheduledMatchesList);
+      const convertedMatches = scheduledMatchesList.map(convertScheduledMatchToMatch);
+      setMatches(convertedMatches);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: `Match "${matchToAdd.teamNames.team1} vs ${matchToAdd.teamNames.team2}" added to schedule`,
+        position: 'bottom',
+        visibilityTime: 3000
+      });
+
+      // Reset state
+      setShowUrlModal(false);
+      setUrlInput('');
+      setFetchedMatchDetails(null);
+      setManualDate('');
+
+    } catch (error) {
+      console.error('Error saving match:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to save match to schedule.',
+        position: 'bottom',
+        visibilityTime: 2000
+      });
+    }
+  };
+
+  const cancelModal = () => {
+    setShowUrlModal(false);
+    setUrlInput('');
+    setFetchedMatchDetails(null);
+    setManualDate('');
   };
 
   useEffect(() => {
@@ -349,56 +408,89 @@ const CalendarScreen: React.FC = () => {
         visible={showUrlModal}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowUrlModal(false)}
+        onRequestClose={cancelModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Schedule Match by Link</Text>
-            <Text style={styles.modalSubtitle}>
-              Enter a CricHeroes scorecard URL to add the match to your schedule
+            <Text style={styles.modalTitle}>
+              {fetchedMatchDetails ? 'Confirm Match Details' : 'Schedule Match by Link'}
             </Text>
 
-            <TextInput
-              style={styles.urlInput}
-              placeholder="https://cricheroes.com/scorecard/..."
-              value={urlInput}
-              onChangeText={setUrlInput}
-              multiline={true}
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
+            {!fetchedMatchDetails ? (
+              <>
+                <Text style={styles.modalSubtitle}>
+                  Enter a CricHeroes scorecard URL to add the match to your schedule
+                </Text>
+
+                <TextInput
+                  style={styles.urlInput}
+                  placeholder="https://cricheroes.com/scorecard/..."
+                  value={urlInput}
+                  onChangeText={setUrlInput}
+                  multiline={true}
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                />
+              </>
+            ) : (
+              <View style={styles.confirmationContainer}>
+                <Text style={styles.confirmTeamText}>
+                  {fetchedMatchDetails.teamNames.team1} vs {fetchedMatchDetails.teamNames.team2}
+                </Text>
+                <Text style={styles.confirmTournamentText}>
+                  {fetchedMatchDetails.tournamentName}
+                </Text>
+
+                <Text style={styles.inputLabel}>Match Date & Time (YYYY-MM-DD HH:mm)</Text>
+                <TextInput
+                  style={styles.dateInput}
+                  value={manualDate}
+                  onChangeText={setManualDate}
+                  placeholder="YYYY-MM-DD HH:mm"
+                />
+                <Text style={styles.helperText}>
+                  Please verify the date and time before adding.
+                </Text>
+              </View>
+            )}
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setShowUrlModal(false);
-                  setUrlInput('');
-                }}
+                onPress={cancelModal}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  styles.addButton,
-                  fetchingMatchDetails && styles.disabledButton
-                ]}
-                onPress={scheduleMatchFromUrl}
-                disabled={fetchingMatchDetails}
-              >
-                {fetchingMatchDetails ? (
-                  <View style={styles.loadingButtonContent}>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={[styles.addButtonText, { marginLeft: 8 }]}>
-                      Fetching Details...
-                    </Text>
-                  </View>
-                ) : (
+              {!fetchedMatchDetails ? (
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.addButton,
+                    fetchingMatchDetails && styles.disabledButton
+                  ]}
+                  onPress={fetchMatchDetails}
+                  disabled={fetchingMatchDetails}
+                >
+                  {fetchingMatchDetails ? (
+                    <View style={styles.loadingButtonContent}>
+                      <ActivityIndicator size="small" color="#fff" />
+                      <Text style={[styles.addButtonText, { marginLeft: 8 }]}>
+                        Fetching...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.addButtonText}>Next</Text>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.addButton]}
+                  onPress={confirmScheduleMatch}
+                >
                   <Text style={styles.addButtonText}>Add Match</Text>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -531,6 +623,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  confirmationContainer: {
+    marginBottom: 20,
+  },
+  confirmTeamText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  confirmTournamentText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 8,
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
   },
 });
 

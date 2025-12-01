@@ -493,6 +493,16 @@ class ApiService {
       // The new API returns data in a different structure: { status, data: { team_a, team_b, ... } }
       // We need to convert this to the expected pageProps.scorecard format with complete details
       let scorecardArray = [];
+
+      if (apiData.data) {
+        console.log('Scorecard API Data Date Fields:', {
+          start_datetime: apiData.data.start_datetime,
+          match_date: apiData.data.match_date,
+          match_start_time: apiData.data.match_start_time,
+          start_time: apiData.data.start_time
+        });
+      }
+
       let teamAInnings = {};
       let teamBInnings = {}
 
@@ -560,8 +570,9 @@ class ApiService {
             overs: apiData.data?.overs,
             ballType: apiData.data?.ball_type,
             groundName: apiData.data?.ground_name,
-            cityName: apiData.data?.city_name,
-            startDateTime: apiData.data?.start_datetime,
+            startDateTime: apiData.data?.start_datetime || apiData.data?.match_date || apiData.data?.match_start_time || apiData.data?.start_time,
+            matchStartTime: apiData.data?.match_start_time, // Add explicit field
+            matchDate: apiData.data?.match_date, // Add explicit field
             tournamentName: apiData.data?.tournament_name,
             tournamentRound: apiData.data?.tournament_round_name,
             tossDetails: apiData.data?.toss_details,
