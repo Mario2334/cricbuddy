@@ -495,12 +495,7 @@ class ApiService {
       let scorecardArray = [];
 
       if (apiData.data) {
-        console.log('Scorecard API Data Date Fields:', {
-          start_datetime: apiData.data.start_datetime,
-          match_date: apiData.data.match_date,
-          match_start_time: apiData.data.match_start_time,
-          start_time: apiData.data.start_time
-        });
+        // Data exists
       }
 
       let teamAInnings = {};

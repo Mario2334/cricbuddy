@@ -35,4 +35,4 @@ EXPOSE 19000 19001 19002 19006 8081
 
 # Default command: run the dev server defined in package.json
 # Adds --non-interactive for reliability in containers. Your script already uses --tunnel.
-CMD ["npm", "run", "start", "--", "--non-interactive"]
+CMD ["npm", "run", "start"]

@@ -307,10 +307,9 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!hasInitiallyLoaded) {
-        loadMatches();
-      }
-    }, [hasInitiallyLoaded, loadMatches])
+      // Always reload matches when screen comes into focus to pick up newly added local matches
+      loadMatches(null, true);
+    }, [loadMatches])
   );
 
   const handleRefresh = useCallback(() => {
