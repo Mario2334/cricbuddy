@@ -6,10 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: mycoach
-    environment:
-      - CI=true
-      - EXPO_NO_TELEMETRY=1
-      - EXPO_NO_INTERACTIVE=1
     # Expose all container ports to the host (Linux only)
     network_mode: "host"
     # Uncomment the following volume to live-reload local changes without rebuilding
