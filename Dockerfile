@@ -20,11 +20,6 @@ RUN npm ci --no-audit --no-fund
 # Copy the rest of the app
 COPY . .
 
-# Environment to avoid interactive prompts in CI/containers
-ENV CI=true \
-    EXPO_NO_TELEMETRY=1 \
-    EXPO_NO_INTERACTIVE=1
-
 # Networking
 # We use host networking via docker-compose (network_mode: host) on Linux, which exposes all
 # container ports directly on the host. The EXPOSE line is informational only and not needed.
