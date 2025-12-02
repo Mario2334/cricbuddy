@@ -410,10 +410,9 @@ const LiveTab: React.FC<TabComponentProps> = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!hasInitiallyLoaded) {
-        loadMatches();
-      }
-    }, [hasInitiallyLoaded, loadMatches])
+      // Always reload matches when screen comes into focus to pick up newly added local matches
+      loadMatches(null, true);
+    }, [loadMatches])
   );
 
   const handleRefresh = useCallback(() => {
@@ -516,10 +515,9 @@ const CompletedTab: React.FC<TabComponentProps> = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!hasInitiallyLoaded) {
-        loadMatches();
-      }
-    }, [hasInitiallyLoaded, loadMatches])
+      // Always reload matches when screen comes into focus to pick up newly added local matches
+      loadMatches(null, true);
+    }, [loadMatches])
   );
 
   const handleRefresh = useCallback(() => {

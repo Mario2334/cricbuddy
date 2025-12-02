@@ -25,13 +25,10 @@ ENV CI=true \
     EXPO_NO_TELEMETRY=1 \
     EXPO_NO_INTERACTIVE=1
 
-# Common Expo/Metro ports
-# 19000: Expo dev server (LAN/tunnel)
-# 19001: Legacy manifest/packager (sometimes used)
-# 19002: Expo web UI (older)
-# 19006: Expo web (when using --web)
-# 8081: Metro bundler
-EXPOSE 19000 19001 19002 19006 8081
+# Networking
+# We use host networking via docker-compose (network_mode: host) on Linux, which exposes all
+# container ports directly on the host. The EXPOSE line is informational only and not needed.
+# Leaving it out avoids implying a limited port set when all ports are reachable on Linux host mode.
 
 # Default command: run the dev server defined in package.json
 # Adds --non-interactive for reliability in containers. Your script already uses --tunnel.
