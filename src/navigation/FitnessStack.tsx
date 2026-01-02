@@ -6,6 +6,8 @@ import { FitnessStackParamList } from '../types/navigation';
 import FitnessDashboard from '../screens/FitnessDashboard';
 import ActiveWorkoutScreen from '../screens/ActiveWorkoutScreen';
 import ExerciseHistoryScreen from '../screens/ExerciseHistoryScreen';
+import WorkoutTemplatesScreen from '../screens/WorkoutTemplatesScreen';
+import WorkoutTemplateDetailScreen from '../screens/WorkoutTemplateDetailScreen';
 
 const Stack = createStackNavigator<FitnessStackParamList>();
 
@@ -15,6 +17,8 @@ const Stack = createStackNavigator<FitnessStackParamList>();
  * - FitnessDashboard: Main fitness overview screen
  * - ActiveWorkout: Step-wizard for logging workouts
  * - ExerciseHistory: View exercise history and progression
+ * - WorkoutTemplates: Browse preloaded workout templates
+ * - WorkoutTemplateDetail: View template details and start workout
  */
 const FitnessStack: React.FC = () => {
   return (
@@ -48,6 +52,20 @@ const FitnessStack: React.FC = () => {
         component={ExerciseHistoryScreen}
         options={{
           title: 'Exercise History',
+        }}
+      />
+      <Stack.Screen
+        name="WorkoutTemplates"
+        component={WorkoutTemplatesScreen}
+        options={{
+          title: 'Workout Templates',
+        }}
+      />
+      <Stack.Screen
+        name="WorkoutTemplateDetail"
+        component={WorkoutTemplateDetailScreen}
+        options={{
+          title: 'Template Details',
         }}
       />
     </Stack.Navigator>

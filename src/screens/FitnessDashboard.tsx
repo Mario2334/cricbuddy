@@ -515,6 +515,13 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
         <View style={styles.quickActionsRow}>
           <TouchableOpacity
             style={styles.quickActionButton}
+            onPress={() => navigation.navigate('WorkoutTemplates')}
+          >
+            <Ionicons name="library" size={24} color="#F97316" />
+            <Text style={styles.quickActionText}>Browse Templates</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickActionButton}
             onPress={() => navigation.navigate('ExerciseHistory', {})}
           >
             <Ionicons name="stats-chart" size={24} color="#3498db" />
@@ -843,7 +850,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
+    padding: 12,
     alignItems: 'center',
     marginHorizontal: 4,
     shadowColor: '#000',
@@ -853,10 +860,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   quickActionText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#333',
-    marginTop: 8,
+    marginTop: 6,
     fontWeight: '500',
+    textAlign: 'center',
   },
 
   // Tip section styles

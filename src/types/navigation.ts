@@ -34,6 +34,10 @@ export type FitnessStackParamList = {
   ExerciseHistory: {
     exerciseName?: string;
   };
+  WorkoutTemplates: undefined;
+  WorkoutTemplateDetail: {
+    templateId: string;
+  };
 };
 
 // Define the parameter list for the bottom tabs
@@ -54,3 +58,5 @@ export type CalendarScreenNavigationProp = StackScreenProps<RootStackParamList, 
 export type FitnessDashboardNavigationProp = StackScreenProps<FitnessStackParamList, 'FitnessDashboard'>;
 export type ActiveWorkoutNavigationProp = StackScreenProps<FitnessStackParamList, 'ActiveWorkout'>;
 export type ExerciseHistoryNavigationProp = StackScreenProps<FitnessStackParamList, 'ExerciseHistory'>;
+export type WorkoutTemplatesNavigationProp = StackScreenProps<FitnessStackParamList, 'WorkoutTemplates'>;
+export type WorkoutTemplateDetailNavigationProp = StackScreenProps<FitnessStackParamList, 'WorkoutTemplateDetail'>;
