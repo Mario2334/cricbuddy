@@ -1,5 +1,6 @@
 import { StackScreenProps } from '@react-navigation/stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { MuscleGroup, DailyWorkout } from './fitness';
 
 // Define the parameter list for the root stack
 export type RootStackParamList = {
@@ -22,12 +23,26 @@ export type RootStackParamList = {
   };
 };
 
+// Define the parameter list for the Fitness stack
+export type FitnessStackParamList = {
+  FitnessDashboard: undefined;
+  ActiveWorkout: {
+    date: string;
+    focusAreas: MuscleGroup[];
+    existingWorkout?: DailyWorkout;
+  };
+  ExerciseHistory: {
+    exerciseName?: string;
+  };
+};
+
 // Define the parameter list for the bottom tabs
 export type TabParamList = {
   Home: undefined;
   Stats: undefined;
   MyTeam: undefined;
   Calendar: undefined;
+  Fitness: undefined;
 };
 
 // Navigation props for each screen
@@ -36,3 +51,6 @@ export type MatchDetailScreenNavigationProp = StackScreenProps<RootStackParamLis
 export type StatsScreenNavigationProp = BottomTabScreenProps<TabParamList, 'Stats'>;
 export type MyTeamScreenNavigationProp = StackScreenProps<RootStackParamList, 'MyTeamList'>;
 export type CalendarScreenNavigationProp = StackScreenProps<RootStackParamList, 'CalendarList'>;
+export type FitnessDashboardNavigationProp = StackScreenProps<FitnessStackParamList, 'FitnessDashboard'>;
+export type ActiveWorkoutNavigationProp = StackScreenProps<FitnessStackParamList, 'ActiveWorkout'>;
+export type ExerciseHistoryNavigationProp = StackScreenProps<FitnessStackParamList, 'ExerciseHistory'>;

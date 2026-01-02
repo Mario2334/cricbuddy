@@ -6,7 +6,9 @@
     "start": "expo start --tunnel",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "jest",
+    "local:ios": "eas build --platform ios" 
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
@@ -44,6 +46,9 @@
     "@types/react-native": "^0.72.8",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.34.1",
+    "fast-check": "^4.5.3",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.8.3"
   },
   "private": true

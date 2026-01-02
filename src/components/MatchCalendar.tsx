@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Match } from '../types/Match';
+import type { WorkoutStorage } from '../types/fitness';
 import { formatMatchTime, getMatchStatusColor } from '../utils/matchUtils';
+import { DAY_INDICATOR_COLORS } from '../utils/fitnessUtils';
 
 interface MatchCalendarProps {
   matches: Match[];
@@ -20,12 +22,14 @@ interface MatchCalendarProps {
   onMatchPress: (match: Match) => void;
   onRefresh: () => void;
   onRemoveMatch?: (match: Match) => void;
+  workouts?: WorkoutStorage;
 }
 
 interface CalendarDay {
   date: Date;
   matches: Match[];
   isCurrentMonth: boolean;
+  hasGymSession: boolean;
 }
 
 interface SwipeableMatchItemProps {
@@ -155,6 +159,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   onMatchPress,
   onRefresh,
   onRemoveMatch,
+  workouts = {},
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
@@ -168,7 +173,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
 
   useEffect(() => {
     generateCalendar();
-  }, [currentDate, matches]);
+  }, [currentDate, matches, workouts]);
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -196,10 +201,16 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
         );
       });
 
+      // Check if there's a gym session on this date
+      const dateStr = currentDateObj.toISOString().split('T')[0];
+      const workout = workouts[dateStr];
+      const hasGymSession = workout?.type === 'GYM' && !workout?.isRestDay;
+
       days.push({
         date: new Date(currentDateObj),
         matches: dayMatches,
         isCurrentMonth: currentDateObj.getMonth() === month,
+        hasGymSession,
       });
 
       currentDateObj.setDate(currentDateObj.getDate() + 1);
@@ -281,22 +292,30 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
           {day.date.getDate()}
         </Text>
 
-        {day.matches.length > 0 && (
-          <View style={styles.matchIndicators}>
-            {day.matches.slice(0, 3).map((match, matchIndex) => (
-              <View
-                key={matchIndex}
-                style={[
-                  styles.matchDot,
-                  { backgroundColor: getMatchStatusColor(match.status) }
-                ]}
-              />
-            ))}
-            {day.matches.length > 3 && (
-              <Text style={styles.moreMatches}>+{day.matches.length - 3}</Text>
-            )}
-          </View>
-        )}
+        <View style={styles.matchIndicators}>
+          {/* Match dots (blue) */}
+          {day.matches.slice(0, 2).map((match, matchIndex) => (
+            <View
+              key={`match-${matchIndex}`}
+              style={[
+                styles.matchDot,
+                { backgroundColor: DAY_INDICATOR_COLORS.MATCH }
+              ]}
+            />
+          ))}
+          {/* Gym session dot (orange) */}
+          {day.hasGymSession && (
+            <View
+              style={[
+                styles.matchDot,
+                { backgroundColor: DAY_INDICATOR_COLORS.GYM }
+              ]}
+            />
+          )}
+          {day.matches.length > 2 && (
+            <Text style={styles.moreMatches}>+{day.matches.length - 2}</Text>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };

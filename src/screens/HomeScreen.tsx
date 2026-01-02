@@ -14,6 +14,7 @@ import apiService from '../services/apiService';
 import type { Match } from '../types/Match';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { formatMatchTime, getMatchStatusColor, getLocalScheduledMatches } from '../utils/matchUtils';
+import NextGymSessionCard from '../components/NextGymSessionCard';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -39,6 +40,7 @@ interface MatchListProps {
   onMatchPress?: (match: Match) => void;
   hasNextPage: boolean;
   navigation: HomeScreenNavigationProp['navigation'];
+  ListHeaderComponent?: React.ReactElement | null;
 }
 
 const MatchList: React.FC<MatchListProps> = ({
@@ -54,6 +56,7 @@ const MatchList: React.FC<MatchListProps> = ({
   onMatchPress,
   hasNextPage = false,
   navigation,
+  ListHeaderComponent = null,
 }) => {
   const handleMatchPress = useCallback((item: Match) => {
     if (onMatchPress) {
@@ -193,6 +196,7 @@ const MatchList: React.FC<MatchListProps> = ({
       }
       onEndReached={hasNextPage && !loadingMore ? onEndReached || onLoadMore : undefined}
       onEndReachedThreshold={0.1}
+      ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={
         loadingMore ? (
           <View style={styles.loadingMoreContainer}>
@@ -334,6 +338,7 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
       onLoadMore={handleLoadMore}
       hasNextPage={!!nextPageUrl}
       navigation={navigation}
+      ListHeaderComponent={<NextGymSessionCard />}
     />
   );
 };
@@ -552,7 +557,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   listContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 32,
   },
   loadingMoreContainer: {

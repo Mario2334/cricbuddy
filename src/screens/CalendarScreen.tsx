@@ -15,14 +15,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import MatchCalendar from '../components/MatchCalendar';
 import type { Match, ScheduledMatch } from '../types/Match';
+import type { WorkoutStorage } from '../types/fitness';
 import apiService from '../services/apiService';
 import { convertScheduledMatchToMatch } from '../utils/matchUtils';
+import { fitnessService } from '../services/fitnessService';
 
 
 
 const CalendarScreen: React.FC = () => {
   const [scheduledMatches, setScheduledMatches] = useState<ScheduledMatch[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutStorage>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [showUrlModal, setShowUrlModal] = useState<boolean>(false);
   const [urlInput, setUrlInput] = useState<string>('');
@@ -33,6 +36,15 @@ const CalendarScreen: React.FC = () => {
 
   const [fetchedMatchDetails, setFetchedMatchDetails] = useState<ScheduledMatch | null>(null);
   const [manualDate, setManualDate] = useState<string>('');
+
+  const loadWorkouts = async () => {
+    try {
+      const workoutHistory = await fitnessService.getWorkoutHistory();
+      setWorkouts(workoutHistory);
+    } catch (error) {
+      console.error('Error loading workouts:', error);
+    }
+  };
 
   const loadScheduledMatches = async () => {
     try {
@@ -138,6 +150,7 @@ const CalendarScreen: React.FC = () => {
 
   const onRefresh = () => {
     loadScheduledMatches();
+    loadWorkouts();
   };
 
   // Parse CricHeroes URL to extract match information
@@ -366,12 +379,14 @@ const CalendarScreen: React.FC = () => {
 
   useEffect(() => {
     loadScheduledMatches();
+    loadWorkouts();
   }, []);
 
-  // Reload matches when screen comes into focus
+  // Reload matches and workouts when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadScheduledMatches();
+      loadWorkouts();
     }, [])
   );
 
@@ -392,6 +407,7 @@ const CalendarScreen: React.FC = () => {
         onMatchPress={handleMatchPress}
         onRefresh={onRefresh}
         onRemoveMatch={handleRemoveMatch}
+        workouts={workouts}
       />
 
       {/* Floating Action Button */}

@@ -13,6 +13,9 @@ import MatchDetailScreen from './src/screens/MatchDetailScreen';
 import MyTeamScreen from './src/screens/MyTeamScreen';
 import CalendarScreen from './src/screens/CalendarScreen';
 
+// Import navigation stacks
+import FitnessStack from './src/navigation/FitnessStack';
+
 // Import navigation types
 import {
   RootStackParamList,
@@ -150,6 +153,8 @@ const App: React.FC = () => {
                 iconName = focused ? 'people' : 'people-outline';
               } else if (route.name === 'Calendar') {
                 iconName = focused ? 'calendar' : 'calendar-outline';
+              } else if (route.name === 'Fitness') {
+                iconName = focused ? 'barbell' : 'barbell-outline';
               }
 
               return <Ionicons name={iconName} size={size} color={color} />;
@@ -190,6 +195,14 @@ const App: React.FC = () => {
             component={CalendarStack}
             options={{
               title: 'Calendar',
+              headerShown: false,
+            }}
+          />
+          <Tab.Screen
+            name="Fitness"
+            component={FitnessStack}
+            options={{
+              title: 'Fitness',
               headerShown: false,
             }}
           />
