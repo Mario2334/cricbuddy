@@ -94,7 +94,11 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
       const dates = getWeekDates(weekStart);
       
       const days: DayData[] = dates.map(date => {
-        const matchForDate = scheduledMatches.find(m => m.scheduledAt.split('T')[0] === date);
+        // Use matchStartTime (actual match date) instead of scheduledAt (when user added it)
+        const matchForDate = scheduledMatches.find(m => {
+          const matchDate = (m.matchStartTime || m.scheduledAt).split('T')[0];
+          return matchDate === date;
+        });
         const workoutForDate = workoutHistory[date];
         
         return {
@@ -424,6 +428,9 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
     }
 
     // Rest day card
+    const today = new Date().toISOString().split('T')[0];
+    const isPastDate = selectedDay.date < today;
+
     return (
       <View style={[styles.actionCard, styles.restDayCard]}>
         <View style={styles.actionCardHeader}>
@@ -432,19 +439,30 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
         </View>
         <Text style={styles.dateLabel}>{formatWorkoutDate(selectedDay.date, 'long')}</Text>
         <Text style={styles.restDayMessage}>No workout scheduled</Text>
-        <TouchableOpacity
-          style={styles.scheduleWorkoutButton}
-          onPress={() => {
-            // Navigate to schedule a workout (could be implemented later)
-            navigation.navigate('ActiveWorkout', {
-              date: selectedDay.date,
-              focusAreas: [],
-            });
-          }}
-        >
-          <Ionicons name="add-circle-outline" size={20} color={DAY_INDICATOR_COLORS.GYM} />
-          <Text style={styles.scheduleWorkoutButtonText}>Schedule Workout</Text>
-        </TouchableOpacity>
+        {isPastDate ? (
+          <TouchableOpacity
+            style={styles.startWorkoutButton}
+            onPress={() => {
+              navigation.navigate('ActiveWorkout', {
+                date: selectedDay.date,
+                focusAreas: [],
+              });
+            }}
+          >
+            <Ionicons name="add-circle" size={24} color="#fff" />
+            <Text style={styles.startWorkoutButtonText}>Log Workout</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.scheduleWorkoutButton}
+            onPress={() => {
+              navigation.navigate('WorkoutTemplates');
+            }}
+          >
+            <Ionicons name="add-circle-outline" size={20} color={DAY_INDICATOR_COLORS.GYM} />
+            <Text style={styles.scheduleWorkoutButtonText}>Schedule Workout</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -530,9 +548,8 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => {
-              const today = new Date().toISOString().split('T')[0];
               navigation.navigate('ActiveWorkout', {
-                date: today,
+                date: selectedDate,
                 focusAreas: [],
               });
             }}

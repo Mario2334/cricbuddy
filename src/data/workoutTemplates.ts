@@ -19,6 +19,11 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     focusAreas: ['BACK', 'BICEPS'],
     warmUp: {
       cardio: { name: 'Cycle', durationMins: 10 },
+      warmup: [
+        { name: 'Arm Circles', durationSecs: 30 },
+        { name: 'Band Pull Aparts', reps: 15 },
+        { name: 'Scapular Push Ups', reps: 12 },
+      ],
       circuit: [
         { name: 'Dynamic Pigeon Stretch: Left', reps: 10 },
         { name: 'Dynamic Pigeon Stretch: Right', reps: 10 },
@@ -62,6 +67,11 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     focusAreas: ['CHEST', 'TRICEPS'],
     warmUp: {
       cardio: { name: 'Cycle', durationMins: 10 },
+      warmup: [
+        { name: 'Arm Circles', durationSecs: 30 },
+        { name: 'Push Up Plus', reps: 10 },
+        { name: 'Band Dislocates', reps: 12 },
+      ],
       circuit: [
         { name: 'High Knees', durationSecs: 45 },
         { name: 'Prone Walkout', durationSecs: 45 },
@@ -101,6 +111,11 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     focusAreas: ['LEGS'],
     warmUp: {
       cardio: { name: 'Cycle', durationMins: 10 },
+      warmup: [
+        { name: 'Leg Swings: Forward', reps: 15 },
+        { name: 'Leg Swings: Lateral', reps: 15 },
+        { name: 'Bodyweight Squats', reps: 15 },
+      ],
       circuit: [
         { name: 'Dynamic Pigeon Stretch: Left', reps: 10 },
         { name: 'Dynamic Pigeon Stretch: Right', reps: 10 },
@@ -123,6 +138,11 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
       { name: 'Side Plank Reachthrough: Right', defaultSets: 3, durationSecs: 30 },
       { name: 'Bicycle Crunches', defaultSets: 3, defaultReps: [12, 10, 8] },
     ],
+    cooldown: [
+      { name: 'Foam Roll: Quads', durationSecs: 60 },
+      { name: 'Foam Roll: Hamstrings', durationSecs: 60 },
+      { name: 'Deep Breathing', durationSecs: 60 },
+    ],
     stretch: [
       { name: 'Hamstring Stretch', durationSecs: 40 },
       { name: "Child's Pose", durationSecs: 40 },
@@ -143,6 +163,11 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     focusAreas: ['SHOULDERS'],
     warmUp: {
       cardio: { name: 'Cross Trainer', durationMins: 10 },
+      warmup: [
+        { name: 'Arm Circles', durationSecs: 30 },
+        { name: 'Band Pull Aparts', reps: 15 },
+        { name: 'Face Pulls Light', reps: 12 },
+      ],
       circuit: [
         { name: "World's Greatest Stretch: Left", reps: 10 },
         { name: "World's Greatest Stretch: Right", reps: 10 },
@@ -163,6 +188,11 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
       { name: 'Low Plank', defaultSets: 3, durationSecs: 30 },
       { name: 'Dead Bug', defaultSets: 3, defaultReps: [12, 10, 8] },
       { name: 'Weighted Sit Ups', defaultSets: 3, defaultReps: [12, 10, 8] },
+    ],
+    cooldown: [
+      { name: 'Foam Roll: Upper Back', durationSecs: 60 },
+      { name: 'Foam Roll: Lats', durationSecs: 60 },
+      { name: 'Deep Breathing', durationSecs: 60 },
     ],
     stretch: [
       { name: 'Sphinx Stretch', durationSecs: 40 },

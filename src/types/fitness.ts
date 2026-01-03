@@ -138,7 +138,18 @@ export interface CoreExercise {
  */
 export interface WarmUpSection {
   cardio: WarmUpExercise;
+  warmup?: WarmUpExercise[];    // Warmup exercises after cardio
   circuit: WarmUpExercise[];
+}
+
+/**
+ * Cooldown exercise after core workout
+ * Can be time-based or rep-based
+ */
+export interface CooldownExercise {
+  name: string;
+  durationSecs?: number;
+  reps?: number;
 }
 
 /**
@@ -153,5 +164,6 @@ export interface WorkoutTemplate {
   warmUp: WarmUpSection;
   exercises: ExerciseDefinition[];
   core?: CoreExercise[];
+  cooldown?: CooldownExercise[];  // Cooldown exercises after core
   stretch: WarmUpExercise[];
 }

@@ -10,7 +10,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { FitnessStackParamList } from '../types/navigation';
 import { templateService } from '../services/templateService';
-import { MuscleGroup, ExerciseDefinition, WarmUpExercise, CoreExercise } from '../types/fitness';
+import { MuscleGroup, ExerciseDefinition, WarmUpExercise, CoreExercise, CooldownExercise } from '../types/fitness';
 
 type Props = StackScreenProps<FitnessStackParamList, 'WorkoutTemplateDetail'>;
 
@@ -74,6 +74,19 @@ function formatCoreExercise(exercise: CoreExercise): string {
 }
 
 /**
+ * Format cooldown exercise info
+ */
+function formatCooldownExercise(exercise: CooldownExercise): string {
+  if (exercise.durationSecs) {
+    return `${exercise.durationSecs}s`;
+  }
+  if (exercise.reps) {
+    return `${exercise.reps} reps`;
+  }
+  return '';
+}
+
+/**
  * WorkoutTemplateDetailScreen
  * 
  * Displays template name and focus areas.
@@ -131,6 +144,22 @@ const WorkoutTemplateDetailScreen: React.FC<Props> = ({ route, navigation }) => 
           {formatDuration(template.warmUp.cardio)}
         </Text>
       </View>
+
+      {/* Warmup exercises after cardio */}
+      {template.warmUp.warmup && template.warmUp.warmup.length > 0 && (
+        <>
+          <Text style={styles.circuitLabel}>Warmup:</Text>
+          {template.warmUp.warmup.map((exercise, index) => (
+            <View key={index} style={styles.warmUpItem}>
+              <View style={styles.warmUpIcon}>
+                <Ionicons name="body" size={18} color="#F97316" />
+              </View>
+              <Text style={styles.warmUpName}>{exercise.name}</Text>
+              <Text style={styles.warmUpDuration}>{formatDuration(exercise)}</Text>
+            </View>
+          ))}
+        </>
+      )}
 
       {/* Circuit */}
       <Text style={styles.circuitLabel}>Circuit:</Text>
@@ -196,6 +225,29 @@ const WorkoutTemplateDetailScreen: React.FC<Props> = ({ route, navigation }) => 
     );
   };
 
+  const renderCooldownSection = () => {
+    if (!template.cooldown || template.cooldown.length === 0) return null;
+
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="snow" size={20} color="#3B82F6" />
+          <Text style={styles.sectionTitle}>Cooldown ({template.cooldown.length})</Text>
+        </View>
+        
+        {template.cooldown.map((exercise, index) => (
+          <View key={index} style={styles.warmUpItem}>
+            <View style={styles.cooldownIcon}>
+              <Ionicons name="snow" size={18} color="#3B82F6" />
+            </View>
+            <Text style={styles.warmUpName}>{exercise.name}</Text>
+            <Text style={styles.warmUpDuration}>{formatCooldownExercise(exercise)}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderStretchSection = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -243,6 +295,7 @@ const WorkoutTemplateDetailScreen: React.FC<Props> = ({ route, navigation }) => 
         {renderWarmUpSection()}
         {renderExercisesSection()}
         {renderCoreSection()}
+        {renderCooldownSection()}
         {renderStretchSection()}
       </ScrollView>
 
@@ -366,6 +419,15 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 8,
     backgroundColor: '#f3e8ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  cooldownIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#dbeafe',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

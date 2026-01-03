@@ -173,7 +173,8 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
 
   useEffect(() => {
     generateCalendar();
-  }, [currentDate, matches, workouts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, matches, JSON.stringify(workouts)]);
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();

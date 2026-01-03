@@ -57,8 +57,9 @@ export function getDayIndicatorColor(
   workouts: WorkoutStorage
 ): DayIndicatorColor {
   // Check if there's a match on this date (highest priority)
+  // Use matchStartTime (actual match date) instead of scheduledAt (when user added it)
   const hasMatch = matches.some(match => {
-    const matchDate = match.scheduledAt.split('T')[0];
+    const matchDate = (match.matchStartTime || match.scheduledAt).split('T')[0];
     return matchDate === date;
   });
 
@@ -100,8 +101,9 @@ export function mergeCalendarData(
   const mergedData: MergedCalendarData = {};
 
   // Add match dates (blue dots)
+  // Use matchStartTime (actual match date) instead of scheduledAt (when user added it)
   for (const match of matches) {
-    const matchDate = match.scheduledAt.split('T')[0];
+    const matchDate = (match.matchStartTime || match.scheduledAt).split('T')[0];
     
     // Skip if outside date range (if specified)
     if (startDate && matchDate < startDate) continue;

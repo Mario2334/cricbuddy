@@ -164,9 +164,9 @@ class FitnessService {
     const matches = await this.getScheduledMatches();
 
     // Check if any match is scheduled for the next day
+    // Use matchStartTime (actual match date) instead of scheduledAt (when user added it)
     return matches.some(match => {
-      // Extract date from scheduledAt (could be ISO string or date string)
-      const matchDate = match.scheduledAt.split('T')[0];
+      const matchDate = (match.matchStartTime || match.scheduledAt).split('T')[0];
       return matchDate === nextDayStr;
     });
   }

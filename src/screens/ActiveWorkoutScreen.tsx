@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,8 +22,10 @@ import {
   ExerciseLog,
   ExerciseSet,
   MuscleGroup,
+  WorkoutTemplate,
 } from '../types/fitness';
 import { fitnessService } from '../services/fitnessService';
+import { templateService } from '../services/templateService';
 import {
   generateUUID,
   addSetToExercise,
@@ -34,37 +36,143 @@ import {
 
 type Props = StackScreenProps<FitnessStackParamList, 'ActiveWorkout'>;
 
-type WorkoutPhase = 'focus' | 'cardio' | 'strength' | 'core';
+type WorkoutPhase = 'focus' | 'cardio' | 'warmup' | 'strength' | 'core' | 'cooldown';
 
-const PHASES_WITH_FOCUS: WorkoutPhase[] = ['focus', 'cardio', 'strength', 'core'];
-const PHASES_WITHOUT_FOCUS: WorkoutPhase[] = ['cardio', 'strength', 'core'];
+const PHASES_WITH_FOCUS: WorkoutPhase[] = ['focus', 'cardio', 'warmup', 'strength', 'core', 'cooldown'];
+const PHASES_WITHOUT_FOCUS: WorkoutPhase[] = ['cardio', 'warmup', 'strength', 'core', 'cooldown'];
 const PHASE_LABELS: Record<WorkoutPhase, string> = {
   focus: 'Focus',
   cardio: 'Cardio',
+  warmup: 'Warmup',
   strength: 'Strength',
   core: 'Core',
+  cooldown: 'Cooldown',
 };
 
 const STRENGTH_MUSCLE_GROUPS: MuscleGroup[] = ['LEGS', 'SHOULDERS', 'CHEST', 'TRICEPS', 'BACK', 'BICEPS'];
 
-const CORE_EXERCISES = [
-  { id: 'plank', name: 'Plank', icon: 'body' },
-  { id: 'russian-twists', name: 'Russian Twists', icon: 'sync' },
-  { id: 'leg-raises', name: 'Leg Raises', icon: 'arrow-up' },
-  { id: 'crunches', name: 'Crunches', icon: 'fitness' },
-  { id: 'mountain-climbers', name: 'Mountain Climbers', icon: 'walk' },
-];
+/**
+ * Get the matching template for selected focus areas
+ */
+function getTemplateForFocusAreas(focusAreas: MuscleGroup[]): WorkoutTemplate | undefined {
+  const templates = templateService.getAllTemplates();
+  
+  // Try to find exact match first
+  const exactMatch = templates.find(t => {
+    if (t.focusAreas.length !== focusAreas.length) return false;
+    return t.focusAreas.every(area => focusAreas.includes(area));
+  });
+  
+  if (exactMatch) return exactMatch;
+  
+  // Find template that covers the most focus areas
+  let bestMatch: WorkoutTemplate | undefined;
+  let bestScore = 0;
+  
+  for (const template of templates) {
+    const matchingAreas = template.focusAreas.filter(area => focusAreas.includes(area));
+    if (matchingAreas.length > bestScore) {
+      bestScore = matchingAreas.length;
+      bestMatch = template;
+    }
+  }
+  
+  return bestMatch;
+}
 
-const EXERCISES_BY_GROUP: Record<MuscleGroup, string[]> = {
-  LEGS: ['Barbell Squats', 'Leg Press', 'Lunges', 'Leg Curls', 'Calf Raises'],
-  SHOULDERS: ['Overhead Press', 'Lateral Raises', 'Front Raises', 'Rear Delt Flyes', 'Shrugs'],
-  CHEST: ['Bench Press', 'Incline Press', 'Dumbbell Flyes', 'Push-ups', 'Cable Crossovers'],
-  TRICEPS: ['Tricep Dips', 'Skull Crushers', 'Tricep Pushdowns', 'Close-Grip Bench', 'Overhead Extensions'],
-  BACK: ['Deadlifts', 'Pull-ups', 'Barbell Rows', 'Lat Pulldowns', 'Seated Rows'],
-  BICEPS: ['Barbell Curls', 'Dumbbell Curls', 'Hammer Curls', 'Preacher Curls', 'Concentration Curls'],
-  CORE: ['Plank', 'Russian Twists', 'Leg Raises', 'Crunches', 'Ab Wheel'],
-  CARDIO: ['Treadmill', 'Cycling', 'Rowing', 'Jump Rope', 'Elliptical'],
-};
+/**
+ * Get core exercises from templates
+ */
+function getCoreExercisesFromTemplates(): { id: string; name: string; icon: string }[] {
+  const templates = templateService.getAllTemplates();
+  const coreExercises: { id: string; name: string; icon: string }[] = [];
+  const seenNames = new Set<string>();
+  
+  for (const template of templates) {
+    if (template.core) {
+      for (const exercise of template.core) {
+        if (!seenNames.has(exercise.name)) {
+          seenNames.add(exercise.name);
+          coreExercises.push({
+            id: exercise.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+            name: exercise.name,
+            icon: exercise.name.toLowerCase().includes('plank') ? 'body' : 
+                  exercise.name.toLowerCase().includes('crunch') || exercise.name.toLowerCase().includes('bicycle') ? 'fitness' :
+                  exercise.name.toLowerCase().includes('dead bug') ? 'bug' : 'body',
+          });
+        }
+      }
+    }
+  }
+  
+  // Fallback if no core exercises found in templates
+  if (coreExercises.length === 0) {
+    return [
+      { id: 'plank', name: 'Plank', icon: 'body' },
+      { id: 'bicycle-crunches', name: 'Bicycle Crunches', icon: 'fitness' },
+      { id: 'dead-bug', name: 'Dead Bug', icon: 'body' },
+    ];
+  }
+  
+  return coreExercises;
+}
+
+/**
+ * Get warmup exercises from templates based on focus areas
+ */
+function getWarmupExercisesFromTemplates(focusAreas: MuscleGroup[]): { id: string; name: string; duration?: string }[] {
+  const template = getTemplateForFocusAreas(focusAreas);
+  const warmupExercises: { id: string; name: string; duration?: string }[] = [];
+  
+  if (template?.warmUp?.warmup) {
+    for (const exercise of template.warmUp.warmup) {
+      warmupExercises.push({
+        id: exercise.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        name: exercise.name,
+        duration: exercise.durationSecs ? `${exercise.durationSecs}s` : exercise.reps ? `${exercise.reps} reps` : undefined,
+      });
+    }
+  }
+  
+  // Fallback warmup exercises
+  if (warmupExercises.length === 0) {
+    return [
+      { id: 'arm-circles', name: 'Arm Circles', duration: '30s' },
+      { id: 'leg-swings', name: 'Leg Swings', duration: '15 reps' },
+      { id: 'bodyweight-squats', name: 'Bodyweight Squats', duration: '15 reps' },
+    ];
+  }
+  
+  return warmupExercises;
+}
+
+/**
+ * Get cooldown exercises from templates based on focus areas
+ */
+function getCooldownExercisesFromTemplates(focusAreas: MuscleGroup[]): { id: string; name: string; duration?: string }[] {
+  const template = getTemplateForFocusAreas(focusAreas);
+  const cooldownExercises: { id: string; name: string; duration?: string }[] = [];
+  
+  if (template?.cooldown) {
+    for (const exercise of template.cooldown) {
+      cooldownExercises.push({
+        id: exercise.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        name: exercise.name,
+        duration: exercise.durationSecs ? `${exercise.durationSecs}s` : exercise.reps ? `${exercise.reps} reps` : undefined,
+      });
+    }
+  }
+  
+  // Fallback cooldown exercises
+  if (cooldownExercises.length === 0) {
+    return [
+      { id: 'foam-roll', name: 'Foam Rolling', duration: '60s' },
+      { id: 'deep-breathing', name: 'Deep Breathing', duration: '60s' },
+    ];
+  }
+  
+  return cooldownExercises;
+}
 
 function getMuscleGroupColor(group: MuscleGroup): string {
   const colors: Record<MuscleGroup, string> = {
@@ -74,21 +182,68 @@ function getMuscleGroupColor(group: MuscleGroup): string {
   return colors[group] || '#6B7280';
 }
 
-function initializeExercises(areas: MuscleGroup[]): ExerciseLog[] {
-  const exerciseList: ExerciseLog[] = [];
-  areas.forEach(area => {
-    if (area !== 'CARDIO' && area !== 'CORE') {
-      const areaExercises = EXERCISES_BY_GROUP[area] || [];
-      areaExercises.slice(0, 3).forEach(exerciseName => {
-        exerciseList.push({
+/**
+ * Initialize exercises from template based on focus areas
+ */
+function initializeExercisesFromTemplate(areas: MuscleGroup[]): ExerciseLog[] {
+  const template = getTemplateForFocusAreas(areas);
+  
+  if (template) {
+    // Use exercises from the matching template
+    return template.exercises
+      .filter(ex => areas.includes(ex.targetGroup) || areas.length === 0)
+      .map(exercise => {
+        const sets: ExerciseSet[] = [];
+        for (let i = 0; i < exercise.defaultSets; i++) {
+          sets.push({
+            id: generateUUID(),
+            weight: exercise.defaultWeight?.[i] ?? 0,
+            reps: exercise.defaultReps?.[i] ?? 10,
+            completed: false,
+          });
+        }
+        return {
           id: generateUUID(),
-          exerciseName,
-          targetGroup: area,
-          sets: [],
-        });
+          exerciseName: exercise.name,
+          targetGroup: exercise.targetGroup,
+          sets,
+        };
       });
+  }
+  
+  // Fallback: collect exercises from all templates for the selected areas
+  const templates = templateService.getAllTemplates();
+  const exerciseList: ExerciseLog[] = [];
+  const seenExercises = new Set<string>();
+  
+  for (const area of areas) {
+    if (area !== 'CARDIO' && area !== 'CORE') {
+      for (const tmpl of templates) {
+        const areaExercises = tmpl.exercises.filter(ex => ex.targetGroup === area);
+        for (const exercise of areaExercises) {
+          if (!seenExercises.has(exercise.name)) {
+            seenExercises.add(exercise.name);
+            const sets: ExerciseSet[] = [];
+            for (let i = 0; i < exercise.defaultSets; i++) {
+              sets.push({
+                id: generateUUID(),
+                weight: exercise.defaultWeight?.[i] ?? 0,
+                reps: exercise.defaultReps?.[i] ?? 10,
+                completed: false,
+              });
+            }
+            exerciseList.push({
+              id: generateUUID(),
+              exerciseName: exercise.name,
+              targetGroup: area,
+              sets,
+            });
+          }
+        }
+      }
     }
-  });
+  }
+  
   return exerciseList;
 }
 
@@ -110,6 +265,15 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<MuscleGroup[]>(initialFocusAreas);
   const focusAreas = selectedFocusAreas.length > 0 ? selectedFocusAreas : initialFocusAreas;
 
+  // Get core exercises from templates
+  const CORE_EXERCISES = useMemo(() => getCoreExercisesFromTemplates(), []);
+  
+  // Get warmup exercises from templates based on focus areas
+  const WARMUP_EXERCISES = useMemo(() => getWarmupExercisesFromTemplates(focusAreas), [focusAreas]);
+  
+  // Get cooldown exercises from templates based on focus areas
+  const COOLDOWN_EXERCISES = useMemo(() => getCooldownExercisesFromTemplates(focusAreas), [focusAreas]);
+
   const [cardioType, setCardioType] = useState<CardioType>(existingWorkout?.cardio?.type || 'RUNNING');
   const [cardioDuration, setCardioDuration] = useState<string>(
     existingWorkout?.cardio?.durationMinutes?.toString() || ''
@@ -123,7 +287,7 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const [exercises, setExercises] = useState<ExerciseLog[]>(() => {
     if (existingWorkout?.exercises?.length) return existingWorkout.exercises;
-    if (initialFocusAreas.length > 0) return initializeExercises(initialFocusAreas);
+    if (initialFocusAreas.length > 0) return initializeExercisesFromTemplate(initialFocusAreas);
     return []; // Will be initialized after focus selection
   });
 
@@ -131,6 +295,8 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
   const [coreCompleted, setCoreCompleted] = useState<Set<string>>(
     new Set(existingWorkout?.coreCompleted || [])
   );
+  const [warmupCompleted, setWarmupCompleted] = useState<Set<string>>(new Set());
+  const [cooldownCompleted, setCooldownCompleted] = useState<Set<string>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
   const validateCardio = useCallback((): boolean => {
@@ -169,8 +335,8 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleNext = useCallback(() => {
     if (currentPhase === 'focus') {
       if (!validateFocusAreas()) return;
-      // Initialize exercises based on selected focus areas
-      setExercises(initializeExercises(selectedFocusAreas));
+      // Initialize exercises based on selected focus areas using templates
+      setExercises(initializeExercisesFromTemplate(selectedFocusAreas));
     }
     if (currentPhase === 'cardio' && !validateCardio()) return;
     if (currentPhaseIndex < PHASES.length - 1) setCurrentPhaseIndex(currentPhaseIndex + 1);
@@ -215,6 +381,24 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handleToggleCoreExercise = useCallback((exerciseId: string) => {
     setCoreCompleted(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(exerciseId)) newSet.delete(exerciseId);
+      else newSet.add(exerciseId);
+      return newSet;
+    });
+  }, []);
+
+  const handleToggleWarmupExercise = useCallback((exerciseId: string) => {
+    setWarmupCompleted(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(exerciseId)) newSet.delete(exerciseId);
+      else newSet.add(exerciseId);
+      return newSet;
+    });
+  }, []);
+
+  const handleToggleCooldownExercise = useCallback((exerciseId: string) => {
+    setCooldownCompleted(prev => {
       const newSet = new Set(prev);
       if (newSet.has(exerciseId)) newSet.delete(exerciseId);
       else newSet.add(exerciseId);
@@ -480,12 +664,76 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
     </ScrollView>
   );
 
+  const renderWarmupPhase = () => (
+    <ScrollView style={styles.phaseContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.phaseTitle}>Warmup</Text>
+      <Text style={styles.phaseSubtitle}>Prepare your muscles for the workout</Text>
+      <View style={styles.coreExercisesList}>
+        {WARMUP_EXERCISES.map(exercise => {
+          const isCompleted = warmupCompleted.has(exercise.id);
+          return (
+            <TouchableOpacity key={exercise.id} style={[styles.coreExerciseItem, isCompleted && styles.coreExerciseItemCompleted]}
+              onPress={() => handleToggleWarmupExercise(exercise.id)}>
+              <View style={[styles.coreCheckbox, isCompleted && styles.coreCheckboxChecked]}>
+                {isCompleted && <Ionicons name="checkmark" size={18} color="#fff" />}
+              </View>
+              <Ionicons name="body" size={24} color={isCompleted ? '#F97316' : '#666'} style={styles.coreExerciseIcon} />
+              <View style={styles.warmupExerciseInfo}>
+                <Text style={[styles.coreExerciseName, isCompleted && styles.coreExerciseNameCompleted]}>{exercise.name}</Text>
+                {exercise.duration && <Text style={styles.warmupDuration}>{exercise.duration}</Text>}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <View style={styles.coreProgress}>
+        <Text style={styles.coreProgressText}>{warmupCompleted.size} of {WARMUP_EXERCISES.length} completed</Text>
+        <View style={styles.coreProgressBar}>
+          <View style={[styles.warmupProgressFill, { width: `${(warmupCompleted.size / WARMUP_EXERCISES.length) * 100}%` }]} />
+        </View>
+      </View>
+    </ScrollView>
+  );
+
+  const renderCooldownPhase = () => (
+    <ScrollView style={styles.phaseContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.phaseTitle}>Cooldown</Text>
+      <Text style={styles.phaseSubtitle}>Help your body recover</Text>
+      <View style={styles.coreExercisesList}>
+        {COOLDOWN_EXERCISES.map(exercise => {
+          const isCompleted = cooldownCompleted.has(exercise.id);
+          return (
+            <TouchableOpacity key={exercise.id} style={[styles.coreExerciseItem, isCompleted && styles.coreExerciseItemCompleted]}
+              onPress={() => handleToggleCooldownExercise(exercise.id)}>
+              <View style={[styles.coreCheckbox, isCompleted && styles.coreCheckboxChecked]}>
+                {isCompleted && <Ionicons name="checkmark" size={18} color="#fff" />}
+              </View>
+              <Ionicons name="snow" size={24} color={isCompleted ? '#3B82F6' : '#666'} style={styles.coreExerciseIcon} />
+              <View style={styles.warmupExerciseInfo}>
+                <Text style={[styles.coreExerciseName, isCompleted && styles.coreExerciseNameCompleted]}>{exercise.name}</Text>
+                {exercise.duration && <Text style={styles.warmupDuration}>{exercise.duration}</Text>}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <View style={styles.coreProgress}>
+        <Text style={styles.coreProgressText}>{cooldownCompleted.size} of {COOLDOWN_EXERCISES.length} completed</Text>
+        <View style={styles.coreProgressBar}>
+          <View style={[styles.cooldownProgressFill, { width: `${(cooldownCompleted.size / COOLDOWN_EXERCISES.length) * 100}%` }]} />
+        </View>
+      </View>
+    </ScrollView>
+  );
+
   const renderPhaseContent = () => {
     switch (currentPhase) {
       case 'focus': return renderFocusPhase();
       case 'cardio': return renderCardioPhase();
+      case 'warmup': return renderWarmupPhase();
       case 'strength': return renderStrengthPhase();
       case 'core': return renderCorePhase();
+      case 'cooldown': return renderCooldownPhase();
       default: return null;
     }
   };
@@ -602,6 +850,10 @@ const styles = StyleSheet.create({
   coreProgressText: { fontSize: 14, color: '#666', marginBottom: 8, textAlign: 'center' },
   coreProgressBar: { height: 8, backgroundColor: '#e0e0e0', borderRadius: 4, overflow: 'hidden' },
   coreProgressFill: { height: '100%', backgroundColor: '#4CAF50', borderRadius: 4 },
+  warmupProgressFill: { height: '100%', backgroundColor: '#F97316', borderRadius: 4 },
+  cooldownProgressFill: { height: '100%', backgroundColor: '#3B82F6', borderRadius: 4 },
+  warmupExerciseInfo: { flex: 1 },
+  warmupDuration: { fontSize: 12, color: '#666', marginTop: 2 },
   footer: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e0e0e0' },
   footerSpacer: { flex: 1 },
   backButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
