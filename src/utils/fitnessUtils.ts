@@ -252,13 +252,14 @@ export function isToday(date: string): boolean {
  * Get an array of dates for a week starting from a given date
  * 
  * @param startDate - ISO date string (YYYY-MM-DD) for the start of the week
- * @returns Array of 7 ISO date strings
+ * @param numDays - Number of days to include (default: 7)
+ * @returns Array of ISO date strings
  */
-export function getWeekDates(startDate: string): string[] {
+export function getWeekDates(startDate: string, numDays: number = 7): string[] {
   const dates: string[] = [];
   const start = new Date(startDate + 'T00:00:00');
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < numDays; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
     dates.push(date.toISOString().split('T')[0]);

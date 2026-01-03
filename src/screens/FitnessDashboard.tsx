@@ -89,9 +89,9 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
       setWorkouts(workoutHistory);
       setMatches(scheduledMatches);
 
-      // Build week data
+      // Build week data - show current week plus one week ahead (14 days total)
       const weekStart = getWeekStartDate();
-      const dates = getWeekDates(weekStart);
+      const dates = getWeekDates(weekStart, 14);
       
       const days: DayData[] = dates.map(date => {
         // Use matchStartTime (actual match date) instead of scheduledAt (when user added it)
@@ -498,7 +498,7 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
 
       {/* Weekly Snapshot - Requirements: 4.1 */}
       <View style={styles.weeklySection}>
-        <Text style={styles.sectionTitle}>This Week</Text>
+        <Text style={styles.sectionTitle}>Next 2 Weeks</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
