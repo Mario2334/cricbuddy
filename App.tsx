@@ -1,10 +1,13 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
+
+// Import services for app initialization
+import { workoutCalendarService } from './src/services';
 
 // Import screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -137,6 +140,23 @@ const CalendarStack: React.FC = () => {
 
 // Define the App component with proper typing
 const App: React.FC = () => {
+  // Clean up past scheduled workouts on app startup
+  // Requirements: 8.5
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        const cleanedCount = await workoutCalendarService.cleanupPastWorkouts();
+        if (cleanedCount > 0) {
+          console.log(`App: Cleaned up ${cleanedCount} past scheduled workouts`);
+        }
+      } catch (error) {
+        console.error('App: Failed to cleanup past workouts:', error);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
   return (
     <>
       <NavigationContainer>

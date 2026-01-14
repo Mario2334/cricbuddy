@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Match } from '../types/Match';
-import type { WorkoutStorage } from '../types/fitness';
+import type { WorkoutStorage, ScheduledWorkout } from '../types/fitness';
 import { formatMatchTime, getMatchStatusColor } from '../utils/matchUtils';
 import { DAY_INDICATOR_COLORS } from '../utils/fitnessUtils';
 
@@ -23,14 +23,28 @@ interface MatchCalendarProps {
   onRefresh: () => void;
   onRemoveMatch?: (match: Match) => void;
   workouts?: WorkoutStorage;
+  scheduledWorkouts?: ScheduledWorkout[];
+  onScheduledWorkoutPress?: (workout: ScheduledWorkout) => void;
+  onDateSelect?: (date: string) => void;
 }
 
 interface CalendarDay {
   date: Date;
+  dateStr: string;
   matches: Match[];
   isCurrentMonth: boolean;
   hasGymSession: boolean;
+  scheduledWorkouts: ScheduledWorkout[];
+  isFutureDate: boolean;
 }
+
+/**
+ * Unified event type for the upcoming events list
+ * Combines matches and scheduled workouts into a single sortable list
+ */
+type UpcomingEvent = 
+  | { type: 'match'; data: Match; dateTime: Date }
+  | { type: 'scheduledWorkout'; data: ScheduledWorkout; dateTime: Date };
 
 interface SwipeableMatchItemProps {
   match: Match;
@@ -44,7 +58,7 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
   onRemove,
 }) => {
   const screenWidth = Dimensions.get('window').width;
-  const swipeThreshold = screenWidth * 0.3; // 30% of screen width
+  const swipeThreshold = screenWidth * 0.3;
   const deleteButtonWidth = 80;
 
   const translateX = new Animated.Value(0);
@@ -52,14 +66,12 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (evt, gestureState) => {
-      // Only respond to horizontal swipes and if onRemove is provided
-      return onRemove && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
+      return !!(onRemove && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10);
     },
     onPanResponderGrant: () => {
       setIsSwipeActive(true);
     },
     onPanResponderMove: (evt, gestureState) => {
-      // Only allow left swipe (negative dx)
       if (gestureState.dx < 0) {
         const clampedDx = Math.max(gestureState.dx, -deleteButtonWidth);
         translateX.setValue(clampedDx);
@@ -69,13 +81,11 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
       setIsSwipeActive(false);
 
       if (gestureState.dx < -swipeThreshold) {
-        // Swipe far enough to show delete button
         Animated.spring(translateX, {
           toValue: -deleteButtonWidth,
           useNativeDriver: true,
         }).start();
       } else {
-        // Snap back to original position
         Animated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -108,7 +118,6 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
 
   return (
     <View style={styles.swipeableContainer}>
-      {/* Delete button (behind the item) */}
       {onRemove && (
         <View style={styles.deleteButtonContainer}>
           <TouchableOpacity
@@ -121,7 +130,6 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
         </View>
       )}
 
-      {/* Main match item */}
       <Animated.View
         style={[
           styles.swipeableItem,
@@ -153,6 +161,54 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
   );
 };
 
+/**
+ * Scheduled workout item component for the upcoming events list
+ */
+interface ScheduledWorkoutItemProps {
+  workout: ScheduledWorkout;
+  onPress: () => void;
+}
+
+const ScheduledWorkoutItem: React.FC<ScheduledWorkoutItemProps> = ({
+  workout,
+  onPress,
+}) => {
+  const formatScheduledTime = (date: string, time: string): string => {
+    const dateObj = new Date(`${date}T${time}:00`);
+    return dateObj.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
+  return (
+    <TouchableOpacity
+      style={[styles.matchItem, styles.workoutItem]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.workoutIconContainer}>
+        <Ionicons name="fitness" size={24} color={DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT} />
+      </View>
+      <View style={styles.matchInfo}>
+        <Text style={styles.matchTeams}>{workout.templateName}</Text>
+        <Text style={styles.matchTime}>
+          {formatScheduledTime(workout.scheduledDate, workout.scheduledTime)}
+        </Text>
+        <Text style={styles.focusAreasText}>
+          {workout.focusAreas.join(', ')}
+        </Text>
+      </View>
+      <View style={[styles.statusBadge, { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }]}>
+        <Text style={styles.statusText}>SCHEDULED</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 const MatchCalendar: React.FC<MatchCalendarProps> = ({
   matches,
   loading,
@@ -160,6 +216,9 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   onRefresh,
   onRemoveMatch,
   workouts = {},
+  scheduledWorkouts = [],
+  onScheduledWorkoutPress,
+  onDateSelect,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
@@ -171,24 +230,33 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const today = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now;
+  }, []);
+
+  // Format date as YYYY-MM-DD in local timezone (avoids UTC conversion issues)
+  const formatDateToLocalString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     generateCalendar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, matches, JSON.stringify(workouts)]);
+  }, [currentDate, matches, JSON.stringify(workouts), JSON.stringify(scheduledWorkouts)]);
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    // Get first day of the month
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    // Get the day of week for the first day (0 = Sunday)
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
-    // Generate 42 days (6 weeks) for the calendar grid
     const days: CalendarDay[] = [];
     const currentDateObj = new Date(startDate);
 
@@ -202,16 +270,28 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
         );
       });
 
-      // Check if there's a gym session on this date
-      const dateStr = currentDateObj.toISOString().split('T')[0];
+      const dateStr = formatDateToLocalString(currentDateObj);
       const workout = workouts[dateStr];
       const hasGymSession = workout?.type === 'GYM' && !workout?.isRestDay;
 
+      // Filter scheduled workouts for this date
+      const dayScheduledWorkouts = scheduledWorkouts.filter(
+        sw => sw.scheduledDate === dateStr
+      );
+
+      // Check if this is a future date
+      const dayDate = new Date(currentDateObj);
+      dayDate.setHours(0, 0, 0, 0);
+      const isFutureDate = dayDate >= today;
+
       days.push({
         date: new Date(currentDateObj),
+        dateStr,
         matches: dayMatches,
         isCurrentMonth: currentDateObj.getMonth() === month,
         hasGymSession,
+        scheduledWorkouts: dayScheduledWorkouts,
+        isFutureDate,
       });
 
       currentDateObj.setDate(currentDateObj.getDate() + 1);
@@ -228,6 +308,19 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
+  };
+
+  const handleDayPress = (day: CalendarDay) => {
+    // If there are scheduled workouts and a handler is provided, show the first one
+    if (day.scheduledWorkouts.length > 0 && onScheduledWorkoutPress) {
+      onScheduledWorkoutPress(day.scheduledWorkouts[0]);
+    } else if (day.matches.length > 0) {
+      // If there are matches, show the first match
+      onMatchPress(day.matches[0]);
+    } else if (onDateSelect && day.isFutureDate) {
+      // If no events and it's a future date, allow scheduling
+      onDateSelect(day.dateStr);
+    }
   };
 
   const renderCalendarHeader = () => (
@@ -268,6 +361,10 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       day.date.getMonth() === new Date().getMonth() &&
       day.date.getFullYear() === new Date().getFullYear();
 
+    // Determine if this day has a "No Play" indicator
+    // Show No Play for future dates with scheduled workouts
+    const hasNoPlayIndicator = day.isFutureDate && day.scheduledWorkouts.length > 0;
+
     return (
       <TouchableOpacity
         key={index}
@@ -276,12 +373,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
           !day.isCurrentMonth && styles.otherMonthDay,
           isToday && styles.today,
         ]}
-        onPress={() => {
-          if (day.matches.length > 0) {
-            // For now, just open the first match of the day
-            onMatchPress(day.matches[0]);
-          }
-        }}
+        onPress={() => handleDayPress(day)}
       >
         <Text
           style={[
@@ -304,7 +396,8 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
               ]}
             />
           ))}
-          {/* Gym session dot (orange) */}
+          
+          {/* Completed gym session dot (orange) - for past workouts */}
           {day.hasGymSession && (
             <View
               style={[
@@ -313,10 +406,29 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
               ]}
             />
           )}
+          
+          {/* Scheduled workout dots (green) - for future scheduled workouts */}
+          {day.scheduledWorkouts.slice(0, 2).map((sw, swIndex) => (
+            <View
+              key={`scheduled-${swIndex}`}
+              style={[
+                styles.matchDot,
+                { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }
+              ]}
+            />
+          ))}
+          
           {day.matches.length > 2 && (
             <Text style={styles.moreMatches}>+{day.matches.length - 2}</Text>
           )}
         </View>
+
+        {/* No Play indicator for dates with scheduled workouts */}
+        {hasNoPlayIndicator && (
+          <View style={styles.noPlayIndicator}>
+            <Text style={styles.noPlayText}>No Play</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -334,51 +446,131 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
     return weeks;
   };
 
-  const renderMatchList = () => {
-    const todayMatches = matches.filter(match => {
+  /**
+   * Merge matches and scheduled workouts into a single chronologically sorted list
+   * Requirements: 3.4
+   */
+  const getUpcomingEvents = useMemo((): UpcomingEvent[] => {
+    const events: UpcomingEvent[] = [];
+    const now = new Date();
+
+    // Add upcoming matches
+    matches.forEach(match => {
       const matchDate = new Date(match.match_start_time || match.start_time || '');
-      const today = new Date();
-      return (
-        matchDate.getDate() === today.getDate() &&
-        matchDate.getMonth() === today.getMonth() &&
-        matchDate.getFullYear() === today.getFullYear()
-      );
+      if (matchDate > now) {
+        events.push({
+          type: 'match',
+          data: match,
+          dateTime: matchDate,
+        });
+      }
     });
 
-    const upcomingMatches = matches
-      .filter(match => {
-        const matchDate = new Date(match.match_start_time || match.start_time || '');
-        return matchDate > new Date();
-      })
-      .slice(0, 5);
+    // Add scheduled workouts
+    scheduledWorkouts.forEach(workout => {
+      const workoutDate = new Date(`${workout.scheduledDate}T${workout.scheduledTime}:00`);
+      if (workoutDate > now) {
+        events.push({
+          type: 'scheduledWorkout',
+          data: workout,
+          dateTime: workoutDate,
+        });
+      }
+    });
+
+    // Sort by date/time in chronological order
+    events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+
+    // Return first 5 events
+    return events.slice(0, 5);
+  }, [matches, scheduledWorkouts]);
+
+  /**
+   * Get today's events (matches and scheduled workouts)
+   */
+  const getTodayEvents = useMemo((): UpcomingEvent[] => {
+    const events: UpcomingEvent[] = [];
+    const todayStr = formatDateToLocalString(new Date());
+
+    // Add today's matches
+    matches.forEach(match => {
+      const matchDate = new Date(match.match_start_time || match.start_time || '');
+      const matchDateStr = formatDateToLocalString(matchDate);
+      if (matchDateStr === todayStr) {
+        events.push({
+          type: 'match',
+          data: match,
+          dateTime: matchDate,
+        });
+      }
+    });
+
+    // Add today's scheduled workouts
+    scheduledWorkouts.forEach(workout => {
+      if (workout.scheduledDate === todayStr) {
+        const workoutDate = new Date(`${workout.scheduledDate}T${workout.scheduledTime}:00`);
+        events.push({
+          type: 'scheduledWorkout',
+          data: workout,
+          dateTime: workoutDate,
+        });
+      }
+    });
+
+    // Sort by time
+    events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+
+    return events;
+  }, [matches, scheduledWorkouts]);
+
+  const renderEventItem = (event: UpcomingEvent, index: number) => {
+    if (event.type === 'match') {
+      return (
+        <SwipeableMatchItem
+          key={`match-${event.data.match_id}-${index}`}
+          match={event.data}
+          onPress={() => onMatchPress(event.data)}
+          onRemove={onRemoveMatch ? () => onRemoveMatch(event.data) : undefined}
+        />
+      );
+    } else {
+      return (
+        <ScheduledWorkoutItem
+          key={`workout-${event.data.id}-${index}`}
+          workout={event.data}
+          onPress={() => onScheduledWorkoutPress?.(event.data)}
+        />
+      );
+    }
+  };
+
+  const renderEventsList = () => {
+    const todayEvents = getTodayEvents;
+    const upcomingEvents = getUpcomingEvents;
 
     return (
       <View style={styles.matchListContainer}>
-        {todayMatches.length > 0 && (
+        {todayEvents.length > 0 && (
           <View style={styles.matchSection}>
-            <Text style={styles.sectionTitle}>Today's Matches</Text>
-            {todayMatches.map((match, index) => (
-              <SwipeableMatchItem
-                key={index}
-                match={match}
-                onPress={() => onMatchPress(match)}
-                onRemove={onRemoveMatch ? () => onRemoveMatch(match) : undefined}
-              />
-            ))}
+            <Text style={styles.sectionTitle}>Today's Events</Text>
+            {todayEvents.map((event, index) => renderEventItem(event, index))}
           </View>
         )}
 
-        {upcomingMatches.length > 0 && (
+        {upcomingEvents.length > 0 && (
           <View style={styles.matchSection}>
-            <Text style={styles.sectionTitle}>Upcoming Matches</Text>
-            {upcomingMatches.map((match, index) => (
-              <SwipeableMatchItem
-                key={index}
-                match={match}
-                onPress={() => onMatchPress(match)}
-                onRemove={onRemoveMatch ? () => onRemoveMatch(match) : undefined}
-              />
-            ))}
+            <Text style={styles.sectionTitle}>Upcoming Events</Text>
+            {upcomingEvents.map((event, index) => renderEventItem(event, index))}
+          </View>
+        )}
+
+        {todayEvents.length === 0 && upcomingEvents.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="calendar-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyStateText}>No upcoming events</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Schedule a workout or add a match to get started
+            </Text>
           </View>
         )}
       </View>
@@ -401,7 +593,24 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       <View style={styles.calendarGrid}>
         {renderCalendarGrid()}
       </View>
-      {renderMatchList()}
+      
+      {/* Legend for calendar indicators */}
+      <View style={styles.legendContainer}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.MATCH }]} />
+          <Text style={styles.legendText}>Match</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.GYM }]} />
+          <Text style={styles.legendText}>Completed</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }]} />
+          <Text style={styles.legendText}>Scheduled</Text>
+        </View>
+      </View>
+      
+      {renderEventsList()}
     </ScrollView>
   );
 };
@@ -464,8 +673,8 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     flex: 1,
-    minHeight: 60,
-    padding: 8,
+    minHeight: 70,
+    padding: 4,
     borderBottomWidth: 0.5,
     borderRightWidth: 0.5,
     borderColor: '#e0e0e0',
@@ -479,9 +688,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e3f2fd',
   },
   dayText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   otherMonthText: {
     color: '#ccc',
@@ -495,6 +704,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   matchDot: {
     width: 6,
@@ -507,6 +717,42 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#666',
     marginLeft: 2,
+  },
+  noPlayIndicator: {
+    marginTop: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    backgroundColor: DAY_INDICATOR_COLORS.NO_PLAY,
+    borderRadius: 4,
+  },
+  noPlayText: {
+    fontSize: 8,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    gap: 20,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#666',
   },
   matchListContainer: {
     padding: 16,
@@ -537,6 +783,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  workoutItem: {
+    borderLeftWidth: 4,
+    borderLeftColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT,
+  },
+  workoutIconContainer: {
+    marginRight: 12,
+  },
   matchInfo: {
     flex: 1,
   },
@@ -550,6 +803,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  focusAreasText: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -559,6 +817,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
+    textAlign: 'center',
   },
   // Swipeable styles
   swipeableContainer: {

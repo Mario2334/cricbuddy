@@ -17,6 +17,7 @@ import { FitnessStackParamList } from '../types/navigation';
 import { DailyWorkout, MuscleGroup, WorkoutStorage } from '../types/fitness';
 import { ScheduledMatch } from '../types/Match';
 import { fitnessService } from '../services/fitnessService';
+import { workoutCalendarService } from '../services/workoutCalendarService';
 import {
   DAY_INDICATOR_COLORS,
   getDayIndicatorColor,
@@ -26,7 +27,10 @@ import {
   getDayNumber,
   isToday,
   formatWorkoutDate,
+  formatDateToLocalString,
 } from '../utils/fitnessUtils';
+import ScheduleWorkoutModal from '../components/ScheduleWorkoutModal';
+import type { ScheduledWorkout } from '../types/fitness';
 
 type Props = StackScreenProps<FitnessStackParamList, 'FitnessDashboard'>;
 
@@ -40,8 +44,10 @@ interface DayData {
   isToday: boolean;
   hasMatch: boolean;
   hasWorkout: boolean;
+  hasScheduledWorkout: boolean;
   workout?: DailyWorkout;
   match?: ScheduledMatch;
+  scheduledWorkouts: ScheduledWorkout[];
   indicatorColor: string;
 }
 
@@ -60,14 +66,19 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [weekDays, setWeekDays] = useState<DayData[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateToLocalString(new Date()));
   const [workouts, setWorkouts] = useState<WorkoutStorage>({});
   const [matches, setMatches] = useState<ScheduledMatch[]>([]);
+  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduledWorkout[]>([]);
   
   // Swap mode state
   const [swapMode, setSwapMode] = useState(false);
   const [swapSourceDate, setSwapSourceDate] = useState<string | null>(null);
   const swapAnimations = useRef<{ [key: string]: Animated.Value }>({}).current;
+  
+  // Schedule workout modal state
+  const [showScheduleWorkoutModal, setShowScheduleWorkoutModal] = useState(false);
+  const [selectedDateForScheduling, setSelectedDateForScheduling] = useState<string | undefined>(undefined);
 
   /**
    * Load workout and match data
@@ -80,14 +91,16 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
     }
 
     try {
-      // Load workouts and matches in parallel
-      const [workoutHistory, scheduledMatches] = await Promise.all([
+      // Load workouts, matches, and scheduled workouts in parallel
+      const [workoutHistory, scheduledMatches, scheduledWorkoutsList] = await Promise.all([
         fitnessService.getWorkoutHistory(),
         fitnessService.getScheduledMatches(),
+        workoutCalendarService.getScheduledWorkouts(),
       ]);
 
       setWorkouts(workoutHistory);
       setMatches(scheduledMatches);
+      setScheduledWorkouts(scheduledWorkoutsList);
 
       // Build week data - show current week plus one week ahead (14 days total)
       const weekStart = getWeekStartDate();
@@ -101,6 +114,11 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
         });
         const workoutForDate = workoutHistory[date];
         
+        // Get scheduled workouts for this date
+        const scheduledWorkoutsForDate = scheduledWorkoutsList.filter(
+          sw => sw.scheduledDate === date
+        );
+        
         return {
           date,
           dayAbbr: getDayAbbreviation(date),
@@ -108,9 +126,11 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
           isToday: isToday(date),
           hasMatch: !!matchForDate,
           hasWorkout: !!workoutForDate && workoutForDate.type === 'GYM' && !workoutForDate.isRestDay,
+          hasScheduledWorkout: scheduledWorkoutsForDate.length > 0,
           workout: workoutForDate,
           match: matchForDate,
-          indicatorColor: getDayIndicatorColor(date, scheduledMatches, workoutHistory),
+          scheduledWorkouts: scheduledWorkoutsForDate,
+          indicatorColor: getDayIndicatorColor(date, scheduledMatches, workoutHistory, scheduledWorkoutsList),
         };
       });
 
@@ -427,8 +447,54 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
       );
     }
 
+    // Scheduled workout card - for future scheduled workouts
+    if (selectedDay.hasScheduledWorkout && selectedDay.scheduledWorkouts.length > 0) {
+      const scheduledWorkout = selectedDay.scheduledWorkouts[0];
+      const focusAreas = scheduledWorkout.focusAreas || [];
+      
+      return (
+        <View style={[styles.actionCard, styles.scheduledWorkoutCard]}>
+          <View style={styles.actionCardHeader}>
+            <Ionicons name="calendar" size={32} color={DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT} />
+            <Text style={styles.actionCardTitle}>Scheduled Workout</Text>
+          </View>
+          <Text style={styles.dateLabel}>{formatWorkoutDate(selectedDay.date, 'long')}</Text>
+          <Text style={styles.scheduledWorkoutName}>{scheduledWorkout.templateName}</Text>
+          <Text style={styles.scheduledWorkoutTime}>
+            {scheduledWorkout.scheduledTime} • {scheduledWorkout.durationMinutes} min
+          </Text>
+          
+          {focusAreas.length > 0 && (
+            <View style={styles.focusAreasContainer}>
+              <Text style={styles.focusAreasLabel}>Focus Areas:</Text>
+              <View style={styles.focusAreasTags}>
+                {focusAreas.map((area, index) => (
+                  <View key={index} style={[styles.focusAreaTag, styles.scheduledFocusAreaTag]}>
+                    <Text style={styles.focusAreaText}>{area}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[styles.startWorkoutButton, styles.scheduledStartButton]}
+            onPress={() => {
+              navigation.navigate('ActiveWorkout', {
+                date: selectedDay.date,
+                focusAreas: focusAreas as MuscleGroup[],
+              });
+            }}
+          >
+            <Ionicons name="play-circle" size={24} color="#fff" />
+            <Text style={styles.startWorkoutButtonText}>Start Workout</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     // Rest day card
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateToLocalString(new Date());
     const isPastDate = selectedDay.date < today;
 
     return (
@@ -456,7 +522,8 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             style={styles.scheduleWorkoutButton}
             onPress={() => {
-              navigation.navigate('WorkoutTemplates');
+              setSelectedDateForScheduling(selectedDay.date);
+              setShowScheduleWorkoutModal(true);
             }}
           >
             <Ionicons name="add-circle-outline" size={20} color={DAY_INDICATOR_COLORS.GYM} />
@@ -512,8 +579,12 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.legendText}>Match</Text>
           </View>
           <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }]} />
+            <Text style={styles.legendText}>Scheduled</Text>
+          </View>
+          <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.GYM }]} />
-            <Text style={styles.legendText}>Gym</Text>
+            <Text style={styles.legendText}>Completed</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.REST }]} />
@@ -569,6 +640,21 @@ const FitnessDashboard: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
       </View>
+
+      {/* Schedule Workout Modal */}
+      <ScheduleWorkoutModal
+        visible={showScheduleWorkoutModal}
+        selectedDate={selectedDateForScheduling}
+        onClose={() => {
+          setShowScheduleWorkoutModal(false);
+          setSelectedDateForScheduling(undefined);
+        }}
+        onSchedule={(workout: ScheduledWorkout) => {
+          setShowScheduleWorkoutModal(false);
+          setSelectedDateForScheduling(undefined);
+          loadData(); // Refresh data after scheduling
+        }}
+      />
     </ScrollView>
   );
 };
@@ -826,6 +912,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+
+  // Scheduled workout card
+  scheduledWorkoutCard: {
+    backgroundColor: '#e8f5e9',
+  },
+  scheduledWorkoutName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT,
+    marginBottom: 4,
+  },
+  scheduledWorkoutTime: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  scheduledFocusAreaTag: {
+    backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT,
+  },
+  scheduledStartButton: {
+    backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT,
   },
 
   // Rest day card

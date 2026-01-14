@@ -5,6 +5,13 @@
  * exercise tracking, and fitness scheduling.
  */
 
+import { ExerciseHealthMetrics, WorkoutHealthMetrics } from './health';
+import type { 
+  ExerciseTimerHistory, 
+  ExerciseVisualState, 
+  InteractiveSessionData 
+} from './timer';
+
 // Muscle groups targeted by exercises
 export type MuscleGroup = 
   | 'LEGS' 
@@ -46,6 +53,12 @@ export interface ExerciseLog {
   targetGroup: MuscleGroup;
   sets: ExerciseSet[];
   notes?: string;
+  healthMetrics?: ExerciseHealthMetrics;
+  // Timer-related properties for interactive sessions
+  suggestedDuration?: number;        // for time-based exercises
+  restDurations?: number[];          // custom rest between sets
+  timerHistory?: ExerciseTimerHistory;
+  visualProgress?: ExerciseVisualState;
 }
 
 /**
@@ -74,6 +87,10 @@ export interface DailyWorkout {
   isRestDay: boolean;
   createdAt: string;
   updatedAt: string;
+  healthKitWorkoutId?: string;
+  workoutMetrics?: WorkoutHealthMetrics;
+  // Interactive session data for timer-driven workouts
+  interactiveSession?: InteractiveSessionData;
 }
 
 /**
@@ -166,4 +183,50 @@ export interface WorkoutTemplate {
   core?: CoreExercise[];
   cooldown?: CooldownExercise[];  // Cooldown exercises after core
   stretch: WarmUpExercise[];
+}
+
+
+// ============================================
+// SCHEDULED WORKOUT TYPES
+// ============================================
+
+/**
+ * Represents a recurring pattern for scheduled workouts
+ * Currently supports weekly recurring schedules
+ */
+export interface RecurringPattern {
+  frequency: 'weekly';
+  daysOfWeek: number[];          // 0=Sunday, 1=Monday, 2=Tuesday, etc.
+  endDate?: string;              // Optional end date for series (ISO date string)
+}
+
+/**
+ * Represents a scheduled future workout session
+ * Contains all information needed to plan and sync workouts with device calendar
+ */
+export interface ScheduledWorkout {
+  id: string;
+  templateId?: string;           // Reference to workout template (optional for custom workouts)
+  templateName: string;          // Display name of the workout
+  focusAreas: MuscleGroup[];     // Target muscle groups
+  scheduledDate: string;         // ISO date string (YYYY-MM-DD)
+  scheduledTime: string;         // Time string (HH:mm)
+  durationMinutes: number;       // Expected duration in minutes
+  calendarEventId?: string;      // Native calendar event ID (set after sync)
+  notificationId?: string;       // Local notification ID for 30-min reminder
+  isRecurring: boolean;          // Whether this is part of a recurring series
+  recurringPattern?: RecurringPattern;  // Pattern details if recurring
+  recurringSeriesId?: string;    // Links recurring instances together
+  createdAt: string;             // ISO timestamp of creation
+  updatedAt: string;             // ISO timestamp of last update
+}
+
+/**
+ * Result of conflict detection when scheduling a workout
+ * Used to warn users about scheduling conflicts
+ */
+export interface ConflictResult {
+  hasConflict: boolean;
+  conflictType?: 'match' | 'workout';
+  conflictDetails?: string;
 }

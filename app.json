@@ -29,6 +29,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sanket.django.cricbuddy",
+      "appleTeamId": "7WVTVM9MK9",
+      "entitlements": {},
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "This app uses location services to show your position on the map and provide directions to cricket grounds.",
@@ -49,7 +51,13 @@
       "config": {
         "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
       },
-      "package": "com.sanket.django.cricbuddy"
+      "package": "com.sanket.django.cricbuddy",
+      "permissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

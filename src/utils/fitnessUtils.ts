@@ -10,15 +10,32 @@ import type { WorkoutStorage, ExerciseLog, ExerciseSet } from '../types/fitness'
 import type { ScheduledMatch } from '../types/Match';
 
 /**
+ * Format date as YYYY-MM-DD in local timezone (avoids UTC conversion issues)
+ * @param date - The date to format
+ * @returns Date string in YYYY-MM-DD format
+ */
+export function formatDateToLocalString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Day indicator colors for the weekly view
  * - Blue: Match day
- * - Orange: Gym day
- * - Grey: Rest day
+ * - Orange: Gym day (completed)
+ * - Green: Scheduled workout (future)
+ * - Grey: Rest day / No play
+ * - Red: Conflict indicator
  */
 export const DAY_INDICATOR_COLORS = {
-  MATCH: '#3B82F6',   // Blue
-  GYM: '#F97316',     // Orange
-  REST: '#9CA3AF',    // Grey
+  MATCH: '#3B82F6',           // Blue - scheduled matches
+  GYM: '#F97316',             // Orange - completed gym sessions
+  SCHEDULED_WORKOUT: '#34C759', // Green - future scheduled workouts
+  NO_PLAY: '#8E8E93',         // Grey - rest days / no play
+  REST: '#9CA3AF',            // Grey (alias for backwards compatibility)
+  CONFLICT: '#FF3B30',        // Red - conflict indicator
 } as const;
 
 export type DayIndicatorColor = typeof DAY_INDICATOR_COLORS[keyof typeof DAY_INDICATOR_COLORS];
@@ -42,11 +59,12 @@ export interface MergedCalendarData {
 /**
  * Get the indicator color for a specific date based on scheduled activities
  * 
- * Priority: Match (blue) > Gym (orange) > Rest (grey)
+ * Priority: Match (blue) > Scheduled Workout (green) > Completed Gym (orange) > Rest (grey)
  * 
  * @param date - ISO date string (YYYY-MM-DD)
  * @param matches - Array of scheduled matches
  * @param workouts - Workout storage object
+ * @param scheduledWorkouts - Array of scheduled workouts (optional)
  * @returns The appropriate indicator color
  * 
  * Requirements: 4.2, 4.3, 4.4
@@ -54,7 +72,8 @@ export interface MergedCalendarData {
 export function getDayIndicatorColor(
   date: string,
   matches: ScheduledMatch[],
-  workouts: WorkoutStorage
+  workouts: WorkoutStorage,
+  scheduledWorkouts?: { scheduledDate: string }[]
 ): DayIndicatorColor {
   // Check if there's a match on this date (highest priority)
   // Use matchStartTime (actual match date) instead of scheduledAt (when user added it)
@@ -67,7 +86,12 @@ export function getDayIndicatorColor(
     return DAY_INDICATOR_COLORS.MATCH;
   }
 
-  // Check if there's a gym workout on this date
+  // Check if there's a scheduled workout on this date (future workouts)
+  if (scheduledWorkouts && scheduledWorkouts.some(sw => sw.scheduledDate === date)) {
+    return DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT;
+  }
+
+  // Check if there's a completed gym workout on this date
   const workout = workouts[date];
   if (workout && workout.type === 'GYM' && !workout.isRestDay) {
     return DAY_INDICATOR_COLORS.GYM;
@@ -244,7 +268,7 @@ export function getDayNumber(date: string): number {
  * @returns true if the date is today
  */
 export function isToday(date: string): boolean {
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateToLocalString(new Date());
   return date === today;
 }
 
@@ -262,7 +286,7 @@ export function getWeekDates(startDate: string, numDays: number = 7): string[] {
   for (let i = 0; i < numDays; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
-    dates.push(date.toISOString().split('T')[0]);
+    dates.push(formatDateToLocalString(date));
   }
 
   return dates;
@@ -282,7 +306,7 @@ export function getWeekStartDate(): string {
   const monday = new Date(today);
   monday.setDate(today.getDate() - daysFromMonday);
   
-  return monday.toISOString().split('T')[0];
+  return formatDateToLocalString(monday);
 }
 
 
