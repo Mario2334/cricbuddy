@@ -3,6 +3,12 @@
  * 
  * Displays overall workout progress with animated circular progress indicator,
  * milestone celebrations, and phase-based visual feedback.
+ * 
+ * Enhanced with curved time text display for elapsed and remaining time
+ * around the progress ring arc.
+ * 
+ * Feature: curved-timer-compact-metrics
+ * Requirements: 1.1, 1.2, 1.4, 2.1, 2.2, 2.4, 3.1, 3.2, 3.3, 3.4, 6.1, 6.3
  */
 
 import React, { useEffect, useState } from 'react';
@@ -16,6 +22,24 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { WorkoutTheme, WorkoutPhase, WorkoutMilestone } from '../types/timer';
 
+/**
+ * Configuration for curved time text display
+ */
+export interface CurvedTimeConfig {
+  elapsedLabel?: string;    // Label prefix for elapsed time (default: "")
+  remainingLabel?: string;  // Label prefix for remaining time (default: "")
+  fontSize?: number;        // Font size for curved text (default: 14, min: 12)
+}
+
+/**
+ * Default curved time configuration values
+ */
+const DEFAULT_CURVED_TIME_CONFIG: Required<CurvedTimeConfig> = {
+  elapsedLabel: '',
+  remainingLabel: '',
+  fontSize: 14,
+};
+
 interface WorkoutProgressRingProps {
   progress: number; // 0-100 percentage
   theme: WorkoutTheme;
@@ -27,6 +51,9 @@ interface WorkoutProgressRingProps {
   onMilestone?: (milestone: WorkoutMilestone) => void;
   size?: 'small' | 'medium' | 'large';
   showDetails?: boolean;
+  // New props for curved time display
+  showCurvedTime?: boolean;
+  curvedTimeConfig?: CurvedTimeConfig;
 }
 
 /**
@@ -43,7 +70,14 @@ export const WorkoutProgressRing: React.FC<WorkoutProgressRingProps> = ({
   onMilestone,
   size = 'medium',
   showDetails = true,
+  showCurvedTime = false,
+  curvedTimeConfig,
 }) => {
+  // Merge user config with defaults
+  const mergedCurvedConfig: Required<CurvedTimeConfig> = {
+    ...DEFAULT_CURVED_TIME_CONFIG,
+    ...curvedTimeConfig,
+  };
   // Animation values
   const [progressAnimation] = useState(new Animated.Value(0));
   const [celebrationAnimation] = useState(new Animated.Value(0));
@@ -131,9 +165,38 @@ export const WorkoutProgressRing: React.FC<WorkoutProgressRingProps> = ({
   };
 
   // Get size-specific dimensions
+  // When showCurvedTime is true, reduce dimensions to fit within 180px max height
   const getDimensions = () => {
     const screenWidth = Dimensions.get('window').width;
     
+    // Reduced dimensions for curved time mode (max 180px height)
+    if (showCurvedTime) {
+      switch (size) {
+        case 'small':
+          return { 
+            diameter: Math.min(screenWidth * 0.25, 100), 
+            strokeWidth: 5, 
+            fontSize: 14,
+            detailFontSize: 9,
+          };
+        case 'large':
+          return { 
+            diameter: Math.min(screenWidth * 0.45, 160), 
+            strokeWidth: 8, 
+            fontSize: 24,
+            detailFontSize: 11,
+          };
+        default: // medium
+          return { 
+            diameter: Math.min(screenWidth * 0.38, 140), 
+            strokeWidth: 7, 
+            fontSize: 20,
+            detailFontSize: 10,
+          };
+      }
+    }
+    
+    // Standard dimensions (original behavior)
     switch (size) {
       case 'small':
         return { 
@@ -341,8 +404,13 @@ export const WorkoutProgressRing: React.FC<WorkoutProgressRingProps> = ({
     </Animated.View>
   );
 
-  // Render time details
+  // Render time details (hidden when showCurvedTime is true)
   const renderTimeDetails = () => {
+    // Hide time details when curved time is enabled (Requirement 3.3)
+    if (showCurvedTime) {
+      return null;
+    }
+    
     if (!showDetails || size === 'small') {
       return null;
     }
@@ -403,11 +471,91 @@ export const WorkoutProgressRing: React.FC<WorkoutProgressRingProps> = ({
     );
   };
 
+  /**
+   * Render curved time text around the progress ring
+   * 
+   * - Elapsed time: Left side, orange color
+   * - Remaining time: Right side, white color
+   * 
+   * Requirements: 1.1, 1.2, 2.1, 2.2, 6.1
+   */
+  const renderCurvedTimeText = () => {
+    if (!showCurvedTime) {
+      return null;
+    }
+    
+    // Get elapsed time text with optional label
+    const elapsedText = mergedCurvedConfig.elapsedLabel 
+      ? `${mergedCurvedConfig.elapsedLabel} ${elapsedTime}`
+      : elapsedTime;
+    
+    // Get remaining time text with optional label
+    const remainingText = estimatedRemainingTime
+      ? (mergedCurvedConfig.remainingLabel 
+          ? `${mergedCurvedConfig.remainingLabel} ${estimatedRemainingTime}`
+          : estimatedRemainingTime)
+      : null;
+
+    // Theme colors for curved text (Requirement 6.1)
+    const elapsedColor = theme.primaryColor;
+    const remainingColor = theme.textColor;
+    
+    const textFontSize = ensureMinimumFontSize(mergedCurvedConfig.fontSize);
+
+    return (
+      <>
+        {/* Elapsed time - Left side */}
+        <View style={[styles.sideTimeContainer, styles.leftTimeContainer]}>
+          <Text style={[
+            styles.sideTimeText,
+            { 
+              color: elapsedColor, 
+              fontSize: textFontSize,
+              transform: [{ rotate: '-90deg' }],
+            }
+          ]}>
+            {elapsedText}
+          </Text>
+        </View>
+        
+        {/* Remaining time - Right side */}
+        {remainingText && (
+          <View style={[styles.sideTimeContainer, styles.rightTimeContainer]}>
+            <Text style={[
+              styles.sideTimeText,
+              { 
+                color: remainingColor, 
+                fontSize: textFontSize,
+                transform: [{ rotate: '90deg' }],
+              }
+            ]}>
+              {remainingText}
+            </Text>
+          </View>
+        )}
+      </>
+    );
+  };
+  
+  // Helper function to ensure minimum font size
+  const ensureMinimumFontSize = (size: number): number => {
+    return Math.max(size, 12);
+  };
+  // Calculate container height based on mode
+  // When showCurvedTime is true, max height is 180px (Requirement 3.1)
+  const containerStyle = showCurvedTime
+    ? [styles.container, styles.compactContainer, { backgroundColor: theme.backgroundColor }]
+    : [styles.container, { backgroundColor: theme.backgroundColor }];
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
-      <View style={styles.progressContainer}>
+    <View style={containerStyle}>
+      <View style={[
+        styles.progressContainer,
+        showCurvedTime && styles.compactProgressContainer,
+      ]}>
         {renderProgressRing()}
         {renderCenterContent()}
+        {renderCurvedTimeText()}
         {renderMilestoneIndicator()}
       </View>
       {renderTimeDetails()}
@@ -418,15 +566,48 @@ export const WorkoutProgressRing: React.FC<WorkoutProgressRingProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 8,
     borderRadius: 16,
-    marginVertical: 8,
+    marginVertical: 4,
+  },
+  compactContainer: {
+    // Max height of 180px when curved time is enabled (Requirement 3.1)
+    maxHeight: 180,
+    paddingVertical: 4,
+    marginVertical: 2,
   },
   progressContainer: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  compactProgressContainer: {
+    marginBottom: 0,
+  },
+  curvedTextOverlay: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sideTimeContainer: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  leftTimeContainer: {
+    left: -45,
+    top: 0,
+    bottom: 0,
+  },
+  rightTimeContainer: {
+    right: -45,
+    top: 0,
+    bottom: 0,
+  },
+  sideTimeText: {
+    fontWeight: '600',
+    fontFamily: 'monospace',
   },
   progressRingContainer: {
     position: 'absolute',

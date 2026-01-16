@@ -97,6 +97,7 @@ export interface RealTimeMetrics {
   heartRateTimestamp: Date | null;
   activeCalories: number;
   elapsedSeconds: number;
+  vo2Max: number | null;
   currentExerciseMetrics?: ExerciseHealthMetrics;
 }
 

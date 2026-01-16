@@ -11,6 +11,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@react-native-async-storage/async-storage$': '<rootDir>/src/__mocks__/asyncStorage.ts',
+    '^react-native-svg$': '<rootDir>/src/__mocks__/react-native-svg.ts',
   },
   setupFilesAfterEnv: [],
   collectCoverageFrom: [

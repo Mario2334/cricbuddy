@@ -165,6 +165,8 @@ export interface InteractiveSessionConfig {
   enableHaptics: boolean;
   enableAdaptiveSuggestions: boolean;
   backgroundMode: boolean;
+  /** Optional initial phase to start the session with (overrides auto-detection) */
+  initialPhase?: WorkoutPhase;
 }
 
 /**

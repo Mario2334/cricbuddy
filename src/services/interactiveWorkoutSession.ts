@@ -162,8 +162,8 @@ export class InteractiveWorkoutSession {
     this.adaptiveAdjustments = [];
     this.timerStats = this.createInitialTimerStats();
 
-    // Determine initial phase based on workout structure
-    const initialPhase = this.determinePhase(0);
+    // Determine initial phase based on workout structure or config override
+    const initialPhase = this.config.initialPhase || this.determinePhase(0);
 
     // Update session state
     this.sessionState = {
@@ -617,9 +617,16 @@ export class InteractiveWorkoutSession {
     // Update elapsed seconds from workout timer
     const workoutTimer = timers.find(t => t.id === this.workoutTimerId);
     if (workoutTimer) {
+      // Calculate remaining time based on initial estimate minus elapsed time
+      const initialEstimate = this.workout 
+        ? this.estimateRemainingTime(this.workout) 
+        : 0;
+      const remainingSeconds = Math.max(0, initialEstimate - workoutTimer.elapsed);
+      
       this.sessionState = {
         ...this.sessionState,
         elapsedSeconds: workoutTimer.elapsed,
+        estimatedRemainingSeconds: remainingSeconds,
       };
     }
 

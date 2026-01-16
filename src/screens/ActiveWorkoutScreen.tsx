@@ -68,6 +68,7 @@ import { audioFeedbackManager } from '../services/audioFeedbackManager';
 import { InteractiveTimer } from '../components/InteractiveTimer';
 import { WorkoutProgressRing } from '../components/WorkoutProgressRing';
 import { TimerControls } from '../components/TimerControls';
+import { LeftMetricsStack, RightMetricsStack } from '../components/CompactMetricsRow';
 import type { AuthorizationStatus, WorkoutSummary, RealTimeMetrics, WatchConnectionState } from '../types/health';
 
 type Props = StackScreenProps<FitnessStackParamList, 'ActiveWorkout'>;
@@ -369,6 +370,7 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
 
   // Real-time health metrics state
   const [currentHeartRate, setCurrentHeartRate] = useState<number | null>(null);
+  const [currentVo2Max, setCurrentVo2Max] = useState<number | null>(null);
   const [currentCalories, setCurrentCalories] = useState<number>(0);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
@@ -554,7 +556,7 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
   }, [cardioType, cardioDuration, cardioDistance, cardioIntensity]);
 
   // Start interactive workout session
-  const startInteractiveSession = useCallback(async () => {
+  const startInteractiveSession = useCallback(async (phase?: WorkoutPhase) => {
     try {
       const tempWorkout: DailyWorkout = {
         id: existingWorkout?.id || generateUUID(),
@@ -576,6 +578,7 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
         enableHaptics: true,
         enableAdaptiveSuggestions: true,
         backgroundMode: true,
+        initialPhase: phase,
       });
 
       setIsInteractiveMode(true);
@@ -584,6 +587,7 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
       // Subscribe to real-time metrics
       workoutSessionManager.subscribeToMetrics((metrics: RealTimeMetrics) => {
         setCurrentHeartRate(metrics.heartRate);
+        setCurrentVo2Max(metrics.vo2Max);
         setCurrentCalories(metrics.activeCalories);
       });
     } catch (error) {
@@ -635,7 +639,7 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
     
     // Start interactive session when entering strength phase
     if (nextPhase === 'strength' && !isInteractiveMode && !healthKitDenied) {
-      await startInteractiveSession();
+      await startInteractiveSession('strength');
     }
     
     // Update theme for the new phase
@@ -938,48 +942,56 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
   );
 
   // Render interactive workout header with timers and progress
+  // Updated to use curved time text and compact metrics row
+  // Requirements: 3.2, 3.3, 4.4, 5.1, 5.2, 6.4
   const renderInteractiveHeader = () => {
     if (!isInteractiveMode || !sessionState) return null;
 
     const workoutTimer = activeTimers.find(t => t.type === 'workout');
+    const focusAreasText = (selectedFocusAreas.length > 0 ? selectedFocusAreas : initialFocusAreas)
+      .filter(a => a !== 'CARDIO' && a !== 'CORE')
+      .join(', ') || 'General';
     
     return (
-      <View style={[styles.interactiveHeader, { backgroundColor: currentTheme.backgroundColor }]}>
-        {/* Overall Progress Ring */}
-        <WorkoutProgressRing
-          progress={sessionState.overallProgress}
-          theme={currentTheme}
-          phase={sessionState.currentPhase}
-          elapsedTime={formatElapsedTime(sessionState.elapsedSeconds)}
-          estimatedRemainingTime={formatElapsedTime(sessionState.estimatedRemainingSeconds)}
-          completedExercises={sessionState.completedExercises.length}
-          totalExercises={exercises.length}
-          size="medium"
-          showDetails={true}
-        />
+      <View style={[styles.interactiveHeader, styles.compactInteractiveHeader, { backgroundColor: currentTheme.backgroundColor }]}>
+        {/* Focus Badge - compact display of selected muscle groups */}
+        <View style={styles.focusBadgeContainer}>
+          <Text style={[styles.focusBadgeText, { color: currentTheme.textColor }]}>
+            Focus: {focusAreasText}
+          </Text>
+        </View>
 
-        {/* Health Metrics Bar */}
-        <View style={styles.healthMetricsBarInteractive}>
-          <View style={styles.healthMetricItem}>
-            <Ionicons name="heart" size={18} color="#FF3B30" />
-            <Text style={[styles.healthMetricValue, { color: currentTheme.textColor }]}>
-              {currentHeartRate !== null ? currentHeartRate : '--'}
-            </Text>
-            <Text style={[styles.healthMetricUnit, { color: currentTheme.textColor }]}>BPM</Text>
-          </View>
-          <View style={styles.healthMetricItem}>
-            <Ionicons name="flame" size={18} color="#F97316" />
-            <Text style={[styles.healthMetricValue, { color: currentTheme.textColor }]}>
-              {Math.round(currentCalories)}
-            </Text>
-            <Text style={[styles.healthMetricUnit, { color: currentTheme.textColor }]}>kcal</Text>
-          </View>
-          <View style={styles.healthMetricItem}>
-            <Ionicons name="time" size={18} color={currentTheme.accentColor} />
-            <Text style={[styles.healthMetricValue, { color: currentTheme.textColor }]}>
-              {workoutTimer?.displayTime || formatElapsedTime(elapsedSeconds)}
-            </Text>
-          </View>
+        {/* Progress Ring Row - metrics on left and right, ring in center */}
+        <View style={styles.progressRingRow}>
+          {/* Left Metrics Stack - Heart Rate, VO2 Max & Elapsed Time */}
+          <LeftMetricsStack
+            heartRate={currentHeartRate}
+            vo2Max={currentVo2Max}
+            elapsedTime={formatElapsedTime(sessionState.elapsedSeconds)}
+            theme={currentTheme}
+          />
+
+          {/* Overall Progress Ring - times now shown on sides */}
+          {/* Requirements: 1.1, 1.2, 1.4, 2.1, 2.2, 2.4, 3.1, 3.2, 3.3, 3.4, 6.1, 6.3 */}
+          <WorkoutProgressRing
+            progress={sessionState.overallProgress}
+            theme={currentTheme}
+            phase={sessionState.currentPhase}
+            elapsedTime={formatElapsedTime(sessionState.elapsedSeconds)}
+            estimatedRemainingTime={formatElapsedTime(sessionState.estimatedRemainingSeconds)}
+            completedExercises={sessionState.completedExercises.length}
+            totalExercises={exercises.length}
+            size="small"
+            showDetails={true}
+            showCurvedTime={false}
+          />
+
+          {/* Right Metrics Stack - Calories & Time */}
+          <RightMetricsStack
+            calories={currentCalories}
+            remainingTime={formatElapsedTime(sessionState.estimatedRemainingSeconds)}
+            theme={currentTheme}
+          />
         </View>
 
         {/* Session Controls */}
@@ -1260,14 +1272,9 @@ const ActiveWorkoutScreen: React.FC<Props> = ({ route, navigation }) => {
   // Render strength phase with interactive UI
   const renderStrengthPhase = () => (
     <ScrollView 
-      style={[styles.phaseContent, isInteractiveMode && { backgroundColor: currentTheme.backgroundColor }]} 
+      style={[styles.phaseContent, styles.strengthPhaseContent, isInteractiveMode && { backgroundColor: currentTheme.backgroundColor }]} 
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.phaseTitle, isInteractiveMode && { color: currentTheme.textColor }]}>Strength Training</Text>
-      <Text style={[styles.phaseSubtitle, isInteractiveMode && { color: currentTheme.textColor }]}>
-        Focus: {(selectedFocusAreas.length > 0 ? selectedFocusAreas : initialFocusAreas).filter(a => a !== 'CARDIO' && a !== 'CORE').join(', ') || 'General'}
-      </Text>
-      
       {renderWatchConnectionStatus()}
       
       {exercises.length === 0 ? (
@@ -1796,13 +1803,21 @@ const styles = StyleSheet.create({
   
   // Interactive header styles
   interactiveHeader: { paddingVertical: 16, paddingHorizontal: 16, alignItems: 'center' },
+  // Compact interactive header for curved time mode (saves ~80-100px vertical space)
+  // Requirements: 5.1, 5.2
+  compactInteractiveHeader: { paddingVertical: 4, paddingHorizontal: 8 },
+  // Progress ring row - metrics on left/right, ring in center
+  progressRingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 4 },
+  // Focus badge styles - compact display of selected muscle groups
+  focusBadgeContainer: { alignSelf: 'center', paddingHorizontal: 12, paddingVertical: 3, backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 12, marginBottom: 2 },
+  focusBadgeText: { fontSize: 11, fontWeight: '500', opacity: 0.9 },
   healthMetricsBarInteractive: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', width: '100%', paddingVertical: 12, marginTop: 12 },
   healthMetricItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   healthMetricValue: { fontSize: 18, fontWeight: '700' },
   healthMetricUnit: { fontSize: 12, opacity: 0.7 },
-  sessionControls: { flexDirection: 'row', marginTop: 12 },
-  sessionControlButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, gap: 8 },
-  sessionControlText: { fontSize: 14, fontWeight: '600' },
+  sessionControls: { flexDirection: 'row', marginTop: -4 },
+  sessionControlButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14, gap: 5 },
+  sessionControlText: { fontSize: 12, fontWeight: '600' },
   
   // Rest timer overlay styles
   restTimerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 100 },
@@ -1834,6 +1849,7 @@ const styles = StyleSheet.create({
 
   // Phase content styles
   phaseContent: { flex: 1, padding: 16 },
+  strengthPhaseContent: { paddingTop: 8 },
   phaseTitle: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
   phaseSubtitle: { fontSize: 14, color: '#666', marginBottom: 24 },
   

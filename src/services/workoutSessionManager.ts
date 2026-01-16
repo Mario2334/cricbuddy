@@ -77,6 +77,7 @@ class WorkoutSessionManager {
   private currentHeartRateTimestamp: Date | null = null;
   private cumulativeCalories: number = 0;
   private caloriesAtSessionStart: number = 0;
+  private currentVo2Max: number | null = null;
 
   // Exercise tracking
   private currentExerciseState: ExerciseTrackingState | null = null;
@@ -528,6 +529,7 @@ class WorkoutSessionManager {
       heartRateTimestamp: this.currentHeartRateTimestamp,
       activeCalories: this.cumulativeCalories,
       elapsedSeconds,
+      vo2Max: this.currentVo2Max,
       currentExerciseMetrics: this.getCurrentExerciseMetrics(),
     };
   }
