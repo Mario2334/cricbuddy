@@ -15,63 +15,24 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import * as Calendar from 'expo-calendar';
 import MatchCalendar from '../components/MatchCalendar';
-import ScheduleWorkoutModal from '../components/ScheduleWorkoutModal';
-import ScheduledWorkoutDetail from '../components/ScheduledWorkoutDetail';
 import type { Match, ScheduledMatch } from '../types/Match';
-import type { WorkoutStorage, ScheduledWorkout } from '../types/fitness';
 import apiService from '../services/apiService';
 import { convertScheduledMatchToMatch } from '../utils/matchUtils';
-import { fitnessService } from '../services/fitnessService';
-import { workoutCalendarService } from '../services/workoutCalendarService';
 
 
 
 const CalendarScreen: React.FC = () => {
   const [scheduledMatches, setScheduledMatches] = useState<ScheduledMatch[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [workouts, setWorkouts] = useState<WorkoutStorage>({});
-  const [scheduledWorkouts, setScheduledWorkouts] = useState<ScheduledWorkout[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showUrlModal, setShowUrlModal] = useState<boolean>(false);
   const [urlInput, setUrlInput] = useState<string>('');
   const [fetchingMatchDetails, setFetchingMatchDetails] = useState<boolean>(false);
   const navigation = useNavigation();
 
-  // State for scheduled workout modal and detail view
-  const [showScheduleWorkoutModal, setShowScheduleWorkoutModal] = useState<boolean>(false);
-  const [selectedDateForScheduling, setSelectedDateForScheduling] = useState<string | undefined>(undefined);
-  const [selectedScheduledWorkout, setSelectedScheduledWorkout] = useState<ScheduledWorkout | null>(null);
-  const [showWorkoutDetailModal, setShowWorkoutDetailModal] = useState<boolean>(false);
-  const [showFabOptions, setShowFabOptions] = useState<boolean>(false);
-
-
-
   const [fetchedMatchDetails, setFetchedMatchDetails] = useState<ScheduledMatch | null>(null);
   const [manualDate, setManualDate] = useState<string>('');
-
-  const loadWorkouts = async () => {
-    try {
-      const workoutHistory = await fitnessService.getWorkoutHistory();
-      setWorkouts(workoutHistory);
-    } catch (error) {
-      console.error('Error loading workouts:', error);
-    }
-  };
-
-  /**
-   * Load scheduled workouts from WorkoutCalendarService
-   * Requirements: 3.1, 3.2, 4.1
-   */
-  const loadScheduledWorkouts = async () => {
-    try {
-      const workoutsList = await workoutCalendarService.getScheduledWorkouts();
-      setScheduledWorkouts(workoutsList);
-    } catch (error) {
-      console.error('Error loading scheduled workouts:', error);
-    }
-  };
 
   const loadScheduledMatches = async () => {
     try {
@@ -177,164 +138,12 @@ const CalendarScreen: React.FC = () => {
 
   const onRefresh = () => {
     loadScheduledMatches();
-    loadWorkouts();
-    loadScheduledWorkouts();
-  };
-
-  /**
-   * Handle scheduled workout press to show details
-   * Requirements: 3.2
-   */
-  const handleScheduledWorkoutPress = useCallback((workout: ScheduledWorkout) => {
-    setSelectedScheduledWorkout(workout);
-    setShowWorkoutDetailModal(true);
-  }, []);
-
-  /**
-   * Handle date selection to open schedule modal
-   * Requirements: 3.1
-   */
-  const handleDateSelect = useCallback((date: string) => {
-    setSelectedDateForScheduling(date);
-    setShowScheduleWorkoutModal(true);
-  }, []);
-
-  /**
-   * Handle workout scheduled callback
-   */
-  const handleWorkoutScheduled = useCallback((workout: ScheduledWorkout) => {
-    Toast.show({
-      type: 'success',
-      text1: 'Workout Scheduled',
-      text2: `${workout.templateName} scheduled for ${workout.scheduledDate}`,
-      position: 'bottom',
-      visibilityTime: 3000,
-    });
-    loadScheduledWorkouts();
-    setShowScheduleWorkoutModal(false);
-    setSelectedDateForScheduling(undefined);
-  }, []);
-
-  /**
-   * Handle edit scheduled workout
-   */
-  const handleEditScheduledWorkout = useCallback(() => {
-    setShowWorkoutDetailModal(false);
-    if (selectedScheduledWorkout) {
-      setSelectedDateForScheduling(selectedScheduledWorkout.scheduledDate);
-      setShowScheduleWorkoutModal(true);
-    }
-  }, [selectedScheduledWorkout]);
-
-  /**
-   * Handle delete scheduled workout
-   */
-  const handleDeleteScheduledWorkout = useCallback(async () => {
-    if (!selectedScheduledWorkout) return;
-
-    try {
-      await workoutCalendarService.deleteScheduledWorkoutWithCalendarSync(selectedScheduledWorkout.id);
-      Toast.show({
-        type: 'success',
-        text1: 'Workout Deleted',
-        text2: 'The scheduled workout has been removed.',
-        position: 'bottom',
-        visibilityTime: 2000,
-      });
-      setShowWorkoutDetailModal(false);
-      setSelectedScheduledWorkout(null);
-      loadScheduledWorkouts();
-    } catch (error) {
-      console.error('Error deleting scheduled workout:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to delete the scheduled workout.',
-        position: 'bottom',
-        visibilityTime: 2000,
-      });
-    }
-  }, [selectedScheduledWorkout]);
-
-  /**
-   * Handle start workout from scheduled workout detail
-   */
-  const handleStartWorkout = useCallback(() => {
-    if (!selectedScheduledWorkout) return;
-    
-    setShowWorkoutDetailModal(false);
-    // Navigate to workout templates screen or active workout
-    // This would typically navigate to the workout execution screen
-    navigation.navigate('WorkoutTemplates' as never);
-  }, [selectedScheduledWorkout, navigation]);
-
-  /**
-   * Request calendar permissions
-   * Requirements: 2.5
-   */
-  const requestCalendarPermission = async (): Promise<boolean> => {
-    const { status } = await Calendar.requestCalendarPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert(
-        'Calendar Permission Required',
-        'To sync workouts with your calendar, please enable calendar access in Settings.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() }
-        ]
-      );
-      return false;
-    }
-    return true;
   };
 
   /**
    * Handle FAB press - show options for scheduling
    */
   const handleFabPress = () => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Schedule Match', 'Schedule Workout'],
-          cancelButtonIndex: 0,
-        },
-        async (buttonIndex) => {
-          if (buttonIndex === 1) {
-            setShowUrlModal(true);
-          } else if (buttonIndex === 2) {
-            // Request calendar permission before opening workout modal
-            const hasPermission = await requestCalendarPermission();
-            if (hasPermission) {
-              setSelectedDateForScheduling(undefined);
-              setShowScheduleWorkoutModal(true);
-            }
-          }
-        }
-      );
-    } else {
-      // For Android, toggle the FAB options menu
-      setShowFabOptions(!showFabOptions);
-    }
-  };
-
-  /**
-   * Handle schedule workout option from FAB
-   */
-  const handleScheduleWorkoutOption = async () => {
-    setShowFabOptions(false);
-    const hasPermission = await requestCalendarPermission();
-    if (hasPermission) {
-      setSelectedDateForScheduling(undefined);
-      setShowScheduleWorkoutModal(true);
-    }
-  };
-
-  /**
-   * Handle schedule match option from FAB
-   */
-  const handleScheduleMatchOption = () => {
-    setShowFabOptions(false);
     setShowUrlModal(true);
   };
 
@@ -564,18 +373,12 @@ const CalendarScreen: React.FC = () => {
 
   useEffect(() => {
     loadScheduledMatches();
-    loadWorkouts();
-    loadScheduledWorkouts();
-    // Cleanup past workouts on app load
-    workoutCalendarService.cleanupPastWorkouts();
   }, []);
 
-  // Reload matches, workouts, and scheduled workouts when screen comes into focus
+  // Reload matches when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadScheduledMatches();
-      loadWorkouts();
-      loadScheduledWorkouts();
     }, [])
   );
 
@@ -596,13 +399,9 @@ const CalendarScreen: React.FC = () => {
         onMatchPress={handleMatchPress}
         onRefresh={onRefresh}
         onRemoveMatch={handleRemoveMatch}
-        workouts={workouts}
-        scheduledWorkouts={scheduledWorkouts}
-        onScheduledWorkoutPress={handleScheduledWorkoutPress}
-        onDateSelect={handleDateSelect}
       />
 
-      {/* Floating Action Button with options */}
+      {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
         onPress={handleFabPress}
@@ -610,77 +409,6 @@ const CalendarScreen: React.FC = () => {
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
-
-      {/* FAB Options Menu (Android) */}
-      {showFabOptions && Platform.OS === 'android' && (
-        <View style={styles.fabOptionsContainer}>
-          <TouchableOpacity
-            style={styles.fabOption}
-            onPress={handleScheduleWorkoutOption}
-          >
-            <Text style={styles.fabOptionText}>🏋️ Schedule Workout</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.fabOption}
-            onPress={handleScheduleMatchOption}
-          >
-            <Text style={styles.fabOptionText}>🏏 Schedule Match</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Backdrop for FAB options */}
-      {showFabOptions && (
-        <TouchableOpacity
-          style={styles.fabBackdrop}
-          onPress={() => setShowFabOptions(false)}
-          activeOpacity={1}
-        />
-      )}
-
-      {/* Schedule Workout Modal */}
-      <ScheduleWorkoutModal
-        visible={showScheduleWorkoutModal}
-        selectedDate={selectedDateForScheduling}
-        onClose={() => {
-          setShowScheduleWorkoutModal(false);
-          setSelectedDateForScheduling(undefined);
-        }}
-        onSchedule={handleWorkoutScheduled}
-      />
-
-      {/* Scheduled Workout Detail Modal */}
-      <Modal
-        visible={showWorkoutDetailModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => {
-          setShowWorkoutDetailModal(false);
-          setSelectedScheduledWorkout(null);
-        }}
-      >
-        <View style={styles.workoutDetailOverlay}>
-          <View style={styles.workoutDetailContainer}>
-            <TouchableOpacity
-              style={styles.workoutDetailCloseButton}
-              onPress={() => {
-                setShowWorkoutDetailModal(false);
-                setSelectedScheduledWorkout(null);
-              }}
-            >
-              <Text style={styles.workoutDetailCloseText}>✕</Text>
-            </TouchableOpacity>
-            {selectedScheduledWorkout && (
-              <ScheduledWorkoutDetail
-                workout={selectedScheduledWorkout}
-                onEdit={handleEditScheduledWorkout}
-                onDelete={handleDeleteScheduledWorkout}
-                onStartWorkout={handleStartWorkout}
-              />
-            )}
-          </View>
-        </View>
-      </Modal>
 
       {/* URL Input Modal for Match Scheduling */}
       <Modal
@@ -817,74 +545,6 @@ const styles = StyleSheet.create({
   fabText: {
     color: '#fff',
     fontSize: 24,
-    fontWeight: 'bold',
-  },
-  fabOptionsContainer: {
-    position: 'absolute',
-    bottom: 90,
-    right: 20,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.34,
-    shadowRadius: 6.27,
-    zIndex: 11,
-    overflow: 'hidden',
-  },
-  fabOption: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  fabOptionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  fabBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'transparent',
-    zIndex: 9,
-  },
-  workoutDetailOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  workoutDetailContainer: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 16,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '80%',
-    padding: 16,
-  },
-  workoutDetailCloseButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  workoutDetailCloseText: {
-    fontSize: 16,
-    color: '#666',
     fontWeight: 'bold',
   },
   modalOverlay: {

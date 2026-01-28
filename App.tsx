@@ -1,13 +1,10 @@
 import 'react-native-gesture-handler';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
-
-// Import services for app initialization
-import { workoutCalendarService } from './src/services';
 
 // Import screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -15,9 +12,6 @@ import StatsScreen from './src/screens/StatsScreen';
 import MatchDetailScreen from './src/screens/MatchDetailScreen';
 import MyTeamScreen from './src/screens/MyTeamScreen';
 import CalendarScreen from './src/screens/CalendarScreen';
-
-// Import navigation stacks
-import FitnessStack from './src/navigation/FitnessStack';
 
 // Import navigation types
 import {
@@ -140,23 +134,6 @@ const CalendarStack: React.FC = () => {
 
 // Define the App component with proper typing
 const App: React.FC = () => {
-  // Clean up past scheduled workouts on app startup
-  // Requirements: 8.5
-  useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        const cleanedCount = await workoutCalendarService.cleanupPastWorkouts();
-        if (cleanedCount > 0) {
-          console.log(`App: Cleaned up ${cleanedCount} past scheduled workouts`);
-        }
-      } catch (error) {
-        console.error('App: Failed to cleanup past workouts:', error);
-      }
-    };
-
-    initializeApp();
-  }, []);
-
   return (
     <>
       <NavigationContainer>
@@ -173,8 +150,6 @@ const App: React.FC = () => {
                 iconName = focused ? 'people' : 'people-outline';
               } else if (route.name === 'Calendar') {
                 iconName = focused ? 'calendar' : 'calendar-outline';
-              } else if (route.name === 'Fitness') {
-                iconName = focused ? 'barbell' : 'barbell-outline';
               }
 
               return <Ionicons name={iconName} size={size} color={color} />;
@@ -215,14 +190,6 @@ const App: React.FC = () => {
             component={CalendarStack}
             options={{
               title: 'Calendar',
-              headerShown: false,
-            }}
-          />
-          <Tab.Screen
-            name="Fitness"
-            component={FitnessStack}
-            options={{
-              title: 'Fitness',
               headerShown: false,
             }}
           />

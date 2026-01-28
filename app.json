@@ -9,12 +9,6 @@
     "newArchEnabled": true,
     "plugins": [
       [
-        "expo-calendar",
-        {
-          "calendarPermission": "The app needs to access your calendar."
-        }
-      ],
-      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
@@ -53,8 +47,6 @@
       },
       "package": "com.sanket.django.cricbuddy",
       "permissions": [
-        "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ]

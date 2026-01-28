@@ -14,7 +14,6 @@ import apiService from '../services/apiService';
 import type { Match } from '../types/Match';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { formatMatchTime, getMatchStatusColor, getLocalScheduledMatches } from '../utils/matchUtils';
-import NextGymSessionCard from '../components/NextGymSessionCard';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -338,7 +337,6 @@ const UpcomingTab: React.FC<UpcomingTabProps> = ({ navigation }) => {
       onLoadMore={handleLoadMore}
       hasNextPage={!!nextPageUrl}
       navigation={navigation}
-      ListHeaderComponent={<NextGymSessionCard />}
     />
   );
 };

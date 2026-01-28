@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Match } from '../types/Match';
-import type { WorkoutStorage, ScheduledWorkout } from '../types/fitness';
 import { formatMatchTime, getMatchStatusColor } from '../utils/matchUtils';
-import { DAY_INDICATOR_COLORS } from '../utils/fitnessUtils';
+
+const MATCH_COLOR = '#3498db';
 
 interface MatchCalendarProps {
   matches: Match[];
@@ -22,9 +22,6 @@ interface MatchCalendarProps {
   onMatchPress: (match: Match) => void;
   onRefresh: () => void;
   onRemoveMatch?: (match: Match) => void;
-  workouts?: WorkoutStorage;
-  scheduledWorkouts?: ScheduledWorkout[];
-  onScheduledWorkoutPress?: (workout: ScheduledWorkout) => void;
   onDateSelect?: (date: string) => void;
 }
 
@@ -33,18 +30,13 @@ interface CalendarDay {
   dateStr: string;
   matches: Match[];
   isCurrentMonth: boolean;
-  hasGymSession: boolean;
-  scheduledWorkouts: ScheduledWorkout[];
   isFutureDate: boolean;
 }
 
 /**
  * Unified event type for the upcoming events list
- * Combines matches and scheduled workouts into a single sortable list
  */
-type UpcomingEvent = 
-  | { type: 'match'; data: Match; dateTime: Date }
-  | { type: 'scheduledWorkout'; data: ScheduledWorkout; dateTime: Date };
+type UpcomingEvent = { type: 'match'; data: Match; dateTime: Date };
 
 interface SwipeableMatchItemProps {
   match: Match;
@@ -161,63 +153,12 @@ const SwipeableMatchItem: React.FC<SwipeableMatchItemProps> = ({
   );
 };
 
-/**
- * Scheduled workout item component for the upcoming events list
- */
-interface ScheduledWorkoutItemProps {
-  workout: ScheduledWorkout;
-  onPress: () => void;
-}
-
-const ScheduledWorkoutItem: React.FC<ScheduledWorkoutItemProps> = ({
-  workout,
-  onPress,
-}) => {
-  const formatScheduledTime = (date: string, time: string): string => {
-    const dateObj = new Date(`${date}T${time}:00`);
-    return dateObj.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
-
-  return (
-    <TouchableOpacity
-      style={[styles.matchItem, styles.workoutItem]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.workoutIconContainer}>
-        <Ionicons name="fitness" size={24} color={DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT} />
-      </View>
-      <View style={styles.matchInfo}>
-        <Text style={styles.matchTeams}>{workout.templateName}</Text>
-        <Text style={styles.matchTime}>
-          {formatScheduledTime(workout.scheduledDate, workout.scheduledTime)}
-        </Text>
-        <Text style={styles.focusAreasText}>
-          {workout.focusAreas.join(', ')}
-        </Text>
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }]}>
-        <Text style={styles.statusText}>SCHEDULED</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
-
 const MatchCalendar: React.FC<MatchCalendarProps> = ({
   matches,
   loading,
   onMatchPress,
   onRefresh,
   onRemoveMatch,
-  workouts = {},
-  scheduledWorkouts = [],
-  onScheduledWorkoutPress,
   onDateSelect,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -247,7 +188,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   useEffect(() => {
     generateCalendar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, matches, JSON.stringify(workouts), JSON.stringify(scheduledWorkouts)]);
+  }, [currentDate, matches]);
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -271,13 +212,6 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       });
 
       const dateStr = formatDateToLocalString(currentDateObj);
-      const workout = workouts[dateStr];
-      const hasGymSession = workout?.type === 'GYM' && !workout?.isRestDay;
-
-      // Filter scheduled workouts for this date
-      const dayScheduledWorkouts = scheduledWorkouts.filter(
-        sw => sw.scheduledDate === dateStr
-      );
 
       // Check if this is a future date
       const dayDate = new Date(currentDateObj);
@@ -289,8 +223,6 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
         dateStr,
         matches: dayMatches,
         isCurrentMonth: currentDateObj.getMonth() === month,
-        hasGymSession,
-        scheduledWorkouts: dayScheduledWorkouts,
         isFutureDate,
       });
 
@@ -311,10 +243,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   };
 
   const handleDayPress = (day: CalendarDay) => {
-    // If there are scheduled workouts and a handler is provided, show the first one
-    if (day.scheduledWorkouts.length > 0 && onScheduledWorkoutPress) {
-      onScheduledWorkoutPress(day.scheduledWorkouts[0]);
-    } else if (day.matches.length > 0) {
+    if (day.matches.length > 0) {
       // If there are matches, show the first match
       onMatchPress(day.matches[0]);
     } else if (onDateSelect && day.isFutureDate) {
@@ -361,10 +290,6 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       day.date.getMonth() === new Date().getMonth() &&
       day.date.getFullYear() === new Date().getFullYear();
 
-    // Determine if this day has a "No Play" indicator
-    // Show No Play for future dates with scheduled workouts
-    const hasNoPlayIndicator = day.isFutureDate && day.scheduledWorkouts.length > 0;
-
     return (
       <TouchableOpacity
         key={index}
@@ -387,48 +312,20 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
 
         <View style={styles.matchIndicators}>
           {/* Match dots (blue) */}
-          {day.matches.slice(0, 2).map((match, matchIndex) => (
+          {day.matches.slice(0, 3).map((match, matchIndex) => (
             <View
               key={`match-${matchIndex}`}
               style={[
                 styles.matchDot,
-                { backgroundColor: DAY_INDICATOR_COLORS.MATCH }
+                { backgroundColor: MATCH_COLOR }
               ]}
             />
           ))}
           
-          {/* Completed gym session dot (orange) - for past workouts */}
-          {day.hasGymSession && (
-            <View
-              style={[
-                styles.matchDot,
-                { backgroundColor: DAY_INDICATOR_COLORS.GYM }
-              ]}
-            />
-          )}
-          
-          {/* Scheduled workout dots (green) - for future scheduled workouts */}
-          {day.scheduledWorkouts.slice(0, 2).map((sw, swIndex) => (
-            <View
-              key={`scheduled-${swIndex}`}
-              style={[
-                styles.matchDot,
-                { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }
-              ]}
-            />
-          ))}
-          
-          {day.matches.length > 2 && (
-            <Text style={styles.moreMatches}>+{day.matches.length - 2}</Text>
+          {day.matches.length > 3 && (
+            <Text style={styles.moreMatches}>+{day.matches.length - 3}</Text>
           )}
         </View>
-
-        {/* No Play indicator for dates with scheduled workouts */}
-        {hasNoPlayIndicator && (
-          <View style={styles.noPlayIndicator}>
-            <Text style={styles.noPlayText}>No Play</Text>
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
@@ -447,8 +344,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   };
 
   /**
-   * Merge matches and scheduled workouts into a single chronologically sorted list
-   * Requirements: 3.4
+   * Get upcoming matches
    */
   const getUpcomingEvents = useMemo((): UpcomingEvent[] => {
     const events: UpcomingEvent[] = [];
@@ -466,27 +362,15 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       }
     });
 
-    // Add scheduled workouts
-    scheduledWorkouts.forEach(workout => {
-      const workoutDate = new Date(`${workout.scheduledDate}T${workout.scheduledTime}:00`);
-      if (workoutDate > now) {
-        events.push({
-          type: 'scheduledWorkout',
-          data: workout,
-          dateTime: workoutDate,
-        });
-      }
-    });
-
     // Sort by date/time in chronological order
     events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
 
     // Return first 5 events
     return events.slice(0, 5);
-  }, [matches, scheduledWorkouts]);
+  }, [matches]);
 
   /**
-   * Get today's events (matches and scheduled workouts)
+   * Get today's matches
    */
   const getTodayEvents = useMemo((): UpcomingEvent[] => {
     const events: UpcomingEvent[] = [];
@@ -505,43 +389,21 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       }
     });
 
-    // Add today's scheduled workouts
-    scheduledWorkouts.forEach(workout => {
-      if (workout.scheduledDate === todayStr) {
-        const workoutDate = new Date(`${workout.scheduledDate}T${workout.scheduledTime}:00`);
-        events.push({
-          type: 'scheduledWorkout',
-          data: workout,
-          dateTime: workoutDate,
-        });
-      }
-    });
-
     // Sort by time
     events.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
 
     return events;
-  }, [matches, scheduledWorkouts]);
+  }, [matches]);
 
   const renderEventItem = (event: UpcomingEvent, index: number) => {
-    if (event.type === 'match') {
-      return (
-        <SwipeableMatchItem
-          key={`match-${event.data.match_id}-${index}`}
-          match={event.data}
-          onPress={() => onMatchPress(event.data)}
-          onRemove={onRemoveMatch ? () => onRemoveMatch(event.data) : undefined}
-        />
-      );
-    } else {
-      return (
-        <ScheduledWorkoutItem
-          key={`workout-${event.data.id}-${index}`}
-          workout={event.data}
-          onPress={() => onScheduledWorkoutPress?.(event.data)}
-        />
-      );
-    }
+    return (
+      <SwipeableMatchItem
+        key={`match-${event.data.match_id}-${index}`}
+        match={event.data}
+        onPress={() => onMatchPress(event.data)}
+        onRemove={onRemoveMatch ? () => onRemoveMatch(event.data) : undefined}
+      />
+    );
   };
 
   const renderEventsList = () => {
@@ -552,14 +414,14 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       <View style={styles.matchListContainer}>
         {todayEvents.length > 0 && (
           <View style={styles.matchSection}>
-            <Text style={styles.sectionTitle}>Today's Events</Text>
+            <Text style={styles.sectionTitle}>Today's Matches</Text>
             {todayEvents.map((event, index) => renderEventItem(event, index))}
           </View>
         )}
 
         {upcomingEvents.length > 0 && (
           <View style={styles.matchSection}>
-            <Text style={styles.sectionTitle}>Upcoming Events</Text>
+            <Text style={styles.sectionTitle}>Upcoming Matches</Text>
             {upcomingEvents.map((event, index) => renderEventItem(event, index))}
           </View>
         )}
@@ -567,9 +429,9 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
         {todayEvents.length === 0 && upcomingEvents.length === 0 && (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyStateText}>No upcoming events</Text>
+            <Text style={styles.emptyStateText}>No upcoming matches</Text>
             <Text style={styles.emptyStateSubtext}>
-              Schedule a workout or add a match to get started
+              Add a match to get started
             </Text>
           </View>
         )}
@@ -597,16 +459,8 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
       {/* Legend for calendar indicators */}
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.MATCH }]} />
+          <View style={[styles.legendDot, { backgroundColor: MATCH_COLOR }]} />
           <Text style={styles.legendText}>Match</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.GYM }]} />
-          <Text style={styles.legendText}>Completed</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT }]} />
-          <Text style={styles.legendText}>Scheduled</Text>
         </View>
       </View>
       
@@ -718,18 +572,6 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 2,
   },
-  noPlayIndicator: {
-    marginTop: 2,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    backgroundColor: DAY_INDICATOR_COLORS.NO_PLAY,
-    borderRadius: 4,
-  },
-  noPlayText: {
-    fontSize: 8,
-    color: '#fff',
-    fontWeight: '600',
-  },
   legendContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -783,13 +625,6 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  workoutItem: {
-    borderLeftWidth: 4,
-    borderLeftColor: DAY_INDICATOR_COLORS.SCHEDULED_WORKOUT,
-  },
-  workoutIconContainer: {
-    marginRight: 12,
-  },
   matchInfo: {
     flex: 1,
   },
@@ -802,11 +637,6 @@ const styles = StyleSheet.create({
   matchTime: {
     fontSize: 14,
     color: '#666',
-  },
-  focusAreasText: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 2,
   },
   statusBadge: {
     paddingHorizontal: 8,
