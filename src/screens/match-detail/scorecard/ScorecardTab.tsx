@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabView, type SceneRendererProps, type NavigationState } from 'react-native-tab-view';
@@ -17,7 +17,8 @@ export interface ScorecardTabProps {
   onRefresh: () => void;
 }
 
-export function ScorecardTab({ scorecard, routes, index, onIndexChange, refreshing, onRefresh }: ScorecardTabProps) {
+/** Memoized: live polling only re-renders it when the scorecard actually changed. */
+export const ScorecardTab = memo(function ScorecardTab({ scorecard, routes, index, onIndexChange, refreshing, onRefresh }: ScorecardTabProps) {
   const layout = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -47,24 +48,7 @@ export function ScorecardTab({ scorecard, routes, index, onIndexChange, refreshi
     );
   }
 
-  // Routes are derived from the scorecard in an effect, so they can lag one render.
   if (routes.length === 0) return null;
-
-  // Scenes read the live innings from the current routes on every render (no SceneMap).
-  const renderScene = ({ route }: SceneRendererProps & { route: ScorecardRoute }) => (
-    <ScrollView
-      style={styles.flex}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
-      refreshControl={refreshControl}
-      showsVerticalScrollIndicator={true}
-    >
-      <InningsView innings={route.innings} title={route.title} />
-    </ScrollView>
-  );
-
-  const renderTabBar = (props: SceneRendererProps & { navigationState: NavigationState<ScorecardRoute> }) => (
-    <TabViewSegmentedBar {...props} scrollable size="sm" />
-  );
 
   return (
     <View style={styles.flex}>
@@ -78,7 +62,25 @@ export function ScorecardTab({ scorecard, routes, index, onIndexChange, refreshi
       />
     </View>
   );
-}
+
+  // Scenes read the live innings from the current routes on every render (no SceneMap).
+  function renderScene({ route }: SceneRendererProps & { route: ScorecardRoute }) {
+    return (
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+        refreshControl={refreshControl}
+        showsVerticalScrollIndicator={true}
+      >
+        <InningsView innings={route.innings} title={route.title} />
+      </ScrollView>
+    );
+  }
+});
+
+const renderTabBar = (props: SceneRendererProps & { navigationState: NavigationState<ScorecardRoute> }) => (
+  <TabViewSegmentedBar {...props} scrollable size="sm" />
+);
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

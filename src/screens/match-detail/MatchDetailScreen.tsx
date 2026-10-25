@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useIsFocused } from '@react-navigation/native';
@@ -57,7 +57,7 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
   // CHANGED: only the very first load replaces the body; live/pull refreshes
   // keep the UI mounted and show a small spinning ball in the hero instead.
   const firstLoad = md.loading && !md.scorecard;
-  const updating = md.loading && !!md.scorecard;
+  const goBack = useCallback(() => navigation.goBack(), [navigation]);
 
   // Scenes are rendered from current state on every render (never SceneMap).
   const renderScene = ({ route: tab }: SceneRendererProps & { route: MainTabRoute }) => {
@@ -96,7 +96,7 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
           title={md.error}
           message="The scorecard didn't make it to the crease."
           actionLabel="Retry"
-          onAction={md.fetchScorecard}
+          onAction={md.retryScorecard}
         />
       </View>
     );
@@ -108,6 +108,7 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
         onIndexChange={md.setMainTabIndex}
         initialLayout={{ width: layout.width }}
         renderTabBar={renderTabBar}
+        lazy
         style={styles.flex}
       />
     );
@@ -124,9 +125,9 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
         matchStartTime={md.matchStartTime}
         status={status}
         now={now}
-        onBack={() => navigation.goBack()}
-        updating={updating}
-        autoRefreshing={!!md.autoRefreshInterval}
+        onBack={goBack}
+        updating={md.updating}
+        autoRefreshing={md.autoRefreshing}
       />
 
       <View style={styles.flex}>{body}</View>

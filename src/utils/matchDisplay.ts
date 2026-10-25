@@ -2,9 +2,12 @@ import type { Match } from '../types/Match';
 import type { RootStackParamList } from '../types/navigation';
 import { toDate, toDateKey, type MatchStatus } from './dates';
 
-export function normalizeStatus(status: string | null | undefined): MatchStatus {
-  switch ((status || '').toLowerCase()) {
+export function normalizeStatus(status: string | number | null | undefined): MatchStatus {
+  switch (String(status ?? '').trim().toLowerCase()) {
     case 'live':
+    case 'inprogress':
+    case 'in progress':
+    case 'running':
       return 'live';
     case 'upcoming':
     case 'scheduled':
@@ -13,6 +16,8 @@ export function normalizeStatus(status: string | null | undefined): MatchStatus 
     case 'completed':
     case 'done':
     case 'finished':
+    case 'resulted':
+    case 'abandoned':
       return 'past';
     default:
       return 'unknown';

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View } from 'react-native';
 import { colors, palette } from '../../../theme';
 import { AppText } from '../../../ui/AppText';
@@ -12,7 +12,7 @@ export interface BowlingTableProps {
 }
 
 /** Bowler, O, M, R, W, Econ. */
-export function BowlingTable({ bowling }: BowlingTableProps) {
+export const BowlingTable = memo(function BowlingTable({ bowling }: BowlingTableProps) {
   return (
     <View style={t.card}>
       <View style={t.clip}>
@@ -53,6 +53,6 @@ export function BowlingTable({ bowling }: BowlingTableProps) {
       <View pointerEvents="none" style={t.rim} />
     </View>
   );
-}
+});
 
 export default BowlingTable;

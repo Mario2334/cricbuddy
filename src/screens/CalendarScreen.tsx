@@ -11,6 +11,7 @@ import { convertScheduledMatchToMatch } from '../utils/matchUtils';
 import { buildMarkedDates, buildMatchDetailParams, getMatchStart, getTeamNames } from '../utils/matchDisplay';
 import { fromDateKey } from '../utils/dates';
 import { haptic } from '../utils/haptics';
+import { rememberMatch } from '../utils/matchRegistry';
 import { useTabBarSpace } from '../navigation/useTabBarSpace';
 import { FAB } from '../ui/FAB';
 import { MeshBackground } from '../ui/MeshBackground';
@@ -119,7 +120,9 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
   const handleMatchPress = useCallback(
     (match: Match) => {
       const params = buildMatchDetailParams(match, { city: match.city_name, defaultTab: 'info' });
-      if (params) navigation.navigate('MatchDetail', params);
+      if (!params) return;
+      rememberMatch(match);
+      navigation.navigate('MatchDetail', params);
     },
     [navigation],
   );

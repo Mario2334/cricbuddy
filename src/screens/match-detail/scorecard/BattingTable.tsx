@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View } from 'react-native';
 import { colors, palette } from '../../../theme';
 import { AppText } from '../../../ui/AppText';
@@ -12,7 +12,7 @@ export interface BattingTableProps {
 }
 
 /** Batter, R(B), 4s, 6s, SR. Not-out batters get a green bar and a star. */
-export function BattingTable({ batting }: BattingTableProps) {
+export const BattingTable = memo(function BattingTable({ batting }: BattingTableProps) {
   return (
     <View style={t.card}>
       <View style={t.clip}>
@@ -58,6 +58,6 @@ export function BattingTable({ batting }: BattingTableProps) {
       <View pointerEvents="none" style={t.rim} />
     </View>
   );
-}
+});
 
 export default BattingTable;

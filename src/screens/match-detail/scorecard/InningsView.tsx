@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { colors, curve, fonts, glass, space, squircle, tones } from '../../../theme';
 import { AppText } from '../../../ui/AppText';
@@ -24,7 +24,8 @@ export interface InningsViewProps {
   title: string;
 }
 
-export function InningsView({ innings: teamInnings, title }: InningsViewProps) {
+/** Memoized: an innings that didn't change keeps its object across live updates and skips re-rendering. */
+export const InningsView = memo(function InningsView({ innings: teamInnings, title }: InningsViewProps) {
   if (!teamInnings) {
     return null;
   }
@@ -135,7 +136,7 @@ export function InningsView({ innings: teamInnings, title }: InningsViewProps) {
       ) : null}
     </View>
   );
-}
+});
 
 const INDEX_TILE = 26;
 

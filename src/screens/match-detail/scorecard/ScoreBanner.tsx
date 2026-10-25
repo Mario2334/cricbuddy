@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
@@ -29,7 +29,7 @@ function DarkChip({ icon, label, iconColor }: { icon: IconName; label: string; i
 }
 
 /** Big display score on the pitch gradient with RR / Extras chips. Runs count up on mount, then roll on with live updates. */
-export function ScoreBanner({ runs, wickets, overs, runRate, extras = 0 }: ScoreBannerProps) {
+export const ScoreBanner = memo(function ScoreBanner({ runs, wickets, overs, runRate, extras = 0 }: ScoreBannerProps) {
   const reduced = useReducedMotion();
 
   return (
@@ -59,7 +59,7 @@ export function ScoreBanner({ runs, wickets, overs, runRate, extras = 0 }: Score
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.rim, curve]} />
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   shadow: {

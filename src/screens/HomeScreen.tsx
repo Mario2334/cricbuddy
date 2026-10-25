@@ -12,6 +12,7 @@ import { colors, glass, palette, radii } from '../theme';
 import { MAX_STAGGERED_ITEMS } from '../theme/motion';
 import { formatShortDate, isSameLocalDay, relativeDayLabel, toDateKey } from '../utils/dates';
 import { buildMarkedDates, buildMatchDetailParams, getMatchStart, matchKey, sortByStart } from '../utils/matchDisplay';
+import { rememberMatch } from '../utils/matchRegistry';
 import { useNow } from '../hooks/useNow';
 import { useHomeMatches, type HomeSegment } from '../hooks/useHomeMatches';
 import { useTabBarSpace } from '../navigation/useTabBarSpace';
@@ -75,7 +76,9 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
   const openMatch = useCallback(
     (m: Match) => {
       const params = buildMatchDetailParams(m);
-      if (params) navigation.navigate('MatchDetail', params);
+      if (!params) return;
+      rememberMatch(m);
+      navigation.navigate('MatchDetail', params);
     },
     [navigation],
   );

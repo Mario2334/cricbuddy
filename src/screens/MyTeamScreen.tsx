@@ -9,6 +9,7 @@ import { colors } from '../theme';
 import { MAX_STAGGERED_ITEMS } from '../theme/motion';
 import { relativeDayLabel } from '../utils/dates';
 import { buildMatchDetailParams, getMatchStart, matchKey } from '../utils/matchDisplay';
+import { rememberMatch } from '../utils/matchRegistry';
 import { useNow } from '../hooks/useNow';
 import { useTabBarSpace } from '../navigation/useTabBarSpace';
 import MatchCalendar from '../components/MatchCalendar';
@@ -92,7 +93,9 @@ const MyTeamScreen: React.FC<MyTeamScreenNavigationProp> = ({ navigation }) => {
   const handleMatchPress = useCallback(
     (item: Match) => {
       const params = buildMatchDetailParams(item);
-      if (params) navigation.navigate('MatchDetail', params);
+      if (!params) return;
+      rememberMatch(item);
+      navigation.navigate('MatchDetail', params);
     },
     [navigation],
   );

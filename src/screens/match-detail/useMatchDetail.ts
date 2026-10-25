@@ -1,7 +1,7 @@
 // All MatchDetail state, effects and handlers. Moved verbatim from the original
 // MatchDetailScreen (dependency arrays and quirks included). Intentional
 // changes are marked "CHANGED:".
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
@@ -12,6 +12,11 @@ import type { RootStackParamList } from '../../types/navigation';
 import apiService from '../../services/apiService';
 import googleMapsService, { type GoogleMapsPlace } from '../../services/googleMapsService';
 import { useConfetti } from '../../ui/Confetti';
+import { useScreenActivity } from '../../hooks/useScreenActivity';
+import { useStableCallback } from '../../hooks/useStableCallback';
+import { toDate } from '../../utils/dates';
+import { getRememberedMatch } from '../../utils/matchRegistry';
+import { detectMatchStatus } from './matchStatus';
 import {
   extractPlayersFromScorecard as extractPlayers,
   generatePaymentWhatsAppMessage as buildPaymentMessage,
@@ -19,22 +24,60 @@ import {
 } from './messageBuilders';
 import {
   BALL_JERSEY_OPTIONS,
+  TARGET_TEAM_ID,
   type Innings,
   type MainTabRoute,
   type ScorecardData,
-  type ScorecardMatchEnvelope,
   type ScorecardRoute,
 } from './types';
+
+/** Live scorecards poll this often while on show. */
+const LIVE_REFRESH_MS = 30_000;
+const NO_ROUTES: ScorecardRoute[] = [];
+
+// Helper function to check if either team in the match is team 5179117
+const isTeam5179117InMatch = (match: any) => {
+  const targetTeamId = TARGET_TEAM_ID;
+  return (
+    (match.team_a && match.team_a.id === targetTeamId) ||
+    (match.team_b && match.team_b.id === targetTeamId) ||
+    (match.team_a_id === targetTeamId) ||
+    (match.team_b_id === targetTeamId)
+  );
+};
+
+/**
+ * Keep the previous object for every innings whose content didn't change, so a
+ * live update only re-renders the innings that actually moved.
+ */
+function shareUnchangedInnings(prev: ScorecardData | null, next: ScorecardData): ScorecardData {
+  const before = prev?.pageProps?.scorecard;
+  const after = next.pageProps?.scorecard;
+  if (!Array.isArray(before) || !Array.isArray(after) || !next.pageProps) return next;
+  return {
+    ...next,
+    pageProps: {
+      ...next.pageProps,
+      scorecard: after.map((innings, i) =>
+        before[i] && JSON.stringify(before[i]) === JSON.stringify(innings) ? before[i] : innings,
+      ),
+    },
+  };
+}
 
 export type MatchDetailParams = RootStackParamList['MatchDetail'];
 
 export function useMatchDetail(params: MatchDetailParams) {
   const { matchId, tournamentName, teamNames, groundName, groundId, city, matchStartTime, defaultTab } = params;
   const confetti = useConfetti();
+  // CHANGED: a match opened from a list card renders at once from what the card had.
+  const remembered = getRememberedMatch(matchId);
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
-  const [matchData, setMatchData] = useState<Match | null>(null);
+  const [matchData, setMatchData] = useState<Match | null>(remembered ?? null);
   const [groundData, setGroundData] = useState<Ground | null>(null);
+  // `loading` is the first load only; `updating` is a silent (live/pull) refresh.
   const [loading, setLoading] = useState<boolean>(true);
+  const [updating, setUpdating] = useState<boolean>(false);
   const [groundLoading, setGroundLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +89,6 @@ export function useMatchDetail(params: MatchDetailParams) {
     { key: 'info', title: 'Info' },
     { key: 'scorecard', title: 'Scorecard' }
   ]);
-  const [scorecardRoutes, setScorecardRoutes] = useState<ScorecardRoute[]>([]);
-  const [matchStatus, setMatchStatus] = useState<string>('unknown');
-  const [autoRefreshInterval, setAutoRefreshInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [showGroundDropdown, setShowGroundDropdown] = useState<boolean>(false);
   const [selectedGroundForWhatsApp, setSelectedGroundForWhatsApp] = useState<Ground | null>(null);
   const [availableGrounds, setAvailableGrounds] = useState<Ground[]>([]);
@@ -60,7 +100,7 @@ export function useMatchDetail(params: MatchDetailParams) {
   const [showBallJerseyDropdown, setShowBallJerseyDropdown] = useState<boolean>(false);
   const [isScheduled, setIsScheduled] = useState<boolean>(false);
   const [schedulingLoading, setSchedulingLoading] = useState<boolean>(false);
-  const [isTeam5179117Match, setIsTeam5179117Match] = useState<boolean>(false);
+  const [isTeam5179117Match, setIsTeam5179117Match] = useState<boolean>(() => !!remembered && isTeam5179117InMatch(remembered));
   const [showPaymentDialog, setShowPaymentDialog] = useState<boolean>(false);
   const [paymentMessage, setPaymentMessage] = useState<string>('');
   const [showFeesInputDialog, setShowFeesInputDialog] = useState<boolean>(false);
@@ -79,70 +119,60 @@ export function useMatchDetail(params: MatchDetailParams) {
     checkIfMatchIsScheduled();
   }, []);
 
-  // Auto-refresh for live matches
+  // CHANGED: status is derived from the scorecard (API status first, then the
+  // result, then the innings with a 12h recency guard) instead of an innings
+  // heuristic that kept finished chases "live" forever.
+  const matchStatus = useMemo<string>(
+    () =>
+      scorecard
+        ? detectMatchStatus(scorecard, {
+            listStatus: remembered?.status,
+            start: toDate(matchData?.match_start_time || matchData?.start_time || matchStartTime),
+          })
+        : 'unknown',
+    [scorecard, remembered, matchData, matchStartTime],
+  );
+
+  // CHANGED: routes are derived (no effect + extra render, no empty-routes frame).
+  const scorecardRoutes = useMemo<ScorecardRoute[]>(() => {
+    const inningsArr = scorecard?.pageProps?.scorecard;
+    if (!Array.isArray(inningsArr) || inningsArr.length === 0) return NO_ROUTES;
+    return inningsArr.map((innings: Innings, idx: number) => ({
+      key: String(idx),
+      title: innings.teamName || `Innings ${idx + 1}`,
+      innings,
+    }));
+  }, [scorecard]);
+
+  // The team can also be read off the scorecard (matches added from the calendar carry no team ids).
   useEffect(() => {
-    if (matchStatus === 'live' && mainTabIndex === 1) { // Only refresh when on scorecard tab
-      const interval = setInterval(() => {
-        fetchScorecard();
-      }, 30000); // Refresh every 30 seconds for live matches
-
-      setAutoRefreshInterval(interval);
-
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
-    } else {
-      // Clear interval if not on live match or not on scorecard tab
-      if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        setAutoRefreshInterval(null);
-      }
-    }
-  }, [matchStatus, mainTabIndex]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-      }
-    };
-  }, []);
-
-  // Process scorecard data into tab routes when it's loaded
-  useEffect(() => {
-    if (scorecard && scorecard.pageProps && Array.isArray(scorecard.pageProps.scorecard) && scorecard.pageProps.scorecard.length > 0) {
-      const inningsArr = scorecard?.pageProps?.scorecard;
-      if (Array.isArray(inningsArr)) {
-        const newRoutes = inningsArr.map((innings: Innings, idx: number) => ({
-          key: String(idx),
-          title: innings.teamName || `Innings ${idx + 1}`,
-          innings: innings
-        }));
-        setScorecardRoutes(newRoutes);
-      }
+    const innings = scorecard?.pageProps?.scorecard;
+    if (Array.isArray(innings) && innings.some(i => i?.teamId === TARGET_TEAM_ID)) {
+      setIsTeam5179117Match(true);
     }
   }, [scorecard]);
 
-  // Helper function to check if either team in the match is team 5179117
-  const isTeam5179117InMatch = (match: any) => {
-    const targetTeamId = 5179117;
-    return (
-      (match.team_a && match.team_a.id === targetTeamId) ||
-      (match.team_b && match.team_b.id === targetTeamId) ||
-      (match.team_a_id === targetTeamId) ||
-      (match.team_b_id === targetTeamId)
-    );
-  };
+  // CHANGED: live auto-refresh runs only while the match is live, the scorecard
+  // tab is showing, the screen is focused and the app is in the foreground, and
+  // catches up at once when coming back. Refreshes are silent.
+  const autoRefreshing = matchStatus === 'live' && mainTabIndex === 1;
+  const refreshTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastFetchAt = useRef(0);
+  useScreenActivity(active => {
+    if (refreshTimer.current) clearInterval(refreshTimer.current);
+    refreshTimer.current = null;
+    if (!active) return;
+    if (Date.now() - lastFetchAt.current >= LIVE_REFRESH_MS) fetchScorecard({ silent: true });
+    refreshTimer.current = setInterval(() => fetchScorecard({ silent: true }), LIVE_REFRESH_MS);
+  }, autoRefreshing);
 
   const fetchMatchData = async () => {
+    // CHANGED: the list card's Match is used as-is; otherwise look on the first
+    // page of team fixtures only (it used to page through up to 500 matches).
+    if (remembered) return;
     try {
-      // Fetch matches from the team matches API to get match details
-      const response = await apiService.getTeamMatches('5179117', 1, 100); // Get first 100 matches
+      const response = await apiService.getTeamMatches('5179117', 1, 100);
       if (response.status && response.data) {
-        // Find the specific match by ID
         const match = response.data.find((m: Match) =>
           m.match_id?.toString() === matchId || m.id?.toString() === matchId
         );
@@ -151,54 +181,11 @@ export function useMatchDetail(params: MatchDetailParams) {
           // Check if either team in the match is team 5179117
           setIsTeam5179117Match(isTeam5179117InMatch(match));
           return;
-        } else {
-          console.log('Match not found in current page, trying more pages...');
-          // If not found in first page, try a few more pages
-          for (let page = 2; page <= 5; page++) {
-            const pageResponse = await apiService.getTeamMatches('5179117', page, 100);
-            if (pageResponse.status && pageResponse.data) {
-              const foundMatch = pageResponse.data.find((m: Match) =>
-                m.match_id?.toString() === matchId || m.id?.toString() === matchId
-              );
-              if (foundMatch) {
-                setMatchData(foundMatch);
-                // Check if either team in the match is team 5179117
-                setIsTeam5179117Match(isTeam5179117InMatch(foundMatch));
-                return;
-              }
-            }
-          }
         }
       }
 
-      // If match not found in API, try to get match data from scorecard API
-      console.log('Match not found in team API, trying to get match data from scorecard API...');
-      try {
-        const matchIdParam: string | number = matchId ?? '';
-        const tournamentSlug = (tournamentName || 'tournament')
-          .toLowerCase()
-          .replace(/\s+/g, '-');
-        const teamNamesSlug = `${teamNames.team1 || 'Team A'}-vs-${teamNames.team2 || 'Team B'}`
-          .toLowerCase()
-          .replace(/\s+/g, '-');
-        const scorecardResponse = await apiService.getMatchScorecard(matchIdParam, tournamentSlug, teamNamesSlug);
-        // CHANGED (types only): `data` is `unknown` on the API response; narrow it
-        // to an envelope so `.data.data` type-checks. Same runtime checks.
-        const scorecardEnvelope = scorecardResponse?.data as ScorecardMatchEnvelope | undefined;
-
-        if (scorecardResponse && scorecardEnvelope && scorecardEnvelope.data) {
-          const matchDataFromScorecard = scorecardEnvelope.data as Match;
-          setMatchData(matchDataFromScorecard);
-          // Check if either team in the match is team 5179117
-          setIsTeam5179117Match(isTeam5179117InMatch(matchDataFromScorecard));
-          return;
-        }
-      } catch (scorecardError) {
-        console.log('Failed to get match data from scorecard API:', scorecardError);
-      }
-
-      // If match not found in any API, create fallback data from route parameters
-      console.log('Match not found in any API, creating fallback data from route parameters');
+      // If match not found in API, create fallback data from route parameters
+      // (the scorecard fills in round, ground, format and result when it lands).
       const fallbackMatchData: Partial<Match> = {
         match_id: parseInt(matchId) || 0,
         tournament_name: tournamentName,
@@ -238,10 +225,23 @@ export function useMatchDetail(params: MatchDetailParams) {
     }
   };
 
-  const fetchScorecard = async () => {
+  // CHANGED: `silent` refreshes (live polling, pull-to-refresh) keep the current
+  // scorecard on screen, never show the error view over good data, and skip the
+  // state update entirely when nothing changed. Overlapping requests are dropped.
+  const scorecardInFlight = useRef(false);
+  const lastScorecardJson = useRef<string | null>(null);
+  const fetchScorecard = useStableCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (scorecardInFlight.current) return;
+    scorecardInFlight.current = true;
+    lastFetchAt.current = Date.now();
+    const hasData = lastScorecardJson.current !== null;
     try {
-      setLoading(true);
-      setError(null);
+      if (silent) {
+        setUpdating(true);
+      } else {
+        setLoading(true);
+        setError(null);
+      }
       // Extract match details for API call
       const matchIdParam: string | number = matchId ?? '';
       // Convert to slug format: lowercase, spaces to dashes, preserve parentheses and dots
@@ -253,46 +253,43 @@ export function useMatchDetail(params: MatchDetailParams) {
         .replace(/\s+/g, '-');
       const response = await apiService.getMatchScorecard(matchIdParam, tournamentSlug, teamNamesSlug);
       if (response && response.data) {
-        setScorecard(response.data);
-
-        // Detect match status from scorecard data
-        const scorecardData = response.data && typeof response.data === 'object' && response.data !== null && 'pageProps' in response.data
-          ? (response.data as ScorecardData).pageProps?.scorecard
-          : null;
-        if (scorecardData && Array.isArray(scorecardData) && scorecardData.length > 0) {
-          // Check if match is live by looking for ongoing innings or incomplete match data
-          const hasIncompleteInnings = scorecardData.some((innings: any) => {
-            return innings.inning && (
-              innings.inning.is_completed === false ||
-              innings.inning.status === 'live' ||
-              (innings.inning.total_wicket < 10 && innings.inning.overs_played &&
-               parseFloat(innings.inning.overs_played) < (innings.inning.total_overs || 20))
-            );
-          });
-
-          if (hasIncompleteInnings) {
-            setMatchStatus('live');
-          } else {
-            setMatchStatus('past');
-          }
-        } else {
-          // No scorecard data available - could be upcoming or very early live match
-          setMatchStatus('upcoming');
+        const json = JSON.stringify(response.data);
+        if (json !== lastScorecardJson.current) {
+          lastScorecardJson.current = json;
+          setScorecard(prev => shareUnchangedInnings(prev, response.data as ScorecardData));
         }
-      } else {
+        setError(null);
+      } else if (!silent || !hasData) {
         setError('Failed to load scorecard');
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Failed to load scorecard');
+      if (!silent || !hasData) {
+        setError(err instanceof Error ? err.message : 'Failed to load scorecard');
       }
     } finally {
+      scorecardInFlight.current = false;
       setLoading(false);
+      setUpdating(false);
       setRefreshing(false);
     }
-  };
+  });
+
+  // Fill gaps in fallback match data (round, ground, format, result) from the scorecard.
+  useEffect(() => {
+    const info = scorecard?.pageProps?.matchInfo;
+    if (!info) return;
+    setMatchData(prev => {
+      if (!prev) return prev;
+      const patch: Partial<Match> = {};
+      if (!prev.tournament_round_name && info.tournamentRound) patch.tournament_round_name = info.tournamentRound;
+      if (!prev.ground_name && info.groundName) patch.ground_name = info.groundName;
+      if (!prev.match_result && typeof info.matchResult === 'string' && info.matchResult) patch.match_result = info.matchResult;
+      if (!prev.match_start_time && (info.matchStartTime || info.startDateTime)) {
+        patch.match_start_time = info.matchStartTime || info.startDateTime;
+      }
+      return Object.keys(patch).length ? { ...prev, ...patch } : prev;
+    });
+  }, [scorecard]);
 
   const fetchGroundDetail = async () => {
     if (!groundId) return;
@@ -480,16 +477,20 @@ export function useMatchDetail(params: MatchDetailParams) {
     }
   };
 
-  const onRefresh = () => {
+  // CHANGED: stable identity (memoized scorecard scenes) and a silent scorecard refresh.
+  const onRefresh = useStableCallback(() => {
     setRefreshing(true);
     Promise.all([
       fetchMatchData(),
-      fetchScorecard(),
+      fetchScorecard({ silent: true }),
       groundId ? fetchGroundDetail() : Promise.resolve()
     ]).finally(() => {
       setRefreshing(false);
     });
-  };
+  });
+
+  /** Retry from the error view: a full (non-silent) load. */
+  const retryScorecard = useStableCallback(() => fetchScorecard());
 
   // Scheduling functions
   const checkIfMatchIsScheduled = async () => {
@@ -629,6 +630,7 @@ export function useMatchDetail(params: MatchDetailParams) {
     matchData,
     groundData,
     loading,
+    updating,
     groundLoading,
     refreshing,
     error,
@@ -637,7 +639,7 @@ export function useMatchDetail(params: MatchDetailParams) {
     mainTabRoutes,
     scorecardRoutes,
     matchStatus,
-    autoRefreshInterval,
+    autoRefreshing,
     showGroundDropdown,
     selectedGroundForWhatsApp,
     availableGrounds,
@@ -672,6 +674,7 @@ export function useMatchDetail(params: MatchDetailParams) {
     // Actions
     fetchMatchData,
     fetchScorecard,
+    retryScorecard,
     fetchGroundDetail,
     fetchAvailableGrounds,
     searchGoogleMapsPlaces,
