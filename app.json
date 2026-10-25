@@ -13,7 +13,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "splash": {
       "image": "./assets/cricbuddy_icon.png",
@@ -58,6 +59,9 @@
       "eas": {
         "projectId": "53e41fc5-f303-4542-b925-22bd6662e0a0"
       }
+    },
+    "experiments": {
+      "tsconfigPaths": false
     }
   }
 }

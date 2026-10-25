@@ -27,8 +27,13 @@ export default [
         Headers: 'readonly',
         Response: 'readonly',
         setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        AbortController: 'readonly',
+        __DEV__: 'readonly',
         NodeJS: 'readonly',
       },
     },
@@ -42,6 +47,38 @@ export default [
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-empty-function': 'off',
       'no-console': 'warn',
+      // Icons come from src/ui/icons.ts. Importing values from the phosphor root
+      // would bundle all ~1,500 icons (Metro can't tree-shake); types are fine.
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: '@expo/vector-icons', message: 'Use <Icon name=…> from src/ui/Icon instead.' },
+            { name: 'react-native-vector-icons', message: 'Use <Icon name=…> from src/ui/Icon instead.' },
+            {
+              name: 'phosphor-react-native',
+              message: "Deep-import icons ('phosphor-react-native/src/icons/<Name>') via src/ui/icons.ts.",
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/__tests__/**/*.{ts,tsx}', '**/__mocks__/**/*.{ts,tsx,js}', 'src/setupTests.ts'],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
     },
   },
   {

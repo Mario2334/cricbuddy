@@ -1,0 +1,2 @@
+# This file ensures the tests directory is tracked by git
+# Unit tests and property-based tests for the Looking For feed feature will be placed here

@@ -1,42 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  Dimensions,
-} from 'react-native';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+  createMaterialTopTabNavigator,
+  type MaterialTopTabBarProps,
+} from '@react-navigation/material-top-tabs';
+import { useIsFocused } from '@react-navigation/native';
 import apiService from '../services/apiService';
+import { radii } from '../theme';
+import type { IconName } from '../ui/icons';
+import { MeshBackground } from '../ui/MeshBackground';
+import { ScreenHeader } from '../ui/ScreenHeader';
+import { EmptyState } from '../ui/EmptyState';
+import { Skeleton } from '../ui/Skeleton';
+import { MaterialTopSegmentedBar } from '../ui/adapters/MaterialTopSegmentedBar';
+import { haptic } from '../utils/haptics';
+import { StatsGrid, StatsGridSkeleton } from './stats/StatsGrid';
+import type { StatsData } from './stats/statMeta';
 
-interface StatItem {
-  value: string | number;
-  title: string;
-}
-interface StatsData {
-  batting?: StatItem[];
-  bowling?: StatItem[];
-  fielding?: StatItem[];
-  captain?: StatItem[];
-}
-
-
-const { width } = Dimensions.get('window');
 const Tab = createMaterialTopTabNavigator();
 
+const TAB_ICONS: Record<string, IconName> = {
+  Batting: 'bat',
+  Bowling: 'target',
+  Fielding: 'gloves',
+  Captain: 'crown',
+};
+
+const renderTabBar = (props: MaterialTopTabBarProps) => <MaterialTopSegmentedBar {...props} icons={TAB_ICONS} />;
+const renderLazyPlaceholder = () => <StatsGridSkeleton />;
+
 const StatsScreen = () => {
+  const isFocused = useIsFocused();
   const [statsData, setStatsData] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(false);
+  // Start in the loading state so the empty state never flashes before the first fetch.
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async (isRefresh = false) => {
+  const loadStats = useCallback(async (isRefresh = false) => {
     if (!isRefresh) {
       setLoading(true);
     }
@@ -55,219 +55,82 @@ const StatsScreen = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
+    haptic('light');
     setRefreshing(true);
     loadStats(true).finally(() => {
       setRefreshing(false);
     });
-  };
+  }, [loadStats]);
 
-  const renderStatCard = (stat: StatItem, index: number) => (
-    <View key={index} style={styles.statCard}>
-      <Text style={styles.statValue}>{stat.value}</Text>
-      <Text style={styles.statTitle}>{stat.title}</Text>
-    </View>
-  );
-
-  const renderStatsGrid = (stats: StatItem[]) => (
-    <ScrollView
-      style={styles.tabContent}
-      contentContainerStyle={styles.scrollContent}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.statsGrid}>
-        {stats.map((stat, index) => renderStatCard(stat, index))}
-      </View>
-    </ScrollView>
-  );
-
-  // Individual tab components
-  const BattingTab = () => (
-    statsData?.batting ? renderStatsGrid(statsData.batting) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No batting stats available</Text>
-      </View>
-    )
-  );
-
-  const BowlingTab = () => (
-    statsData?.bowling ? renderStatsGrid(statsData.bowling) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No bowling stats available</Text>
-      </View>
-    )
-  );
-
-  const FieldingTab = () => (
-    statsData?.fielding ? renderStatsGrid(statsData.fielding) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No fielding stats available</Text>
-      </View>
-    )
-  );
-
-  const CaptainTab = () => (
-    statsData?.captain ? renderStatsGrid(statsData.captain) : (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No captain stats available</Text>
-      </View>
-    )
-  );
-
-
+  let body: React.ReactNode;
   if (loading && !statsData) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading statistics...</Text>
+    body = (
+      <View style={styles.loading}>
+        <Skeleton height={52} radius={radii.pill} style={styles.tabsSkeleton} />
+        <StatsGridSkeleton />
       </View>
     );
-  }
-
-  if (!statsData) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No statistics available</Text>
+  } else if (!statsData) {
+    body = (
+      <View style={styles.center}>
+        <EmptyState
+          icon="chart"
+          title="No stats yet"
+          message="We couldn't find your career numbers just now."
+          actionLabel="Try again"
+          onAction={() => loadStats()}
+        />
       </View>
+    );
+  } else {
+    body = (
+      <Tab.Navigator
+        tabBar={renderTabBar}
+        style={styles.navigator}
+        screenOptions={{
+          lazy: true,
+          lazyPlaceholder: renderLazyPlaceholder,
+          sceneStyle: styles.scene,
+        }}
+      >
+        <Tab.Screen name="Batting" options={{ title: 'Batting' }}>
+          {() => <StatsGrid stats={statsData.batting} kind="batting" refreshing={refreshing} onRefresh={onRefresh} />}
+        </Tab.Screen>
+        <Tab.Screen name="Bowling" options={{ title: 'Bowling' }}>
+          {() => <StatsGrid stats={statsData.bowling} kind="bowling" refreshing={refreshing} onRefresh={onRefresh} />}
+        </Tab.Screen>
+        <Tab.Screen name="Fielding" options={{ title: 'Fielding' }}>
+          {() => <StatsGrid stats={statsData.fielding} kind="fielding" refreshing={refreshing} onRefresh={onRefresh} />}
+        </Tab.Screen>
+        <Tab.Screen name="Captain" options={{ title: 'Captain' }}>
+          {() => <StatsGrid stats={statsData.captain} kind="captain" refreshing={refreshing} onRefresh={onRefresh} />}
+        </Tab.Screen>
+      </Tab.Navigator>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Tab.Navigator
-        screenOptions={{
-          tabBarActiveTintColor: '#007AFF',
-          tabBarInactiveTintColor: '#8E8E93',
-          tabBarIndicatorStyle: {
-            backgroundColor: '#007AFF',
-            height: 3,
-          },
-          tabBarStyle: {
-            backgroundColor: '#fff',
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 1,
-            borderBottomColor: '#E5E5EA',
-          },
-          tabBarLabelStyle: {
-            fontSize: 14,
-            fontWeight: '600',
-            textTransform: 'none',
-          },
-          tabBarScrollEnabled: false,
-        }}
-      >
-        <Tab.Screen
-          name="Batting"
-          component={BattingTab}
-          options={{ title: 'Batting' }}
-        />
-        <Tab.Screen
-          name="Bowling"
-          component={BowlingTab}
-          options={{ title: 'Bowling' }}
-        />
-        <Tab.Screen
-          name="Fielding"
-          component={FieldingTab}
-          options={{ title: 'Fielding' }}
-        />
-        <Tab.Screen
-          name="Captain"
-          component={CaptainTab}
-          options={{ title: 'Captain' }}
-        />
-      </Tab.Navigator>
-    </View>
+    <MeshBackground paused={!isFocused}>
+      <ScreenHeader title="My Stats" icon="chart" subtitle="Your CricHeroes career" />
+      {body}
+    </MeshBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  tabContent: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#8E8E93',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#8E8E93',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#8E8E93',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    width: (width - 48) / 3, // 3 cards per row with padding
-    minHeight: 80,
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  statTitle: {
-    fontSize: 12,
-    color: '#8E8E93',
-    textAlign: 'center',
-    lineHeight: 14,
-  },
+  navigator: { backgroundColor: 'transparent' },
+  // Transparent so the mesh background shows through every tab's scene.
+  scene: { backgroundColor: 'transparent' },
+  loading: { flex: 1 },
+  tabsSkeleton: { marginHorizontal: 16, marginBottom: 16 },
+  center: { flex: 1, justifyContent: 'center', paddingBottom: 80 },
 });
 
 export default StatsScreen;

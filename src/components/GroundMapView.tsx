@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   Alert,
   Linking,
   Platform,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
-import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import type { Ground } from '../types/Ground';
 import googleMapsService from '../services/googleMapsService';
+import { colors, curve, glass, palette, radii, shadows, space } from '../theme';
+import { AppText } from '../ui/AppText';
+import { Button } from '../ui/Button';
+import { IconTile } from '../ui/IconTile';
 
 interface GroundMapViewProps {
   ground: Ground;
@@ -20,9 +21,9 @@ interface GroundMapViewProps {
 }
 
 
-const GroundMapView: React.FC<GroundMapViewProps> = ({ 
-  ground, 
-  showSearchButton = true 
+const GroundMapView: React.FC<GroundMapViewProps> = ({
+  ground,
+  showSearchButton = true
 }) => {
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
@@ -144,13 +145,20 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
   if (!hasValidCoordinates) {
     return (
       <View style={styles.container}>
-        <View style={styles.noMapContainer}>
-          <Text style={styles.noMapText}>Map not available</Text>
-          <Text style={styles.noMapSubtext}>Invalid coordinates for this ground</Text>
+        <View style={[styles.noMapContainer, curve]}>
+          <IconTile icon="map" tone="teal" size="lg" style={styles.noMapIcon} />
+          <AppText variant="h3" center>Map not available</AppText>
+          <AppText variant="small" color={colors.textMuted} center style={styles.noMapSubtext}>
+            Invalid coordinates for this ground
+          </AppText>
           {showSearchButton && (
-            <TouchableOpacity style={styles.searchButton} onPress={searchGroundByName}>
-              <Text style={styles.searchButtonText}>Search in Google Maps</Text>
-            </TouchableOpacity>
+            <Button
+              label="Search in Google Maps"
+              icon="search"
+              variant="secondary"
+              size="sm"
+              onPress={searchGroundByName}
+            />
           )}
         </View>
       </View>
@@ -164,125 +172,110 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
     longitudeDelta: 0.01,
   };
 
+  const showDirections = locationPermission && !!userLocation;
+
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
-        region={region}
-        showsUserLocation={locationPermission}
-        showsMyLocationButton={locationPermission}
-        showsCompass={true}
-        showsScale={true}
-      >
-        <Marker
-          coordinate={{ latitude, longitude }}
-          title={ground.name}
-          description={`${ground.city_name}${ground.address ? ` - ${ground.address}` : ''}`}
-        />
-      </MapView>
-
-      <View style={styles.buttonContainer}>
-        {showSearchButton && (
-          <TouchableOpacity style={styles.mapButton} onPress={openInGoogleMaps}>
-            <Ionicons name="location-outline" size={20} color="#fff" />
-            <Text style={styles.mapButtonText}>Open in Maps</Text>
-          </TouchableOpacity>
-        )}
-
-        {locationPermission && userLocation && (
-          <TouchableOpacity style={styles.directionsButton} onPress={getDirections}>
-            <Ionicons name="navigate-outline" size={20} color="#fff" />
-            <Text style={styles.directionsButtonText}>Get Directions</Text>
-          </TouchableOpacity>
-        )}
+      <View style={[styles.mapFrame, curve]}>
+        <View style={[styles.mapClip, curve]}>
+          <MapView
+            style={styles.map}
+            provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
+            region={region}
+            showsUserLocation={locationPermission}
+            showsMyLocationButton={locationPermission}
+            showsCompass={true}
+            showsScale={true}
+          >
+            <Marker
+              coordinate={{ latitude, longitude }}
+              title={ground.name}
+              description={`${ground.city_name}${ground.address ? ` - ${ground.address}` : ''}`}
+              pinColor={palette.green600}
+            />
+          </MapView>
+        </View>
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.mapRim, curve]} />
       </View>
+
+      {(showSearchButton || showDirections) && (
+        <View style={styles.buttonContainer}>
+          {showSearchButton && (
+            <Button
+              label="Open in Maps"
+              icon="map"
+              variant="primary"
+              size="sm"
+              onPress={openInGoogleMaps}
+              style={styles.buttonFlex}
+            />
+          )}
+
+          {showDirections && (
+            <Button
+              label="Directions"
+              icon="directions"
+              variant="sunny"
+              size="sm"
+              onPress={getDirections}
+              style={styles.buttonFlex}
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+    alignSelf: 'stretch',
+  },
+  mapFrame: {
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: glass.hairline,
+    backgroundColor: palette.green50,
+    ...shadows.glass,
+  },
+  mapClip: {
+    borderRadius: radii.lg,
+    overflow: 'hidden',
+  },
+  mapRim: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: glass.rim,
   },
   map: {
     width: '100%',
-    height: 300,
+    height: 220,
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    gap: space.sm,
+    marginTop: space.md,
   },
-  mapButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+  buttonFlex: {
     flex: 1,
-    marginRight: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
   },
   noMapContainer: {
-    height: 300,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 12,
-    margin: 16,
+    justifyContent: 'center',
+    paddingVertical: space.xxl,
+    paddingHorizontal: space.lg,
+    borderRadius: radii.lg,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: palette.stone300,
+    backgroundColor: glass.fill,
   },
-  noMapText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
+  noMapIcon: {
+    marginBottom: space.md,
   },
   noMapSubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  directionsButton: {
-    backgroundColor: '#34C759',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  directionsButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  searchButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  searchButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: space.xxs,
+    marginBottom: space.md,
   },
 });
 

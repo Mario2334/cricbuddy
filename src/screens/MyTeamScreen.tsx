@@ -1,29 +1,33 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  useWindowDimensions,
-} from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { TabView, TabBar } from 'react-native-tab-view';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Alert, FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { TabView, type SceneRendererProps, type NavigationState } from 'react-native-tab-view';
 import apiService from '../services/apiService';
 import type { Match } from '../types/Match';
-import { MyTeamScreenNavigationProp } from '../types/navigation';
-import { formatMatchTime, getMatchStatusColor } from '../utils/matchUtils';
+import type { MyTeamScreenNavigationProp } from '../types/navigation';
+import { colors } from '../theme';
+import { MAX_STAGGERED_ITEMS } from '../theme/motion';
+import { relativeDayLabel } from '../utils/dates';
+import { buildMatchDetailParams, getMatchStart, matchKey } from '../utils/matchDisplay';
+import { useNow } from '../hooks/useNow';
+import { useTabBarSpace } from '../navigation/useTabBarSpace';
 import MatchCalendar from '../components/MatchCalendar';
+import { MatchCard } from '../components/match/MatchCard';
+import { EmptyState } from '../ui/EmptyState';
+import { MatchCardSkeleton } from '../ui/Skeleton';
+import { MeshBackground } from '../ui/MeshBackground';
+import { ScreenHeader } from '../ui/ScreenHeader';
+import { SpinningBall } from '../ui/CricketBall';
+import { TabViewSegmentedBar } from '../ui/adapters/TabViewSegmentedBar';
 
-interface MyTeamScreenProps {
-  navigation: MyTeamScreenNavigationProp['navigation'];
-  route: MyTeamScreenNavigationProp['route'];
-}
+type TeamRoute = { key: 'matches' | 'calendar'; title: string };
 
-const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
+const TEAM_ROUTES: TeamRoute[] = [
+  { key: 'matches', title: 'Matches' },
+  { key: 'calendar', title: 'Calendar' },
+];
+
+const MyTeamScreen: React.FC<MyTeamScreenNavigationProp> = ({ navigation }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,46 +36,47 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
   const [pageNo, setPageNo] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
-  const [tabRoutes] = useState([
-    { key: 'matches', title: 'Matches' },
-    { key: 'calendar', title: 'Calendar' }
-  ]);
   const layout = useWindowDimensions();
+  const isFocused = useIsFocused();
+  const now = useNow(60_000, { enabled: isFocused });
+  const tabBarSpace = useTabBarSpace();
+  const animated = useRef(new Set<string>());
 
   const teamId = '5179117'; // Default team ID from the API URL
 
-  const fetchTeamMatches = useCallback(async (page: number = 1, isRefresh: boolean = false) => {
-    try {
-      if (page === 1) {
-        setLoading(true);
-        setError(null);
-      } else {
-        setLoadingMore(true);
+  const fetchTeamMatches = useCallback(
+    async (page: number = 1, isRefresh: boolean = false) => {
+      try {
+        if (page === 1) {
+          setLoading(true);
+          setError(null);
+        } else {
+          setLoadingMore(true);
+        }
+
+        const response = await apiService.getTeamMatches(teamId, page, 12);
+        const newMatches = response.data || [];
+
+        if (isRefresh || page === 1) {
+          setMatches(newMatches);
+        } else {
+          setMatches(prev => [...prev, ...newMatches]);
+        }
+
+        setHasNextPage(newMatches.length === 12);
+        setPageNo(page);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(errorMessage);
+        Alert.alert('Error', errorMessage);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
       }
-
-      const response = await apiService.getTeamMatches(teamId, page, 12);
-
-      const newMatches = response.data || [];
-
-      if (isRefresh || page === 1) {
-        setMatches(newMatches);
-      } else {
-        setMatches(prev => [...prev, ...newMatches]);
-      }
-
-      // Check if there are more pages
-      setHasNextPage(newMatches.length === 12);
-      setPageNo(page);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-      setLoadingMore(false);
-    }
-  }, [teamId]);
+    },
+    [teamId],
+  );
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -84,405 +89,135 @@ const MyTeamScreen: React.FC<MyTeamScreenProps> = ({ navigation }) => {
     }
   }, [loadingMore, hasNextPage, pageNo, fetchTeamMatches]);
 
-  const handleMatchPress = useCallback((item: Match) => {
-    const matchId = item.id || item.match_id;
-    if (matchId) {
-      navigation.navigate('MatchDetail', {
-        matchId: matchId.toString(),
-        tournamentName: item.tournament_name || 'Match',
-        teamNames: {
-          team1: item.team1_name || item.team_a || 'Team 1',
-          team2: item.team2_name || item.team_b || 'Team 2',
-        },
-        groundName: item.ground_name,
-        groundId: item.ground_id,
-        city: undefined,
-        matchStartTime: item.match_start_time || item.start_time,
-        defaultTab: item.status === 'live' || item.status === 'past' ? 'scorecard' : 'info',
-      });
-    }
-  }, [navigation]);
+  const handleMatchPress = useCallback(
+    (item: Match) => {
+      const params = buildMatchDetailParams(item);
+      if (params) navigation.navigate('MatchDetail', params);
+    },
+    [navigation],
+  );
 
   useFocusEffect(
     useCallback(() => {
       fetchTeamMatches(1, true);
-    }, [fetchTeamMatches])
+    }, [fetchTeamMatches]),
   );
 
-  const renderMatch = ({ item }: { item: Match }) => {
-    const team1Name = item.team1_name || item.team_a || 'Team 1';
-    const team2Name = item.team2_name || item.team_b || 'Team 2';
+  const nextMatch = useMemo(() => {
+    const t = now.getTime();
+    return matches
+      .map(m => getMatchStart(m))
+      .filter((d): d is Date => !!d && d.getTime() > t)
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+  }, [matches, now]);
 
-    return (
-      <TouchableOpacity 
-        style={styles.matchCard}
-        onPress={() => handleMatchPress(item)}
-      >
-        <View style={styles.matchHeader}>
-          <View style={styles.tournamentInfo}>
-            <Text style={styles.tournamentName} numberOfLines={1}>
-              {item.tournament_name || 'Practice Match'}
-            </Text>
-            <Text style={styles.roundName} numberOfLines={1}>
-              {item.round_name || 'Match'}
-            </Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: getMatchStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
-          </View>
-        </View>
+  const subtitle = loading && matches.length === 0
+    ? 'Warming up…'
+    : `${matches.length} ${matches.length === 1 ? 'match' : 'matches'}${nextMatch ? ` · next ${relativeDayLabel(nextMatch, now).toLowerCase()}` : ''}`;
 
-        <View style={styles.teamsContainer}>
-          {(item.status === 'live' || item.status === 'past') && (item.team1_score || item.team2_score) ? (
-            // Show mini scores for live and past matches
-            <View style={styles.teamRowWithScores}>
-              <View style={styles.teamWithScore}>
-                <Text style={styles.teamName} numberOfLines={1}>{team1Name}</Text>
-                {item.team1_score && (
-                  <Text style={styles.miniScore} numberOfLines={1}>
-                    {item.team1_score.summary || `${item.team1_score.runs}/${item.team1_score.wickets} (${item.team1_score.overs})`}
-                  </Text>
-                )}
-              </View>
-              <Text style={styles.vsText}>VS</Text>
-              <View style={styles.teamWithScore}>
-                <Text style={styles.teamName} numberOfLines={1}>{team2Name}</Text>
-                {item.team2_score && (
-                  <Text style={styles.miniScore} numberOfLines={1}>
-                    {item.team2_score.summary || `${item.team2_score.runs}/${item.team2_score.wickets} (${item.team2_score.overs})`}
-                  </Text>
-                )}
-              </View>
-            </View>
-          ) : (
-            // Show regular team names for upcoming matches or when no scores available
-            <View style={styles.teamRow}>
-              <View style={styles.teamInfo}>
-                <Text style={styles.teamName} numberOfLines={1}>{team1Name}</Text>
-              </View>
-              <Text style={styles.vsText}>VS</Text>
-              <View style={styles.teamInfo}>
-                <Text style={styles.teamName} numberOfLines={1}>{team2Name}</Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.matchFooter}>
-          <View style={styles.groundInfo}>
-            <Text style={styles.groundName} numberOfLines={1}>
-              {item.ground_name || 'Ground TBD'}
-            </Text>
-          </View>
-          <Text style={styles.matchTime}>
-            {formatMatchTime(item.match_start_time || item.start_time || '')}
-          </Text>
-        </View>
-
-        {item.match_result && (
-          <View style={styles.resultContainer}>
-            <Text style={styles.resultText} numberOfLines={2}>
-              {item.match_result}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
-  const renderFooter = () => {
-    if (!loadingMore) return null;
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#0066cc" />
-        <Text style={styles.loadingText}>Loading more matches...</Text>
-      </View>
-    );
-  };
-
-  const renderEmpty = () => {
-    if (loading) return null;
-
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          {error ? 'Failed to load team matches' : 'No team matches found'}
-        </Text>
-        {error && (
-          <TouchableOpacity style={styles.retryButton} onPress={() => fetchTeamMatches(1, true)}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  const renderTabBar = (props: any) => (
-    <TabBar
-      {...props}
-      indicatorStyle={styles.tabIndicator}
-      style={styles.tabBar}
-      labelStyle={styles.tabLabel}
-      activeColor="#0066cc"
-      inactiveColor="#666"
-    />
+  const renderMatch = useCallback(
+    ({ item, index }: { item: Match; index: number }) => {
+      const key = matchKey(item, index);
+      const animateIn = index < MAX_STAGGERED_ITEMS && !animated.current.has(key);
+      if (animateIn) animated.current.add(key);
+      return <MatchCard match={item} now={now} onPress={handleMatchPress} index={index} animateIn={animateIn} />;
+    },
+    [now, handleMatchPress],
   );
 
   const renderMatchesTab = () => {
     if (loading && matches.length === 0) {
       return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0066cc" />
-          <Text style={styles.loadingText}>Loading team matches...</Text>
+        <View style={styles.list}>
+          <MatchCardSkeleton />
+          <MatchCardSkeleton />
+          <MatchCardSkeleton />
         </View>
       );
     }
-
     return (
-      <View style={styles.tabContent}>
-        <FlatList
-          data={matches}
-          renderItem={renderMatch}
-          keyExtractor={(item) => (item.id || item.match_id || Math.random()).toString()}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={['#0066cc']}
-              tintColor="#0066cc"
+      <FlatList
+        data={matches}
+        renderItem={renderMatch}
+        keyExtractor={matchKey}
+        extraData={now}
+        removeClippedSubviews={false}
+        contentContainerStyle={[styles.list, { paddingBottom: tabBarSpace }]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primaryStrong]} tintColor={colors.primary} />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.1}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footer}>
+              <SpinningBall size={26} />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          error ? (
+            <EmptyState
+              icon="oops"
+              title="Dropped catch!"
+              message="Failed to load team matches."
+              tone="error"
+              actionLabel="Retry"
+              onAction={() => fetchTeamMatches(1, true)}
             />
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={renderEmpty}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={matches.length === 0 ? styles.emptyListContainer : undefined}
-        />
-      </View>
+          ) : (
+            <EmptyState icon="team" tone="teal" title="No team matches yet" message="Once your team plays, the fixtures land here." />
+          )
+        }
+        showsVerticalScrollIndicator={false}
+      />
     );
   };
 
-  const renderCalendarTab = () => {
-    return (
-      <View style={styles.tabContent}>
-        <MatchCalendar
-          matches={matches}
-          loading={loading}
-          onMatchPress={handleMatchPress}
-          onRefresh={handleRefresh}
-        />
-      </View>
-    );
-  };
-
-  const renderScene = ({ route }: { route: { key: string; title: string } }) => {
+  const renderScene = ({ route }: { route: TeamRoute }) => {
     switch (route.key) {
       case 'matches':
         return renderMatchesTab();
       case 'calendar':
-        return renderCalendarTab();
+        return (
+          <MatchCalendar
+            matches={matches}
+            loading={loading}
+            onMatchPress={handleMatchPress}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+            showWeekStrip={false}
+            bottomSpace={tabBarSpace}
+          />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <View style={styles.container}>
+    <MeshBackground paused={!isFocused}>
+      <ScreenHeader title="My Team" icon="team" iconTone="teal" subtitle={subtitle} />
       <TabView
-        navigationState={{ index: tabIndex, routes: tabRoutes }}
+        navigationState={{ index: tabIndex, routes: TEAM_ROUTES }}
         renderScene={renderScene}
         onIndexChange={setTabIndex}
         initialLayout={{ width: layout.width }}
-        renderTabBar={renderTabBar}
-        style={{ flex: 1 }}
+        renderTabBar={(props: SceneRendererProps & { navigationState: NavigationState<TeamRoute> }) => (
+          <TabViewSegmentedBar {...props} icons={{ matches: 'bat', calendar: 'calendar' }} />
+        )}
+        swipeEnabled={false}
+        animationEnabled
+        style={styles.flex}
       />
-    </View>
+    </MeshBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  tabBar: {
-    backgroundColor: '#fff',
-    elevation: 0,
-    shadowOpacity: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  tabIndicator: {
-    backgroundColor: '#0066cc',
-    height: 3,
-  },
-  tabLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    textTransform: 'none',
-  },
-  tabContent: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  matchCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  matchHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  tournamentInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  tournamentName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  roundName: {
-    fontSize: 14,
-    color: '#666',
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  teamsContainer: {
-    marginBottom: 12,
-  },
-  teamRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  teamInfo: {
-    flex: 1,
-  },
-  teamName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-  },
-  vsText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#0066cc',
-    marginHorizontal: 16,
-  },
-  matchFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  groundInfo: {
-    flex: 1,
-  },
-  groundName: {
-    fontSize: 14,
-    color: '#666',
-  },
-  matchTime: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  resultContainer: {
-    marginTop: 12,
-    padding: 8,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 8,
-  },
-  resultText: {
-    fontSize: 14,
-    color: '#0066cc',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  footerLoader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyListContainer: {
-    flexGrow: 1,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  retryButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Mini score styles
-  teamRowWithScores: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  teamWithScore: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  miniScore: {
-    fontSize: 12,
-    color: '#0066cc',
-    fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
-  },
+  flex: { flex: 1 },
+  list: { paddingHorizontal: 16, paddingTop: 6 },
+  footer: { paddingVertical: 20, alignItems: 'center' },
 });
 
 export default MyTeamScreen;

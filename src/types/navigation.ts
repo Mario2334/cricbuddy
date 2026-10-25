@@ -1,14 +1,16 @@
 import { StackScreenProps } from '@react-navigation/stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NavigatorScreenParams } from '@react-navigation/native';
 
 // Define the parameter list for the root stack
 export type RootStackParamList = {
   HomeList: undefined;
   MyTeamList: undefined;
-  CalendarList: undefined;
-  MatchDetail: { 
-    matchId: string; 
-    tournamentName: string; 
+  /** `openAddFor`: yyyy-MM-dd to open the add-match sheet on that day. */
+  CalendarList: { openAddFor?: string } | undefined;
+  MatchDetail: {
+    matchId: string;
+    tournamentName: string;
     teamNames: {
       team1: string;
       team2: string;
@@ -24,10 +26,11 @@ export type RootStackParamList = {
 
 // Define the parameter list for the bottom tabs
 export type TabParamList = {
-  Home: undefined;
+  Home: NavigatorScreenParams<RootStackParamList> | undefined;
   Stats: undefined;
-  MyTeam: undefined;
-  Calendar: undefined;
+  MyTeam: NavigatorScreenParams<RootStackParamList> | undefined;
+  Calendar: NavigatorScreenParams<RootStackParamList> | undefined;
+  LookingForFeed: undefined;
 };
 
 // Navigation props for each screen
@@ -36,3 +39,4 @@ export type MatchDetailScreenNavigationProp = StackScreenProps<RootStackParamLis
 export type StatsScreenNavigationProp = BottomTabScreenProps<TabParamList, 'Stats'>;
 export type MyTeamScreenNavigationProp = StackScreenProps<RootStackParamList, 'MyTeamList'>;
 export type CalendarScreenNavigationProp = StackScreenProps<RootStackParamList, 'CalendarList'>;
+export type LookingForFeedScreenNavigationProp = BottomTabScreenProps<TabParamList, 'LookingForFeed'>;

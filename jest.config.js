@@ -2,7 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
@@ -12,8 +12,23 @@ module.exports = {
   moduleNameMapper: {
     '^@react-native-async-storage/async-storage$': '<rootDir>/src/__mocks__/asyncStorage.ts',
     '^react-native-svg$': '<rootDir>/src/__mocks__/react-native-svg.ts',
+    '^react-native$': '<rootDir>/src/__mocks__/react-native.ts',
+    '^@expo/vector-icons$': '<rootDir>/src/__mocks__/expo-vector-icons.ts',
+    '^@testing-library/react-native$': '<rootDir>/src/__mocks__/react-native-testing-library.ts',
+    '^react-native-reanimated$': '<rootDir>/src/__mocks__/react-native-reanimated.ts',
+    '^react-native-gesture-handler(/.*)?$': '<rootDir>/src/__mocks__/react-native-gesture-handler.ts',
+    '^react-native-safe-area-context$': '<rootDir>/src/__mocks__/react-native-safe-area-context.ts',
+    '^expo-linear-gradient$': '<rootDir>/src/__mocks__/expo-linear-gradient.ts',
+    '^expo-blur$': '<rootDir>/src/__mocks__/expo-blur.ts',
+    '^expo-haptics$': '<rootDir>/src/__mocks__/expo-haptics.ts',
+    '^expo-constants$': '<rootDir>/src/__mocks__/expo-constants.ts',
+    '^expo-status-bar$': '<rootDir>/src/__mocks__/expo-status-bar.ts',
+    '^phosphor-react-native(/.*)?$': '<rootDir>/src/__mocks__/phosphor-react-native.js',
+    '^@expo-google-fonts/.*$': '<rootDir>/src/__mocks__/fileStub.js',
+    '\\.(ttf|otf)$': '<rootDir>/src/__mocks__/fileStub.js',
   },
-  setupFilesAfterEnv: [],
+  globalSetup: '<rootDir>/jest.globalSetup.js',
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

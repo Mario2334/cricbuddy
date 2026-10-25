@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		31EB722257B901BAB2F45D8F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2457E67041BBD9797C01DBC5 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		9C21BE305A1F27D089D117EC /* libPods-CricBuddy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBD86A6745AE83C49D09CDCF /* libPods-CricBuddy.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		DB07CDC1C61BF1D793B53889 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1387BD2EA799F1A287499040 /* ExpoModulesProvider.swift */; };
+		E6D2DEC62E49E9A23F26644A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0B27C2C2A5A86821D5061199 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F209D676E3CC2A7B6420B97D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52E095C028CFE2D21847EAC9 /* ExpoModulesProvider.swift */; };
+		FADE7068580B2E3A6162F24E /* libPods-CricBuddy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 22D3AE07F1FF22ED6428BE06 /* libPods-CricBuddy.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		01089B1BBE2DA09D896789ED /* Pods-CricBuddy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CricBuddy.release.xcconfig"; path = "Target Support Files/Pods-CricBuddy/Pods-CricBuddy.release.xcconfig"; sourceTree = "<group>"; };
+		0B27C2C2A5A86821D5061199 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = CricBuddy/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1387BD2EA799F1A287499040 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CricBuddy/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* CricBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CricBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = CricBuddy/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = CricBuddy/Info.plist; sourceTree = "<group>"; };
-		2457E67041BBD9797C01DBC5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = CricBuddy/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		44F598E870227B5AEDA4469F /* Pods-CricBuddy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CricBuddy.release.xcconfig"; path = "Target Support Files/Pods-CricBuddy/Pods-CricBuddy.release.xcconfig"; sourceTree = "<group>"; };
-		52E095C028CFE2D21847EAC9 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CricBuddy/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		22D3AE07F1FF22ED6428BE06 /* libPods-CricBuddy.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CricBuddy.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = CricBuddy/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		BBD86A6745AE83C49D09CDCF /* libPods-CricBuddy.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CricBuddy.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C38B1C8FB953E17961A72CEB /* Pods-CricBuddy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CricBuddy.debug.xcconfig"; path = "Target Support Files/Pods-CricBuddy/Pods-CricBuddy.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = CricBuddy/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* CricBuddy-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CricBuddy-Bridging-Header.h"; path = "CricBuddy/CricBuddy-Bridging-Header.h"; sourceTree = "<group>"; };
+		F69692F100FE15B14A364763 /* Pods-CricBuddy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CricBuddy.debug.xcconfig"; path = "Target Support Files/Pods-CricBuddy/Pods-CricBuddy.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,17 +37,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C21BE305A1F27D089D117EC /* libPods-CricBuddy.a in Frameworks */,
+				FADE7068580B2E3A6162F24E /* libPods-CricBuddy.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0DEC43A8B1C86825168CE19D /* ExpoModulesProviders */ = {
+		0D26F80DA10CDDBDA1E2E0A6 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				CCD9F86A397C833D2C08C5B3 /* CricBuddy */,
+				630891094197702B4FEBE72A /* CricBuddy */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -61,7 +61,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				2457E67041BBD9797C01DBC5 /* PrivacyInfo.xcprivacy */,
+				0B27C2C2A5A86821D5061199 /* PrivacyInfo.xcprivacy */,
 			);
 			name = CricBuddy;
 			sourceTree = "<group>";
@@ -70,19 +70,27 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				BBD86A6745AE83C49D09CDCF /* libPods-CricBuddy.a */,
+				22D3AE07F1FF22ED6428BE06 /* libPods-CricBuddy.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4679D0000DDBDA4E5AFE8380 /* Pods */ = {
+		343CC01387D5FEF877CD1BB0 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				C38B1C8FB953E17961A72CEB /* Pods-CricBuddy.debug.xcconfig */,
-				44F598E870227B5AEDA4469F /* Pods-CricBuddy.release.xcconfig */,
+				F69692F100FE15B14A364763 /* Pods-CricBuddy.debug.xcconfig */,
+				01089B1BBE2DA09D896789ED /* Pods-CricBuddy.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		630891094197702B4FEBE72A /* CricBuddy */ = {
+			isa = PBXGroup;
+			children = (
+				1387BD2EA799F1A287499040 /* ExpoModulesProvider.swift */,
+			);
+			name = CricBuddy;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -99,8 +107,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				4679D0000DDBDA4E5AFE8380 /* Pods */,
-				0DEC43A8B1C86825168CE19D /* ExpoModulesProviders */,
+				343CC01387D5FEF877CD1BB0 /* Pods */,
+				0D26F80DA10CDDBDA1E2E0A6 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -124,14 +132,6 @@
 			path = CricBuddy/Supporting;
 			sourceTree = "<group>";
 		};
-		CCD9F86A397C833D2C08C5B3 /* CricBuddy */ = {
-			isa = PBXGroup;
-			children = (
-				52E095C028CFE2D21847EAC9 /* ExpoModulesProvider.swift */,
-			);
-			name = CricBuddy;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "CricBuddy" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				7032FFC0425F26701F202C50 /* [Expo] Configure project */,
+				40C921D1F5594CA7D188A73C /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				C8638809251E189EE0D6021B /* [CP] Embed Pods Frameworks */,
+				814CAA731D1C52051DC7FF1A /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				31EB722257B901BAB2F45D8F /* PrivacyInfo.xcprivacy in Resources */,
+				E6D2DEC62E49E9A23F26644A /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,7 +240,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		7032FFC0425F26701F202C50 /* [Expo] Configure project */ = {
+		40C921D1F5594CA7D188A73C /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -344,7 +344,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CricBuddy/Pods-CricBuddy-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C8638809251E189EE0D6021B /* [CP] Embed Pods Frameworks */ = {
+		814CAA731D1C52051DC7FF1A /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -370,7 +370,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				F209D676E3CC2A7B6420B97D /* ExpoModulesProvider.swift in Sources */,
+				DB07CDC1C61BF1D793B53889 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,7 +379,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C38B1C8FB953E17961A72CEB /* Pods-CricBuddy.debug.xcconfig */;
+			baseConfigurationReference = F69692F100FE15B14A364763 /* Pods-CricBuddy.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -416,7 +416,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 44F598E870227B5AEDA4469F /* Pods-CricBuddy.release.xcconfig */;
+			baseConfigurationReference = 01089B1BBE2DA09D896789ED /* Pods-CricBuddy.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
