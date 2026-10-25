@@ -84,7 +84,7 @@ The main entry point is a Bottom Tab Navigator allowing quick access to core fea
 | **Calendar** | `calendar` / `calendar-outline` | `CalendarStack` | Schedule and planner. |
 
 ### 5.2 Stack Navigators
-Each major tab (except Stats) has its own Stack Navigator to handle drill-down navigation (e.g., viewing match details).
+Each major tab (except Stats) has its own native stack (`@react-navigation/native-stack`) to handle drill-down navigation (e.g., viewing match details). Tabs and stack screens use `freezeOnBlur`, so screens that aren't on show don't re-render. List screens record the tapped `Match` in `src/utils/matchRegistry.ts`, so MatchDetail renders straight away.
 
 #### **HomeStack**
 - **HomeList** (`HomeScreen`): List of matches.
@@ -112,11 +112,20 @@ A modern light theme: a soft emerald / teal / lime mesh behind frosted-glass sur
   - `GlassView` uses real blur on iOS only where safe: tab bar, sheets, compact header.
   - Elsewhere (list rows, anything whose ancestor animates opacity, Android) it uses translucent frost.
   - With Reduce Transparency on, surfaces go solid.
-  - `MeshBackground` sits behind every screen; one shared, slow drift clock pauses when the screen isn't focused.
+  - `MeshBackground` sits behind every screen. It is static, drawn once in a single memoized SVG: moving content behind a BlurView makes iOS re-blur every frame.
+  - iOS draws `boxShadow` on the CPU and redraws it whenever a view's size changes. Never put one on a view whose size animates (move it with transforms). List rows use the single-layer `shadows.row`.
 - **UI kit** (`src/ui/`): `PlayCard`, `Button` (gradient pill with glow), `Chip`, `DateBadge`, `StatusDateChip` ("Upcoming · Tomorrow 7:00 AM"), `WeekStrip`, `TodayHero`, `CountdownTiles`, `SegmentedTabs` (+ adapters), `BottomSheet`, `EmptyState`, `Skeleton`, `Confetti`, `AnimatedNumber`, `PlayToast`, `FAB`, `PullBall`, `GradientText`, and a collapsing `ScreenHeader` with `CompactHeaderBar`.
 - **Navigation shell** (`src/navigation/`): a frosted floating tab bar whose glowing gradient indicator glides between tabs, and whose icons cross-fade from outline to filled. Screens draw their own headers. The tab bar hides on MatchDetail. Lists pad their bottom with `useTabBarSpace()`.
-- **Dates** (`src/utils/dates.ts`): every date in the UI is formatted here with date-fns, in local time. `useNow()` re-renders on an interval and rolls over at midnight.
+- **Dates** (`src/utils/dates.ts`): every date in the UI is formatted here with date-fns, in local time. `useNow()` re-renders on an interval, rolls over at midnight, and only ticks while its screen is focused and the app is in the foreground.
 - **Motion**: Reanimated on the UI thread, haptics on interactions, staggered list entrances (first 8 items), confetti for celebrations. `useReducedMotion()` is respected everywhere.
+  - Idle (ambient) loops go through `useAmbientLoop` (`src/hooks/useScreenActivity.ts`). They run only while the screen is focused and the app is active, driven by listeners so they also stop on frozen screens.
+  - Decorative loops are finite: the ball bounces 3 times per visit, the FAB breathes twice, and the today ring and empty state run 3 cycles. Live pulses and spinners loop only while on screen.
+- **Live scorecards** (`src/screens/match-detail/`): status comes from `detectMatchStatus`, in this order: the API status, then a result, then the innings with a 12h recency guard. Polling (30s) runs only while the match is live, on the Scorecard tab, focused and in the foreground. Refreshes are silent, skip unchanged data, and keep unchanged innings objects.
+- **Match links**: `buildCricHeroesMatchUrl` (`src/utils/matchLinks.ts`) is the single source of the public scorecard URL.
+  - Match cards have a link `IconButton`, and long-press copies.
+  - The Today hero blocks copy on long-press.
+  - MatchDetail has a link button in the hero and in the Share card.
+- **Production builds** strip `console.log` (`babel-plugin-transform-remove-console`, production env only).
 
 ## 6. Security & Authentication
 - **Headers**: identifying headers (`api-key`, `udid`, `authorization`) are sent with requests.
