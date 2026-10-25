@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import MyTeamScreen from '../screens/MyTeamScreen';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -7,7 +7,7 @@ import MatchDetailScreen from '../screens/MatchDetailScreen';
 import type { RootStackParamList } from '../types/navigation';
 import { stackScreenOptions } from './screenOptions';
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 type ListRoute = 'HomeList' | 'MyTeamList' | 'CalendarList';
 

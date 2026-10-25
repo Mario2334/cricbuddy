@@ -1,10 +1,14 @@
-import { TransitionPresets, type StackNavigationOptions } from '@react-navigation/stack';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { colors } from '../theme';
 
-// Screens draw their own playful headers, so native headers are off.
-export const stackScreenOptions: StackNavigationOptions = {
+// Screens draw their own playful headers, so native headers are off. Native
+// push/pop (UINavigationController) instead of a JS card animation, and screens
+// that aren't on show are frozen so timers and data updates don't re-render them.
+export const stackScreenOptions: NativeStackNavigationOptions = {
   headerShown: false,
-  cardStyle: { backgroundColor: colors.bg },
+  contentStyle: { backgroundColor: colors.bg },
   gestureEnabled: true,
-  ...TransitionPresets.SlideFromRightIOS,
+  fullScreenGestureEnabled: true,
+  animation: 'slide_from_right',
+  freezeOnBlur: true,
 };

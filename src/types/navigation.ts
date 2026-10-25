@@ -1,4 +1,4 @@
-import { StackScreenProps } from '@react-navigation/stack';
+import type { NativeStackScreenProps as StackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 

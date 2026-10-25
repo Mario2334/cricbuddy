@@ -21,7 +21,8 @@ export function RootTabs() {
   return (
     <Tab.Navigator
       tabBar={props => <FloatingTabBar {...props} />}
-      screenOptions={{ headerShown: false, animation: 'fade' }}
+      // freezeOnBlur: hidden tabs stop re-rendering on clock ticks and late data.
+      screenOptions={{ headerShown: false, animation: 'fade', freezeOnBlur: true }}
     >
       <Tab.Screen name="Home" component={HomeStack} options={stackTabOptions('Home')} />
       <Tab.Screen name="LookingForFeed" component={LookingForFeedTab} options={{ title: 'Find' }} />
