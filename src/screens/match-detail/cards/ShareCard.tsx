@@ -16,6 +16,7 @@ export interface ShareCardProps {
   onPickGround: () => void;
   onPickBallJersey: () => void;
   onCopyToWhatsApp: () => void;
+  onCopyLink: () => void;
   onWritePayments: () => void;
   animateIndex?: number;
 }
@@ -41,6 +42,7 @@ export function ShareCard({
   onPickGround,
   onPickBallJersey,
   onCopyToWhatsApp,
+  onCopyLink,
   onWritePayments,
   animateIndex,
 }: ShareCardProps) {
@@ -80,6 +82,7 @@ export function ShareCard({
           loading={searchingPlaces}
           fullWidth
         />
+        <Button label="Copy match link" icon="link" variant="secondary" onPress={onCopyLink} haptic={false} fullWidth />
         {showPayments ? (
           <Button
             label="Write Payments"

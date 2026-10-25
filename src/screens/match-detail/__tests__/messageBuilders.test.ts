@@ -198,7 +198,7 @@ describe('generateWhatsAppMessage (golden)', () => {
         '👕 Ball & Jersey: White ball, Coloured Jersey',
         '📍Location: https://maps.google.com/maps/search/Cricket%20Ground',
         '',
-        'Cricheroes : https://cricheroes.com/scorecard/999/undefined/team-a-vs-team-b',
+        'Cricheroes : https://cricheroes.com/scorecard/999/match/team-a-vs-team-b',
         '',
         SIGNATURE,
       ),

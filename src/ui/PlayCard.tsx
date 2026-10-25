@@ -30,6 +30,7 @@ export interface PlayCardProps {
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
   testID?: string;
 }
 
@@ -53,6 +54,7 @@ export function PlayCard({
   style,
   contentStyle,
   accessibilityLabel,
+  accessibilityHint,
   testID,
 }: PlayCardProps) {
   const reduced = useReducedMotion();
@@ -88,6 +90,7 @@ export function PlayCard({
       <AnimatedPressable
         accessibilityRole={interactive ? 'button' : undefined}
         accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
         testID={testID}
         disabled={!interactive}
         onPressIn={() => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Linking, Alert, Share } from 'react-native';
+import { View, StyleSheet, ScrollView, Linking, Alert, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 import { RecruitmentPost } from '../types';
@@ -11,14 +11,12 @@ import { Button } from '../../../ui/Button';
 import { Chip } from '../../../ui/Chip';
 import { DateBadge } from '../../../ui/DateBadge';
 import { GlassView } from '../../../ui/GlassView';
-import { Icon } from '../../../ui/Icon';
+import { IconButton } from '../../../ui/IconButton';
 import { IconTile } from '../../../ui/IconTile';
-import type { IconName } from '../../../ui/icons';
 import { InfoRow } from '../../../ui/InfoRow';
 import { SectionCard } from '../../../ui/SectionCard';
 import { useNow } from '../../../hooks/useNow';
 import { formatFullDate, relativeDayLabel, toDate } from '../../../utils/dates';
-import { haptic } from '../../../utils/haptics';
 import { ballIcon, firstValidDate, positionIcon, positionTone, postedLabel } from './PostCard';
 
 interface PostDetailComponentProps {
@@ -40,36 +38,6 @@ const titleCase = (s: string) =>
     .filter(Boolean)
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
-
-/** Frosted glass circle holding a single icon (sheet close / share). */
-function RoundIconButton({
-  icon,
-  onPress,
-  label,
-  color = colors.text,
-}: {
-  icon: IconName;
-  onPress: () => void;
-  label: string;
-  color?: string;
-}) {
-  return (
-    <Pressable
-      onPress={() => {
-        haptic('light');
-        onPress();
-      }}
-      hitSlop={10}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [pressed && styles.roundButtonPressed]}
-    >
-      <GlassView mode="frost" radius={ROUND_BUTTON / 2} shadow="soft" style={styles.roundButton}>
-        <Icon name={icon} size={20} weight="bold" color={color} />
-      </GlassView>
-    </Pressable>
-  );
-}
 
 const PostDetailComponent: React.FC<PostDetailComponentProps> = ({
   post,
@@ -172,8 +140,8 @@ const PostDetailComponent: React.FC<PostDetailComponentProps> = ({
       <View style={styles.topBar}>
         <View style={styles.grabber} />
         <View style={styles.topBarRow}>
-          {onClose ? <RoundIconButton icon="close" label="Close" onPress={onClose} /> : <View style={styles.roundSpacer} />}
-          <RoundIconButton icon="share" label="Share post" onPress={handleShare} color={colors.primaryStrong} />
+          {onClose ? <IconButton icon="close" label="Close" onPress={onClose} /> : <View style={styles.roundSpacer} />}
+          <IconButton icon="share" label="Share post" onPress={handleShare} color={colors.primaryStrong} />
         </View>
       </View>
 
@@ -381,15 +349,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  roundButton: {
-    width: ROUND_BUTTON,
-    height: ROUND_BUTTON,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  roundButtonPressed: {
-    transform: [{ scale: 0.92 }],
   },
   roundSpacer: {
     width: ROUND_BUTTON,

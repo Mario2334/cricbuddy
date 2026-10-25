@@ -1,13 +1,15 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Match } from '../../types/Match';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, fonts, glass, gradients, palette, radii } from '../../theme';
 import { statusDateLabel } from '../../utils/dates';
 import { getMatchStart, getTeamNames, normalizeStatus, scoreLine } from '../../utils/matchDisplay';
+import { copyLinkForMatch } from '../../utils/copyMatchLink';
 import { AppText } from '../../ui/AppText';
 import { Avatar } from '../../ui/Avatar';
 import { Icon } from '../../ui/Icon';
+import { IconButton } from '../../ui/IconButton';
 import { IconTile } from '../../ui/IconTile';
 import { DateBadge } from '../../ui/DateBadge';
 import { PlayCard } from '../../ui/PlayCard';
@@ -23,6 +25,8 @@ export interface MatchCardProps {
   animateIn?: boolean;
   variant?: 'full' | 'compact';
   right?: React.ReactNode;
+  /** Show the copy-link button (long-press copies either way). Default true. */
+  showCopyLink?: boolean;
   testID?: string;
 }
 
@@ -50,11 +54,23 @@ function TeamRow({ name, score, winner }: { name: string; score: string | null; 
 
 /**
  * The one match card used across Home, My Team and Calendar: tear-off date
- * badge, teams with avatars, status + date chip, and a result banner.
+ * badge, teams with avatars, status + date chip, and a result banner. The link
+ * button (or a long-press) copies the match's CricHeroes link.
  */
-function MatchCardBase({ match, now, onPress, index = 0, animateIn = false, variant = 'full', right, testID }: MatchCardProps) {
+function MatchCardBase({
+  match,
+  now,
+  onPress,
+  index = 0,
+  animateIn = false,
+  variant = 'full',
+  right,
+  showCopyLink = true,
+  testID,
+}: MatchCardProps) {
   const status = normalizeStatus(match.status);
-  const start = getMatchStart(match);
+  // Parsed once per match, not on every minute tick.
+  const start = useMemo(() => getMatchStart(match), [match]);
   const { team1, team2 } = getTeamNames(match);
   const s1 = scoreLine(match.team1_score);
   const s2 = scoreLine(match.team2_score);
@@ -70,8 +86,10 @@ function MatchCardBase({ match, now, onPress, index = 0, animateIn = false, vari
     <PlayCard
       tone={status === 'live' ? 'live' : 'default'}
       onPress={() => onPress(match)}
+      onLongPress={() => copyLinkForMatch(match)}
       animateIndex={animateIn ? index : undefined}
       accessibilityLabel={`${team1} versus ${team2}. ${info.text}`}
+      accessibilityHint="Long press to copy the match link"
       style={styles.card}
       testID={testID}
     >
@@ -83,6 +101,17 @@ function MatchCardBase({ match, now, onPress, index = 0, animateIn = false, vari
               {match.tournament_name || 'Practice Match'}
             </AppText>
             {right}
+            {showCopyLink ? (
+              <IconButton
+                icon="link"
+                size="sm"
+                label={`Copy link for ${team1} versus ${team2}`}
+                color={colors.primaryStrong}
+                haptic={false}
+                onPress={() => copyLinkForMatch(match)}
+                style={styles.copyLink}
+              />
+            ) : null}
           </View>
           {!compact && round ? (
             <AppText variant="caption" color={colors.textMuted} numberOfLines={1}>
@@ -155,6 +184,8 @@ const styles = StyleSheet.create({
   body: { flex: 1, marginLeft: 12 },
   flex: { flex: 1 },
   topLine: { flexDirection: 'row', alignItems: 'center' },
+  // Pulled into the row's line height so the card keeps its rhythm.
+  copyLink: { marginLeft: 8, marginVertical: -6 },
   teams: { marginTop: 8 },
   teamRow: { flexDirection: 'row', alignItems: 'center' },
   teamName: { flex: 1, marginLeft: 8 },

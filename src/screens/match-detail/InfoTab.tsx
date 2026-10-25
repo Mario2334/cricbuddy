@@ -68,6 +68,7 @@ export function InfoTab({ md }: InfoTabProps) {
         }}
         onPickBallJersey={() => md.setShowBallJerseyDropdown(true)}
         onCopyToWhatsApp={md.copyToWhatsApp}
+        onCopyLink={md.copyMatchLink}
         onWritePayments={md.openFeesInputDialog}
         animateIndex={i++}
       />

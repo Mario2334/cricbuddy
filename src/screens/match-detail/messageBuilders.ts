@@ -5,6 +5,7 @@
 import type { Ground } from '../../types/Ground';
 import type { Match } from '../../types/Match';
 import googleMapsService, { type GoogleMapsPlace } from '../../services/googleMapsService';
+import { buildCricHeroesMatchUrl } from '../../utils/matchLinks';
 import type { ScorecardData } from './types';
 
 export interface MessageContext {
@@ -131,7 +132,7 @@ export const generateWhatsAppMessage = (input: WhatsAppMessageInput): string => 
   locationLink = googleMapsService.normalizeGoogleMapsUrl(locationLink);
 
   // Generate Cricheroes link
-  const cricHeroesLink = `https://cricheroes.com/scorecard/${matchId}/${tournamentName?.toLowerCase().replace(/\s+/g, '-')}/${teamNames.team1?.toLowerCase().replace(/\s+/g, '-')}-vs-${teamNames.team2?.toLowerCase().replace(/\s+/g, '-')}`;
+  const cricHeroesLink = buildCricHeroesMatchUrl(matchId, tournamentName, teamNames);
 
   const message = `${tournamentName || 'Cricket Tournament'} match
 ${teamNames.team1} VS ${teamNames.team2}

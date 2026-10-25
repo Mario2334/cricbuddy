@@ -17,6 +17,7 @@ import { colors, curve, easings, enter, fonts, glass, glows, gradients, palette,
 import { formatDayMonthYear, formatDayName, formatFullDate, greeting, startedAgoLabel, type GreetingKey } from '../utils/dates';
 import { getMatchStart, getTeamNames } from '../utils/matchDisplay';
 import { haptic } from '../utils/haptics';
+import { copyLinkForMatch } from '../utils/copyMatchLink';
 import { AppText } from './AppText';
 import { BouncingBall } from './CricketBall';
 import { Button } from './Button';
@@ -78,8 +79,10 @@ function LiveBlock({ match, now, onPress }: { match: Match; now: Date; onPress?:
           haptic('light');
           onPress?.(match);
         }}
+        onLongPress={() => copyLinkForMatch(match)}
         accessibilityRole="button"
         accessibilityLabel={`Live now: ${team1} versus ${team2}. Open scorecard`}
+        accessibilityHint="Long press to copy the match link"
       >
         <LinearGradient colors={gradients.rose} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.block, styles.blockRadius]}>
           <LinearGradient colors={gradients.glassSheen} style={styles.sheen} />
@@ -146,8 +149,10 @@ function NextBlock({
           haptic('light');
           onPress?.(match);
         }}
+        onLongPress={() => copyLinkForMatch(match)}
         accessibilityRole="button"
         accessibilityLabel={`Next match: ${team1} versus ${team2}`}
+        accessibilityHint="Long press to copy the match link"
       >
         <GlassView mode="frost" radius={radii.lg} shadow="soft" style={styles.block}>
           <View style={styles.nextTop}>

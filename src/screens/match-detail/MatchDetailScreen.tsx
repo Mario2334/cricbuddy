@@ -128,6 +128,7 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
         onBack={goBack}
         updating={md.updating}
         autoRefreshing={md.autoRefreshing}
+        onCopyLink={md.copyMatchLink}
       />
 
       <View style={styles.flex}>{body}</View>

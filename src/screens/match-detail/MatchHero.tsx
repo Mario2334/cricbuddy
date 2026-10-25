@@ -24,6 +24,7 @@ import { AppText } from '../../ui/AppText';
 import { Avatar } from '../../ui/Avatar';
 import { DateBadge } from '../../ui/DateBadge';
 import { Icon } from '../../ui/Icon';
+import { IconButton } from '../../ui/IconButton';
 import { IconTile } from '../../ui/IconTile';
 import type { IconName } from '../../ui/icons';
 import { BackButton } from '../../ui/ScreenHeader';
@@ -131,6 +132,8 @@ export interface MatchHeroProps {
   updating: boolean;
   /** Live auto-refresh is armed (live match on the scorecard tab). */
   autoRefreshing: boolean;
+  /** Copy the match's CricHeroes link. */
+  onCopyLink?: () => void;
 }
 
 /** Deep emerald pitch header: back button, date badge, teams, pills and result. */
@@ -144,6 +147,7 @@ export const MatchHero = memo(function MatchHero({
   onBack,
   updating,
   autoRefreshing,
+  onCopyLink,
 }: MatchHeroProps) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -180,6 +184,17 @@ export const MatchHero = memo(function MatchHero({
             <StatusDateChip status={status} start={start} now={now} variant="onDark" size="sm" style={styles.statusChip} />
           </View>
 
+          {onCopyLink ? (
+            <IconButton
+              icon="link"
+              label="Copy match link"
+              tone="dark"
+              color={palette.yellow200}
+              haptic={false}
+              onPress={onCopyLink}
+              style={styles.copyLink}
+            />
+          ) : null}
           <DateBadge date={start} now={now} status={status} tone="onDark" size="md" />
         </View>
 
@@ -254,6 +269,7 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center' },
   back: { marginRight: space.md },
   titleCol: { flex: 1, marginRight: space.md },
+  copyLink: { marginRight: space.sm },
   overlineRow: { flexDirection: 'row', alignItems: 'center' },
   overline: { flexShrink: 1 },
   updating: { marginLeft: space.sm },

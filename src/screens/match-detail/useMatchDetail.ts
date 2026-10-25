@@ -16,6 +16,8 @@ import { useScreenActivity } from '../../hooks/useScreenActivity';
 import { useStableCallback } from '../../hooks/useStableCallback';
 import { toDate } from '../../utils/dates';
 import { getRememberedMatch } from '../../utils/matchRegistry';
+import { buildCricHeroesMatchUrl } from '../../utils/matchLinks';
+import { copyMatchLink as copyLinkToClipboard } from '../../utils/copyMatchLink';
 import { detectMatchStatus } from './matchStatus';
 import {
   extractPlayersFromScorecard as extractPlayers,
@@ -492,6 +494,13 @@ export function useMatchDetail(params: MatchDetailParams) {
   /** Retry from the error view: a full (non-silent) load. */
   const retryScorecard = useStableCallback(() => fetchScorecard());
 
+  // CricHeroes link for this match (copied from the hero and the Share card).
+  const matchLink = useMemo(
+    () => buildCricHeroesMatchUrl(matchId, matchData?.tournament_name || tournamentName, teamNames),
+    [matchId, matchData?.tournament_name, tournamentName, teamNames],
+  );
+  const copyMatchLink = useStableCallback(() => copyLinkToClipboard(matchLink));
+
   // Scheduling functions
   const checkIfMatchIsScheduled = async () => {
     try {
@@ -680,6 +689,8 @@ export function useMatchDetail(params: MatchDetailParams) {
     searchGoogleMapsPlaces,
     copyToWhatsApp,
     copyToWhatsAppWithSelectedPlace,
+    matchLink,
+    copyMatchLink,
     togglePlayerSelection,
     selectAllPlayers,
     deselectAllPlayers,
