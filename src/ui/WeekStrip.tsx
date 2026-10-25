@@ -25,6 +25,7 @@ import { colors, curve, enter, fonts, glass, glows, gradients, palette, radii, s
 import { dayRange, formatMonthYear, isSameLocalDay, toDateKey, type MatchStatus } from '../utils/dates';
 import type { MarkedDay } from '../utils/matchDisplay';
 import { haptic } from '../utils/haptics';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 import { AppText } from './AppText';
 import { Chip } from './Chip';
 
@@ -64,14 +65,17 @@ const DayPill = memo(function DayPill({ date, width, isToday, isSelected, isPast
     scale.value = withSpring(isSelected ? 1.06 : 1, springs.release);
   }, [isSelected, scale]);
 
-  useEffect(() => {
-    if (isToday && !isSelected && !reduced) {
-      breathe.value = withRepeat(withTiming(1, { duration: 1600 }), -1, true);
-    } else {
+  // Three slow breaths each time the screen comes on show, then the ring rests.
+  useAmbientLoop(
+    () => {
+      breathe.value = withRepeat(withTiming(1, { duration: 1600 }), 6, true);
+    },
+    () => {
       cancelAnimation(breathe);
       breathe.value = 0;
-    }
-  }, [isToday, isSelected, reduced, breathe]);
+    },
+    isToday && !isSelected,
+  );
 
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const ringStyle = useAnimatedStyle(() => ({ opacity: 0.55 + breathe.value * 0.45 }));

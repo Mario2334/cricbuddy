@@ -1,23 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { memo, useRef } from 'react';
 import { StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import Animated, {
-  cancelAnimation,
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
+import Animated, { useReducedMotion } from 'react-native-reanimated';
 import type { Match } from '../../types/Match';
 import {
   colors,
   curve,
-  durations,
   enter,
   enterUp,
   fonts,
@@ -59,33 +49,11 @@ const MowedStripes = React.memo(function MowedStripes() {
 
 let orbSeq = 0;
 
-/** Soft radial colour orb that drifts on the shared hero clock (transforms only). */
-function HeroOrb({
-  color,
-  opacity,
-  size,
-  dx,
-  dy,
-  clock,
-  style,
-}: {
-  color: string;
-  opacity: number;
-  size: number;
-  dx: number;
-  dy: number;
-  clock: SharedValue<number>;
-  style: StyleProp<ViewStyle>;
-}) {
+/** Soft radial colour orb. Static: a drifting orb kept the whole hero re-compositing every frame. */
+function HeroOrb({ color, opacity, size, style }: { color: string; opacity: number; size: number; style: StyleProp<ViewStyle> }) {
   const id = useRef(`heroOrb${++orbSeq}`).current;
-  const drift = useAnimatedStyle(() => {
-    const c = clock.value;
-    return {
-      transform: [{ translateX: (c - 0.5) * 2 * dx }, { translateY: (c - 0.5) * 2 * dy }, { scale: 1 + c * 0.08 }],
-    };
-  });
   return (
-    <Animated.View pointerEvents="none" style={[styles.orb, { width: size, height: size }, style, drift]}>
+    <View pointerEvents="none" style={[styles.orb, { width: size, height: size }, style]}>
       <Svg width={size} height={size}>
         <Defs>
           <RadialGradient id={id} cx="50%" cy="50%" r="50%">
@@ -95,25 +63,13 @@ function HeroOrb({
         </Defs>
         <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={`url(#${id})`} />
       </Svg>
-    </Animated.View>
+    </View>
   );
 }
 
 /** Lime + sky glow orbs behind the hero content. */
-const HeroOrbs = React.memo(function HeroOrbs({ paused }: { paused: boolean }) {
-  const reduced = useReducedMotion();
+const HeroOrbs = memo(function HeroOrbs() {
   const { width } = useWindowDimensions();
-  const clock = useSharedValue(0);
-
-  useEffect(() => {
-    if (reduced || paused) {
-      cancelAnimation(clock);
-      return;
-    }
-    clock.value = withRepeat(withTiming(1, { duration: durations.drift * 0.7, easing: Easing.inOut(Easing.sin) }), -1, true);
-    return () => cancelAnimation(clock);
-  }, [reduced, paused, clock]);
-
   const lime = width * 0.85;
   const sky = width * 0.95;
   return (
@@ -122,39 +78,17 @@ const HeroOrbs = React.memo(function HeroOrbs({ paused }: { paused: boolean }) {
         color={palette.yellow300}
         opacity={0.34}
         size={lime}
-        dx={-26}
-        dy={18}
-        clock={clock}
         style={{ right: -lime * 0.32, top: -lime * 0.42 }}
       />
       <HeroOrb
         color={palette.sky300}
         opacity={0.3}
         size={sky}
-        dx={24}
-        dy={-16}
-        clock={clock}
         style={{ left: -sky * 0.4, bottom: -sky * 0.55 }}
       />
     </View>
   );
 });
-
-function SpinningIcon() {
-  const reduced = useReducedMotion();
-  const spin = useSharedValue(0);
-  useEffect(() => {
-    if (reduced) return;
-    spin.value = withRepeat(withTiming(360, { duration: 1600, easing: Easing.linear }), -1, false);
-    return () => cancelAnimation(spin);
-  }, [reduced, spin]);
-  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value}deg` }] }));
-  return (
-    <Animated.View style={style}>
-      <Icon name="autoRefresh" size={14} weight="bold" color={palette.yellow300} />
-    </Animated.View>
-  );
-}
 
 function HeroPill({ icon, label }: { icon: IconName; label: string }) {
   return (
@@ -197,12 +131,10 @@ export interface MatchHeroProps {
   updating: boolean;
   /** Live auto-refresh is armed (live match on the scorecard tab). */
   autoRefreshing: boolean;
-  /** Stop the background orb drift (e.g. while the screen is not focused). */
-  paused?: boolean;
 }
 
 /** Deep emerald pitch header: back button, date badge, teams, pills and result. */
-export function MatchHero({
+export const MatchHero = memo(function MatchHero({
   tournamentName,
   teamNames,
   matchData,
@@ -212,7 +144,6 @@ export function MatchHero({
   onBack,
   updating,
   autoRefreshing,
-  paused = false,
 }: MatchHeroProps) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -228,7 +159,7 @@ export function MatchHero({
         style={[styles.hero, curve, { paddingTop: insets.top + space.sm }]}
       >
         <MowedStripes />
-        <HeroOrbs paused={paused} />
+        <HeroOrbs />
 
         <View style={styles.topRow}>
           <View style={styles.back}>
@@ -291,7 +222,7 @@ export function MatchHero({
 
         {status === 'live' && autoRefreshing ? (
           <View style={styles.autoRefresh}>
-            <SpinningIcon />
+            <Icon name="autoRefresh" size={14} weight="bold" color={palette.yellow300} />
             <AppText variant="caption" color={palette.yellow300} style={styles.autoRefreshText}>
               Auto-refreshing every 30s
             </AppText>
@@ -300,7 +231,7 @@ export function MatchHero({
       </LinearGradient>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   heroShadow: {

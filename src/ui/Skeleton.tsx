@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors, curve, durations, glass, gradients, radii, shadows } from '../theme';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 
 interface SkeletonProps {
   width?: DimensionValue;
@@ -30,12 +31,14 @@ export function Skeleton({ width = '100%', height, radius = radii.sm, tone = 'gl
   const [w, setW] = useState(0);
   const x = useSharedValue(0);
 
-  useEffect(() => {
-    if (reduced || !w) return;
-    x.value = 0;
-    x.value = withRepeat(withTiming(1, { duration: durations.shimmer, easing: Easing.inOut(Easing.quad) }), -1, false);
-    return () => cancelAnimation(x);
-  }, [reduced, w, x]);
+  useAmbientLoop(
+    () => {
+      x.value = 0;
+      x.value = withRepeat(withTiming(1, { duration: durations.shimmer, easing: Easing.inOut(Easing.quad) }), -1, false);
+    },
+    () => cancelAnimation(x),
+    w > 0,
+  );
 
   const shimmer = useAnimatedStyle(() => ({ transform: [{ translateX: -w + x.value * w * 2 }] }));
 

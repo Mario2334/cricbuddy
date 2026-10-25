@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 
 interface PulseDotProps {
   color: string;
@@ -16,20 +16,21 @@ interface PulseDotProps {
   pulsing?: boolean;
 }
 
-/** A softly glowing dot with an expanding ring, used for LIVE indicators. */
+/** A softly glowing dot with an expanding ring, used for LIVE indicators. Pulses only while on screen. */
 export function PulseDot({ color, size = 8, pulsing = true }: PulseDotProps) {
-  const reduced = useReducedMotion();
   const ring = useSharedValue(0);
 
-  useEffect(() => {
-    if (pulsing && !reduced) {
+  useAmbientLoop(
+    () => {
+      ring.value = 0;
       ring.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.out(Easing.ease) }), -1, false);
-    } else {
+    },
+    () => {
       cancelAnimation(ring);
       ring.value = 0;
-    }
-    return () => cancelAnimation(ring);
-  }, [pulsing, reduced, ring]);
+    },
+    pulsing,
+  );
 
   const ringStyle = useAnimatedStyle(() => ({
     opacity: 0.6 * (1 - ring.value),

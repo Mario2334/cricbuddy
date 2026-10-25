@@ -13,16 +13,18 @@ interface CountdownTilesProps {
   onZero?: () => void;
 }
 
-function Tile({ value, label }: { value: number; label: string }) {
+/** `flip` rolls the digits on change; the seconds tile doesn't, so the hero isn't animating half of every second. */
+function Tile({ value, label, flip }: { value: number; label: string; flip: boolean }) {
   const reduced = useReducedMotion();
   const text = String(value).padStart(2, '0');
+  const animate = flip && !reduced;
   return (
     <View style={styles.tileWrap}>
       <View style={[styles.tile, curve]}>
         <Animated.View
-          key={text}
-          entering={reduced ? undefined : FadeInDown.duration(240).easing(easings.out)}
-          exiting={reduced ? undefined : FadeOutUp.duration(160)}
+          key={animate ? text : 'static'}
+          entering={animate ? FadeInDown.duration(240).easing(easings.out) : undefined}
+          exiting={animate ? FadeOutUp.duration(160) : undefined}
           style={styles.digit}
         >
           <AppText style={styles.digitText} color={colors.text} adjustsFontSizeToFit numberOfLines={1}>
@@ -37,7 +39,7 @@ function Tile({ value, label }: { value: number; label: string }) {
   );
 }
 
-/** D/H/M/S glass tiles; only this component re-renders every second. */
+/** D/H/M/S glass tiles; only this component re-renders every second (and only while on screen). */
 export function CountdownTiles({ target, enabled = true, onZero }: CountdownTilesProps) {
   const now = useNow(1000, { enabled, align: true });
   const parts = countdownParts(target, now);
@@ -70,7 +72,7 @@ export function CountdownTiles({ target, enabled = true, onZero }: CountdownTile
               :
             </AppText>
           ) : null}
-          <Tile value={t.v} label={t.l} />
+          <Tile value={t.v} label={t.l} flip={t.l !== 'SEC'} />
         </React.Fragment>
       ))}
     </View>

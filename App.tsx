@@ -12,7 +12,6 @@ import { RootTabs } from './src/navigation/RootTabs';
 import { navTheme } from './src/navigation/navTheme';
 import { useTabBarSpace } from './src/navigation/useTabBarSpace';
 import { ConfettiProvider } from './src/ui/Confetti';
-import { MeshClockProvider } from './src/ui/MeshBackground';
 import { toastConfig } from './src/ui/PlayToast';
 import { colors } from './src/theme';
 import { fontAssets } from './src/theme/fontAssets';
@@ -41,13 +40,11 @@ const App: React.FC = () => {
       <SafeAreaProvider>
         <StatusBar style="dark" />
         {/* No root fade: animating an ancestor's opacity breaks iOS blur views. */}
-        <MeshClockProvider>
-          <ConfettiProvider>
-            <NavigationContainer theme={navTheme}>
-              <RootTabs />
-            </NavigationContainer>
-          </ConfettiProvider>
-        </MeshClockProvider>
+        <ConfettiProvider>
+          <NavigationContainer theme={navTheme}>
+            <RootTabs />
+          </NavigationContainer>
+        </ConfettiProvider>
         <ThemedToast />
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -245,7 +245,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
   );
 
   return (
-    <MeshBackground paused={!isFocused} style={{ paddingTop: insets.top }}>
+    <MeshBackground style={{ paddingTop: insets.top }}>
       <Animated.FlatList
         data={rows}
         keyExtractor={(item, index) =>

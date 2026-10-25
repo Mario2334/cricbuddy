@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { curve, easings, enter, glows, gradients, palette, springs, tones } from '../theme';
 import { haptic } from '../utils/haptics';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import type { IconName } from './icons';
@@ -24,7 +25,7 @@ interface FABProps {
   icon?: IconName;
   label?: string;
   bottomOffset: number;
-  /** Idle glow "breathe" every few seconds to invite a tap. */
+  /** Two glow "breaths" each time the screen comes on show, to invite a tap. */
   attention?: boolean;
   accessibilityLabel?: string;
 }
@@ -41,20 +42,21 @@ export function FAB({ onPress, icon = 'add', label, bottomOffset, attention = fa
   const scale = useSharedValue(1);
   const turn = useSharedValue(0);
 
-  useEffect(() => {
-    if (!attention || reduced) {
+  useAmbientLoop(
+    () => {
+      // ~3s cycle: swell, settle, rest. Twice, then quiet.
+      breathe.value = withRepeat(
+        withSequence(withTiming(1, BREATHE), withTiming(0, BREATHE), withDelay(800, withTiming(0, { duration: 0 }))),
+        2,
+        false,
+      );
+    },
+    () => {
       cancelAnimation(breathe);
       breathe.value = 0;
-      return;
-    }
-    // ~3s cycle: swell, settle, rest.
-    breathe.value = withRepeat(
-      withSequence(withTiming(1, BREATHE), withTiming(0, BREATHE), withDelay(800, withTiming(0, { duration: 0 }))),
-      -1,
-      false,
-    );
-    return () => cancelAnimation(breathe);
-  }, [attention, reduced, breathe]);
+    },
+    attention,
+  );
 
   const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const breatheStyle = useAnimatedStyle(() => ({ opacity: breathe.value }));

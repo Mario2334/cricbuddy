@@ -114,7 +114,7 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
   }
 
   return (
-    <MeshBackground variant="calm" paused={!isFocused}>
+    <MeshBackground variant="calm">
       {isFocused ? <StatusBar style="light" /> : null}
 
       <MatchHero
@@ -127,7 +127,6 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
         onBack={() => navigation.goBack()}
         updating={updating}
         autoRefreshing={!!md.autoRefreshInterval}
-        paused={!isFocused}
       />
 
       <View style={styles.flex}>{body}</View>

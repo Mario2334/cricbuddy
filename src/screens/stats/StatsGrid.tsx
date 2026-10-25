@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { colors } from '../../theme';
@@ -18,6 +18,11 @@ export interface StatsGridProps {
 /** One tab's worth of stat tiles in a two-column grid. */
 export function StatsGrid({ stats, kind, refreshing, onRefresh }: StatsGridProps) {
   const isFocused = useIsFocused();
+  // Count up the first time the tab is shown, not on every revisit.
+  const [played, setPlayed] = useState(isFocused);
+  useEffect(() => {
+    if (isFocused) setPlayed(true);
+  }, [isFocused]);
   const bottomSpace = useTabBarSpace();
   const list = stats ?? [];
   const hasStats = list.length > 0;
@@ -45,7 +50,7 @@ export function StatsGrid({ stats, kind, refreshing, onRefresh }: StatsGridProps
               stat={stat}
               index={i}
               kind={kind}
-              play={isFocused}
+              play={played}
               style={styles.cell}
             />
           ))}

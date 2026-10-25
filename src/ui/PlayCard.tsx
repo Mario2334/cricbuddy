@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { curve, enterUp, glass, radii, shadows, springs, tones } from '../theme';
 import { haptic, type HapticKind } from '../utils/haptics';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -59,15 +60,17 @@ export function PlayCard({
   const glow = useSharedValue(0);
   const live = tone === 'live';
 
-  useEffect(() => {
-    if (live && !reduced) {
+  // The live glow breathes only while the card's screen is on show.
+  useAmbientLoop(
+    () => {
       glow.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }), -1, true);
-    } else {
+    },
+    () => {
       cancelAnimation(glow);
       glow.value = 0;
-    }
-    return () => cancelAnimation(glow);
-  }, [live, reduced, glow]);
+    },
+    live,
+  );
 
   const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: 0.35 + glow.value * 0.65 }));
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: glass.hairline,
-    ...shadows.glass,
+    ...shadows.row,
   },
   sunny: {
     backgroundColor: SUNNY_FILL,

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { colors, enter, fonts, glass, glows, gradients, palette, radii, shadows, springs, statusColors } from '../theme';
+import { colors, enter, fonts, glass, gradients, palette, radii, shadows, springs, statusColors } from '../theme';
 import { haptic } from '../utils/haptics';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -53,9 +53,11 @@ export function SegmentedTabs({ segments, index, onChange, size = 'md', tone = '
     right.value = withSpring(targetR, movingRight ? springs.snappy : springs.gentle);
   }, [index, layouts, left, right]);
 
+  // translateX instead of `left`, and no boxShadow on the moving pill: iOS redraws a
+  // view's shadow bitmap whenever its size changes, which was every frame here.
   const indicatorStyle = useAnimatedStyle(() => ({
-    left: left.value,
     width: Math.max(0, right.value - left.value),
+    transform: [{ translateX: left.value }],
   }));
 
   const small = size === 'sm';
@@ -128,7 +130,7 @@ export function SegmentedTabs({ segments, index, onChange, size = 'md', tone = '
   });
 
   const indicator = (
-    <Animated.View pointerEvents="none" style={[styles.indicator, primary ? glows.emerald : shadows.soft, indicatorStyle]}>
+    <Animated.View pointerEvents="none" style={[styles.indicator, indicatorStyle]}>
       <View style={[StyleSheet.absoluteFill, styles.indicatorClip]}>
         {primary ? (
           <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -137,6 +139,7 @@ export function SegmentedTabs({ segments, index, onChange, size = 'md', tone = '
         )}
         <LinearGradient colors={gradients.glassSheen} style={styles.indicatorGloss} />
       </View>
+      <View style={[StyleSheet.absoluteFill, styles.indicatorRim, !primary && styles.indicatorRimLight]} />
     </Animated.View>
   );
 
@@ -177,9 +180,11 @@ const styles = StyleSheet.create({
   itemFlex: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
   icon: { marginRight: 6 },
   label: { fontFamily: fonts.bodyExtraBold, letterSpacing: -0.1, flexShrink: 1 },
-  indicator: { position: 'absolute', top: 0, bottom: 0, borderRadius: radii.pill },
+  indicator: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: radii.pill },
   indicatorClip: { borderRadius: radii.pill, overflow: 'hidden' },
   indicatorGloss: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%' },
+  indicatorRim: { borderRadius: radii.pill, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
+  indicatorRimLight: { borderColor: colors.border },
   badge: {
     marginLeft: 6,
     minWidth: 20,

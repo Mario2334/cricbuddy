@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors, curve, enter, squircle, tones, type IconTone } from '../theme';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 import { AppText } from './AppText';
 import { Button } from './Button';
 import { IconTile } from './IconTile';
@@ -29,7 +30,7 @@ export interface EmptyStateProps {
 
 const FLOAT = { duration: 1200, easing: Easing.inOut(Easing.sin) };
 
-/** Floating icon tile with a soft glow, a witty line, and an optional action. */
+/** Icon tile that floats a few times with a soft glow, a witty line, and an optional action. */
 export function EmptyState({ icon, title, message, actionLabel, onAction, tone = 'neutral', compact }: EmptyStateProps) {
   const reduced = useReducedMotion();
   // 0.5 = rest; 0..1 maps to translateY +6..-6.
@@ -39,11 +40,19 @@ export function EmptyState({ icon, title, message, actionLabel, onAction, tone =
   const iconName: IconName = icon ?? (isError ? 'oops' : 'sparkle');
   const box = compact ? 52 : 88;
 
-  useEffect(() => {
-    if (reduced) return;
-    float.value = withSequence(withTiming(1, { ...FLOAT, duration: 600 }), withRepeat(withTiming(0, FLOAT), -1, true));
-    return () => cancelAnimation(float);
-  }, [reduced, float]);
+  useAmbientLoop(
+    () => {
+      float.value = withSequence(
+        withTiming(1, { ...FLOAT, duration: 600 }),
+        withRepeat(withTiming(0, FLOAT), 6, true),
+        withTiming(0.5, { ...FLOAT, duration: 600 }),
+      );
+    },
+    () => {
+      cancelAnimation(float);
+      float.value = 0.5;
+    },
+  );
 
   const floatStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (0.5 - float.value) * 12 }] }));
   // Glow swells as the tile rises.

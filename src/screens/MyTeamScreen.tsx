@@ -196,7 +196,7 @@ const MyTeamScreen: React.FC<MyTeamScreenNavigationProp> = ({ navigation }) => {
   };
 
   return (
-    <MeshBackground paused={!isFocused}>
+    <MeshBackground>
       <ScreenHeader title="My Team" icon="team" iconTone="teal" subtitle={subtitle} />
       <TabView
         navigationState={{ index: tabIndex, routes: TEAM_ROUTES }}

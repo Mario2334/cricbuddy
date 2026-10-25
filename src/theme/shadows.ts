@@ -16,6 +16,8 @@ export const shadows = {
   soft: { boxShadow: '0px 1px 2px rgba(15,23,42,0.05), 0px 4px 12px -2px rgba(15,23,42,0.08)' },
   card: { boxShadow: '0px 1px 2px rgba(15,23,42,0.04), 0px 10px 28px -8px rgba(15,23,42,0.14)' },
   glass: glassShadow,
+  /** List rows: one small layer. iOS draws boxShadow blurs on the CPU each time a row mounts. */
+  row: { boxShadow: '0px 6px 16px -6px rgba(6,78,59,0.16)' },
   float: { boxShadow: '0px 2px 6px rgba(15,23,42,0.06), 0px 18px 44px -12px rgba(15,23,42,0.24)' },
   /** @deprecated use `glass` */
   sticker: glassShadow,

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
@@ -34,7 +34,6 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const tabBarSpace = useTabBarSpace();
   const confetti = useConfetti();
-  const isFocused = useIsFocused();
   const { scrollY, onScroll } = useCollapsingHeader();
 
   const loadScheduledMatches = useCallback(async () => {
@@ -162,7 +161,7 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
       : 'Your match diary';
 
   return (
-    <MeshBackground paused={!isFocused}>
+    <MeshBackground>
       <View style={styles.flex}>
         <MatchCalendar
           matches={matches}

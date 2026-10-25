@@ -4,7 +4,6 @@ import {
   createMaterialTopTabNavigator,
   type MaterialTopTabBarProps,
 } from '@react-navigation/material-top-tabs';
-import { useIsFocused } from '@react-navigation/native';
 import apiService from '../services/apiService';
 import { radii } from '../theme';
 import type { IconName } from '../ui/icons';
@@ -30,7 +29,6 @@ const renderTabBar = (props: MaterialTopTabBarProps) => <MaterialTopSegmentedBar
 const renderLazyPlaceholder = () => <StatsGridSkeleton />;
 
 const StatsScreen = () => {
-  const isFocused = useIsFocused();
   const [statsData, setStatsData] = useState<StatsData | null>(null);
   // Start in the loading state so the empty state never flashes before the first fetch.
   const [loading, setLoading] = useState(true);
@@ -117,7 +115,7 @@ const StatsScreen = () => {
   }
 
   return (
-    <MeshBackground paused={!isFocused}>
+    <MeshBackground>
       <ScreenHeader title="My Stats" icon="chart" subtitle="Your CricHeroes career" />
       {body}
     </MeshBackground>

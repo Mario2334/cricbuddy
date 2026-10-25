@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { fonts, glass, shadows } from '../theme';
+import { fonts, glass } from '../theme';
 import { teamColor, teamInitials } from '../utils/matchDisplay';
 import { AppText } from './AppText';
 
@@ -54,7 +54,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     overflow: 'hidden',
-    ...shadows.soft,
   },
 });
 

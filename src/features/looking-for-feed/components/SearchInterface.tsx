@@ -46,6 +46,7 @@ import type { IconName } from '../../../ui/icons';
 import { Skeleton } from '../../../ui/Skeleton';
 import { SpinningBall } from '../../../ui/CricketBall';
 import { haptic } from '../../../utils/haptics';
+import { useAmbientLoop } from '../../../hooks/useScreenActivity';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -521,14 +522,17 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({
 
 /** Pulsing "Thinking…" line with a shimmer bar while the AI works on the query. */
 function ThinkingLine() {
-  const reduced = useReducedMotion();
   const pulse = useSharedValue(1);
 
-  useEffect(() => {
-    if (reduced) return;
-    pulse.value = withRepeat(withTiming(0.4, { duration: 650, easing: Easing.inOut(Easing.quad) }), -1, true);
-    return () => cancelAnimation(pulse);
-  }, [reduced, pulse]);
+  useAmbientLoop(
+    () => {
+      pulse.value = withRepeat(withTiming(0.4, { duration: 650, easing: Easing.inOut(Easing.quad) }), -1, true);
+    },
+    () => {
+      cancelAnimation(pulse);
+      pulse.value = 1;
+    },
+  );
 
   const pulseStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
   // The brain breathes with the text: slightly larger at full opacity.

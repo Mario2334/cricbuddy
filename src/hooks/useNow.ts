@@ -1,54 +1,54 @@
-import { useEffect, useState } from 'react';
-import { AppState } from 'react-native';
+import { useRef, useState } from 'react';
 import { msUntilNextMidnight } from '../utils/dates';
+import { useScreenActivity } from './useScreenActivity';
 
 interface UseNowOptions {
-  /** Pause ticking (e.g. when the screen is not focused). Default true. */
+  /** Pause ticking (e.g. while a sheet is closed). Default true. */
   enabled?: boolean;
   /** Align ticks to the interval boundary (whole seconds/minutes). */
   align?: boolean;
 }
 
+type Timer = ReturnType<typeof setTimeout>;
+
 /**
- * Current time that re-renders every `intervalMs`, rolls over at local
- * midnight, and refreshes immediately when the app returns to foreground
- * (JS timers freeze while backgrounded).
+ * Current time that re-renders every `intervalMs` and rolls over at local
+ * midnight. Ticks only while the screen is focused and the app is in the
+ * foreground; coming back catches up at once, skipping the re-render when the
+ * interval hasn't rolled over yet.
  */
 export function useNow(intervalMs = 60_000, { enabled = true, align = false }: UseNowOptions = {}): Date {
   const [now, setNow] = useState(() => new Date());
+  const timers = useRef<Timer[]>([]);
 
-  useEffect(() => {
-    if (!enabled) return;
+  useScreenActivity(active => {
+    timers.current.forEach(id => {
+      clearTimeout(id);
+      clearInterval(id);
+    });
+    timers.current = [];
+    if (!active) return;
+
     const tick = () => setNow(new Date());
-    tick();
+    setNow(prev => (Math.floor(Date.now() / intervalMs) === Math.floor(prev.getTime() / intervalMs) ? prev : new Date()));
 
-    let intervalId: ReturnType<typeof setInterval> | undefined;
     const alignDelay = align ? intervalMs - (Date.now() % intervalMs) : intervalMs;
-    const alignId = setTimeout(() => {
-      tick();
-      intervalId = setInterval(tick, intervalMs);
-    }, alignDelay);
-
-    let midnightId: ReturnType<typeof setTimeout>;
-    const armMidnight = () => {
-      midnightId = setTimeout(() => {
+    timers.current.push(
+      setTimeout(() => {
         tick();
-        armMidnight();
-      }, msUntilNextMidnight(new Date()) + 250);
+        timers.current.push(setInterval(tick, intervalMs));
+      }, alignDelay),
+    );
+    const armMidnight = () => {
+      timers.current.push(
+        setTimeout(() => {
+          tick();
+          armMidnight();
+        }, msUntilNextMidnight(new Date()) + 250),
+      );
     };
     armMidnight();
-
-    const sub = AppState.addEventListener('change', state => {
-      if (state === 'active') tick();
-    });
-
-    return () => {
-      clearTimeout(alignId);
-      if (intervalId) clearInterval(intervalId);
-      clearTimeout(midnightId);
-      sub.remove();
-    };
-  }, [intervalMs, enabled, align]);
+  }, enabled);
 
   return now;
 }

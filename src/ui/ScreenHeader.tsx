@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   interpolate,
-  useAnimatedProps,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useReducedMotion,
@@ -120,8 +121,6 @@ export function ScreenHeader({
   );
 }
 
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-
 interface CompactHeaderBarProps {
   title: string;
   scrollY: SharedValue<number>;
@@ -130,14 +129,24 @@ interface CompactHeaderBarProps {
   threshold?: [number, number];
 }
 
-/** Slim frosted bar that fades in over the top once the large title scrolls away. */
+/**
+ * Slim frosted bar that fades in over the top once the large title scrolls away.
+ * The blur keeps a fixed intensity and only mounts past the threshold: animating
+ * BlurView intensity per scroll frame re-created the effect on every frame.
+ */
 export function CompactHeaderBar({ title, scrollY, right, threshold = [40, 80] }: CompactHeaderBarProps) {
   const insets = useSafeAreaInsets();
   const [a, b] = threshold;
+  const [blurOn, setBlurOn] = useState(false);
 
-  const blurProps = useAnimatedProps(() => ({
-    intensity: interpolate(scrollY.value, [a, b], [0, 60], 'clamp'),
-  }));
+  useAnimatedReaction(
+    () => Platform.OS === 'ios' && scrollY.value > a + (b - a) / 2,
+    (on, prev) => {
+      if (on !== prev) runOnJS(setBlurOn)(on);
+    },
+    [a, b],
+  );
+
   const fillStyle = useAnimatedStyle(() => ({ opacity: interpolate(scrollY.value, [a, b], [0, 1], 'clamp') }));
   const titleStyle = useAnimatedStyle(() => ({
     opacity: interpolate(scrollY.value, [a + 10, b], [0, 1], 'clamp'),
@@ -146,9 +155,7 @@ export function CompactHeaderBar({ title, scrollY, right, threshold = [40, 80] }
 
   return (
     <View pointerEvents="box-none" style={[styles.compact, { height: insets.top + 48 }]}>
-      {Platform.OS === 'ios' ? (
-        <AnimatedBlurView tint="systemUltraThinMaterialLight" animatedProps={blurProps} style={StyleSheet.absoluteFill} />
-      ) : null}
+      {blurOn ? <BlurView tint="systemUltraThinMaterialLight" intensity={60} style={StyleSheet.absoluteFill} /> : null}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.compactFill, fillStyle]} />
       <View pointerEvents="box-none" style={[styles.compactRow, { paddingTop: insets.top }]}>
         <Animated.View style={[styles.compactTitle, titleStyle]}>

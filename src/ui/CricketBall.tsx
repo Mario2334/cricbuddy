@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, Path, RadialGradient, Stop } from 'react-native-svg';
 import Animated, {
@@ -6,7 +6,6 @@ import Animated, {
   Easing,
   interpolate,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -14,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { haptic } from '../utils/haptics';
+import { useAmbientLoop } from '../hooks/useScreenActivity';
 
 let gradientSeq = 0;
 
@@ -59,32 +59,36 @@ interface BouncingBallProps {
   height?: number;
 }
 
+const IDLE_BOUNCES = 3;
+const BOUNCE_MS = 860;
+
 /**
- * Idle-bouncing ball with squash & stretch and a ground shadow. Tap it for a
- * big bounce and a spin.
+ * Ball with squash & stretch and a ground shadow: a few bounces each time the
+ * screen comes on show, then it rests. Tap it for a big bounce and a spin.
  */
 export function BouncingBall({ size = 44, height = 26 }: BouncingBallProps) {
-  const reduced = useReducedMotion();
   const y = useSharedValue(0);
   const kick = useSharedValue(0);
   const spin = useSharedValue(0);
 
-  useEffect(() => {
-    if (reduced) return;
-    y.value = withRepeat(
-      withSequence(
-        withTiming(-height, { duration: 430, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 430, easing: Easing.in(Easing.quad) }),
-      ),
-      -1,
-      false,
-    );
-    spin.value = withRepeat(withTiming(360, { duration: 2600, easing: Easing.linear }), -1, false);
-    return () => {
+  useAmbientLoop(
+    () => {
+      y.value = withRepeat(
+        withSequence(
+          withTiming(-height, { duration: BOUNCE_MS / 2, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: BOUNCE_MS / 2, easing: Easing.in(Easing.quad) }),
+        ),
+        IDLE_BOUNCES,
+        false,
+      );
+      spin.value = withTiming(spin.value + 360, { duration: BOUNCE_MS * IDLE_BOUNCES, easing: Easing.linear });
+    },
+    () => {
       cancelAnimation(y);
       cancelAnimation(spin);
-    };
-  }, [reduced, height, y, spin]);
+      y.value = 0;
+    },
+  );
 
   const ballStyle = useAnimatedStyle(() => {
     const lift = -(y.value + kick.value) / height; // 0 on the ground, 1+ in the air
@@ -112,9 +116,7 @@ export function BouncingBall({ size = 44, height = 26 }: BouncingBallProps) {
       withTiming(0, { duration: 360, easing: Easing.in(Easing.quad) }),
       withSpring(0, { damping: 6, stiffness: 300 }),
     );
-    spin.value = withTiming(spin.value + 720, { duration: 900, easing: Easing.out(Easing.cubic) }, () => {
-      spin.value = withRepeat(withTiming(spin.value + 360, { duration: 2600, easing: Easing.linear }), -1, false);
-    });
+    spin.value = withTiming(spin.value + 720, { duration: 900, easing: Easing.out(Easing.cubic) });
   };
 
   return (
@@ -133,20 +135,20 @@ export function BouncingBall({ size = 44, height = 26 }: BouncingBallProps) {
   );
 }
 
-/** A spinning ball, used as a playful loading spinner. */
+/** A spinning ball, used as a playful loading spinner (spins only while on screen). */
 export function SpinningBall({ size = 28 }: { size?: number }) {
-  const reduced = useReducedMotion();
   const spin = useSharedValue(0);
   const bob = useSharedValue(0);
-  useEffect(() => {
-    if (reduced) return;
-    spin.value = withRepeat(withTiming(360, { duration: 900, easing: Easing.linear }), -1, false);
-    bob.value = withRepeat(withTiming(1, { duration: 450, easing: Easing.inOut(Easing.quad) }), -1, true);
-    return () => {
+  useAmbientLoop(
+    () => {
+      spin.value = withRepeat(withTiming(spin.value + 360, { duration: 900, easing: Easing.linear }), -1, false);
+      bob.value = withRepeat(withTiming(1, { duration: 450, easing: Easing.inOut(Easing.quad) }), -1, true);
+    },
+    () => {
       cancelAnimation(spin);
       cancelAnimation(bob);
-    };
-  }, [reduced, spin, bob]);
+    },
+  );
   const style = useAnimatedStyle(() => ({
     transform: [{ translateY: -bob.value * size * 0.25 }, { rotate: `${spin.value}deg` }],
   }));
