@@ -277,6 +277,9 @@ export class CricHeroesApiClient {
     const queryParams = new URLSearchParams({
       cityid: filters?.cityId?.toString() || '1798', // Use Bangalore as default
       typeid: '1', // Default type ID for looking for feed
+      // CHANGED: send the page (it was only part of the cache key, so "load more" refetched page 1).
+      pageno: String(pageNo),
+      pagesize: String(pageSize),
     });
 
     // Add other filters if provided
@@ -311,15 +314,16 @@ export class CricHeroesApiClient {
       // Cache the successful response
       await this.cacheService.cacheRecruitmentPosts(cacheKey, parsedResponse.data);
       
-      // Also cache individual posts for quick access
+      // Also cache individual posts for quick access (one batched write, not one per post)
+      const posts: RecruitmentPost[] = [];
       for (const rawPost of parsedResponse.data.data) {
         try {
-          const transformedPost = this.transformToRecruitmentPost(rawPost);
-          await this.cacheService.cachePost(transformedPost);
+          posts.push(this.transformToRecruitmentPost(rawPost));
         } catch (error) {
           console.warn('[CricHeroesApiClient] Failed to cache individual post:', error);
         }
       }
+      await this.cacheService.cachePosts(posts);
     }
     
     return {
@@ -335,8 +339,6 @@ export class CricHeroesApiClient {
    */
   parseAndValidateResponse(rawData: any): CricHeroesApiResponse<CricHeroesRecruitmentResponse> {
     try {
-      console.log('[CricHeroesApiClient] Raw API response:', JSON.stringify(rawData, null, 2));
-      
       // Validate response structure
       if (!this.validateResponse(rawData)) {
         console.error('Invalid API response structure:', rawData);

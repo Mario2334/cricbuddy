@@ -161,12 +161,19 @@ export const convertScheduledMatchToMatch = (scheduledMatch: ScheduledMatch): Ma
   };
 };
 
+// Same stored list within the same minute -> the same Match objects (status depends
+// on the clock), so memoized cards don't re-render on every focus reload.
+let localCache: { key: string; matches: Match[] } | null = null;
+
 export const getLocalScheduledMatches = async (): Promise<Match[]> => {
   try {
     const matchesData = await AsyncStorage.getItem('scheduledMatches');
     if (matchesData) {
+      const key = `${Math.floor(Date.now() / 60_000)}|${matchesData}`;
+      if (localCache?.key === key) return localCache.matches;
       const parsedMatches: ScheduledMatch[] = JSON.parse(matchesData);
-      return parsedMatches.map(convertScheduledMatchToMatch);
+      localCache = { key, matches: parsedMatches.map(convertScheduledMatchToMatch) };
+      return localCache.matches;
     }
     return [];
   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -28,26 +28,41 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
 
+  // CHANGED: no permission prompt (and no fresh GPS fix) every time a match opens.
+  // If location is already allowed, use the last known position; otherwise ask
+  // only when the user taps Directions.
   useEffect(() => {
-    requestLocationPermission();
+    let mounted = true;
+    (async () => {
+      try {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (!mounted || status !== 'granted') return;
+        setLocationPermission(true);
+        const last = await Location.getLastKnownPositionAsync();
+        if (mounted && last) setUserLocation(last);
+      } catch (error) {
+        console.error('Error reading location permission:', error);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const requestLocationPermission = async () => {
+  const locateUser = async (): Promise<Location.LocationObject | null> => {
+    if (userLocation) return userLocation;
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        setLocationPermission(true);
-        const location = await Location.getCurrentPositionAsync({});
-        setUserLocation(location);
-      } else {
-        setLocationPermission(false);
-        Alert.alert(
-          'Location Permission',
-          'Location permission is needed to show your position on the map.'
-        );
-      }
+      if (status !== 'granted') return null;
+      setLocationPermission(true);
+      const location =
+        (await Location.getLastKnownPositionAsync()) ??
+        (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
+      setUserLocation(location);
+      return location;
     } catch (error) {
-      console.error('Error requesting location permission:', error);
+      console.error('Error getting location:', error);
+      return null;
     }
   };
 
@@ -103,7 +118,8 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
     });
   };
 
-  const getDirections = () => {
+  const getDirections = async () => {
+    const userLocation = await locateUser();
     if (!userLocation) {
       Alert.alert('Location Required', 'Please enable location services to get directions.');
       return;
@@ -172,16 +188,17 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
     longitudeDelta: 0.01,
   };
 
-  const showDirections = locationPermission && !!userLocation;
 
   return (
     <View style={styles.container}>
       <View style={[styles.mapFrame, curve]}>
         <View style={[styles.mapClip, curve]}>
+          {/* initialRegion (keyed on the spot): a controlled region re-centred the map on every parent render. */}
           <MapView
+            key={`${latitude},${longitude}`}
             style={styles.map}
             provider={Platform.OS === 'ios' ? PROVIDER_DEFAULT : PROVIDER_GOOGLE}
-            region={region}
+            initialRegion={region}
             showsUserLocation={locationPermission}
             showsMyLocationButton={locationPermission}
             showsCompass={true}
@@ -198,31 +215,26 @@ const GroundMapView: React.FC<GroundMapViewProps> = ({
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.mapRim, curve]} />
       </View>
 
-      {(showSearchButton || showDirections) && (
-        <View style={styles.buttonContainer}>
-          {showSearchButton && (
-            <Button
-              label="Open in Maps"
-              icon="map"
-              variant="primary"
-              size="sm"
-              onPress={openInGoogleMaps}
-              style={styles.buttonFlex}
-            />
-          )}
-
-          {showDirections && (
-            <Button
-              label="Directions"
-              icon="directions"
-              variant="sunny"
-              size="sm"
-              onPress={getDirections}
-              style={styles.buttonFlex}
-            />
-          )}
-        </View>
-      )}
+      <View style={styles.buttonContainer}>
+        {showSearchButton && (
+          <Button
+            label="Open in Maps"
+            icon="map"
+            variant="primary"
+            size="sm"
+            onPress={openInGoogleMaps}
+            style={styles.buttonFlex}
+          />
+        )}
+        <Button
+          label="Directions"
+          icon="directions"
+          variant="sunny"
+          size="sm"
+          onPress={getDirections}
+          style={styles.buttonFlex}
+        />
+      </View>
     </View>
   );
 };
@@ -279,4 +291,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GroundMapView;
+export default memo(GroundMapView);

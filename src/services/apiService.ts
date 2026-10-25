@@ -48,6 +48,10 @@ class ApiService {
   private readonly baseSiteUrl: string;
   private nextJsBuildId: string | null = null;
   private readonly requestCache: Map<string, { data: unknown; timestamp: number }>;
+  /** Requests in flight by cache key: concurrent callers share one network call. */
+  private readonly inFlight = new Map<string, Promise<ApiResponse<any>>>();
+  /** Last mapped object per match id, reused while its content is unchanged. */
+  private readonly matchPool = new Map<string, { json: string; match: unknown }>();
   private lastRequestTime: number;
   private readonly minRequestInterval: number;
   private rateLimitInfo: {
@@ -66,7 +70,7 @@ class ApiService {
     // Request throttling and caching
     this.requestCache = new Map();
     this.lastRequestTime = 0;
-    this.minRequestInterval = 500; // Minimum 500ms between requests
+    this.minRequestInterval = 250; // Minimum 250ms between requests
 
     // Rate limit tracking
     this.rateLimitInfo = {
@@ -110,15 +114,31 @@ class ApiService {
    * Throttle requests to prevent rate limiting
    */
   async throttleRequest() {
+    // Reserve the next free slot up front so concurrent callers queue up
+    // `minRequestInterval` apart instead of all reading the same timestamp.
     const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-
-    if (timeSinceLastRequest < this.minRequestInterval) {
-      const delay = this.minRequestInterval - timeSinceLastRequest;
-      await new Promise(resolve => setTimeout(resolve, delay));
+    const slot = Math.max(now, this.lastRequestTime + this.minRequestInterval);
+    this.lastRequestTime = slot;
+    if (slot > now) {
+      await new Promise(resolve => setTimeout(resolve, slot - now));
     }
+  }
 
-    this.lastRequestTime = Date.now();
+  /**
+   * Same match, same content -> the same object as last time, so memoized match
+   * cards skip re-rendering when a list is refetched (every focus) unchanged.
+   */
+  private intern<T>(matches: T[]): T[] {
+    return matches.map(m => {
+      const raw = m as { match_id?: unknown; id?: unknown } | null;
+      const id = String(raw?.match_id ?? raw?.id ?? '');
+      if (!id) return m;
+      const json = JSON.stringify(m);
+      const hit = this.matchPool.get(id);
+      if (hit && hit.json === json) return hit.match as T;
+      this.matchPool.set(id, { json, match: m });
+      return m;
+    });
   }
 
   /**
@@ -127,7 +147,6 @@ class ApiService {
   getCachedResponse(cacheKey: string, maxAge: number = 30000): any { // 30 seconds default cache
     const cached = this.requestCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < maxAge) {
-      console.log('Using cached response for:', cacheKey);
       return cached.data;
     }
     return null;
@@ -137,10 +156,17 @@ class ApiService {
    * Cache response data
    */
   setCachedResponse(cacheKey: string, data: any): void {
+    const now = Date.now();
     this.requestCache.set(cacheKey, {
       data,
-      timestamp: Date.now()
+      timestamp: now
     });
+    // Nothing reads entries older than a few minutes; keep the map from growing all session.
+    if (this.requestCache.size > 60) {
+      this.requestCache.forEach((entry, key) => {
+        if (now - entry.timestamp > 5 * 60_000) this.requestCache.delete(key);
+      });
+    }
   }
 
   /**
@@ -187,14 +213,6 @@ class ApiService {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // Log response details
-    console.log(`📡 API Response [${response.status}]:`, {
-      url: url.split('?')[0], // Show base URL without query params
-      status: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
-      timestamp: new Date().toISOString()
-    });
-
     // Update rate limit info
     this.updateRateLimitInfo(response.headers);
 
@@ -227,14 +245,6 @@ class ApiService {
     }
 
     this.rateLimitInfo.lastUpdated = Date.now();
-
-    // Log rate limit info for debugging
-    console.log('📊 Rate Limit Info:', {
-      limit: this.rateLimitInfo.limit,
-      remaining: this.rateLimitInfo.remaining,
-      reset: this.rateLimitInfo.reset ? new Date(this.rateLimitInfo.reset * 1000).toISOString() : null,
-      retryAfter: this.rateLimitInfo.retryAfter
-    });
   }
 
   /**
@@ -257,21 +267,29 @@ class ApiService {
     // Check cache first
     const cached = this.getCachedResponse(cacheKey, cacheMaxAge);
     if (cached) return cached;
-    try {
-      const response = await this.makeRequestWithRetry(url, requestOptions);
-      const data = await response.json();
-      const result = {
-        success: true,
-        data: extractData(data),
-        status: response.status,
-      };
-      this.setCachedResponse(cacheKey, result);
-      return result;
-    } catch (error) {
-      const { normalizeApiError } = await import('../utils/normalizeApiError');
-      const errMsg = normalizeApiError(error);
-      return { success: false, error: errMsg, status: 500 };
-    }
+    const pending = this.inFlight.get(cacheKey);
+    if (pending) return pending as Promise<ApiResponse<T>>;
+    const request = (async (): Promise<ApiResponse<T>> => {
+      try {
+        const response = await this.makeRequestWithRetry(url, requestOptions);
+        const data = await response.json();
+        const result = {
+          success: true,
+          data: extractData(data),
+          status: response.status,
+        };
+        this.setCachedResponse(cacheKey, result);
+        return result;
+      } catch (error) {
+        const { normalizeApiError } = await import('../utils/normalizeApiError');
+        const errMsg = normalizeApiError(error);
+        return { success: false, error: errMsg, status: 500 };
+      } finally {
+        this.inFlight.delete(cacheKey);
+      }
+    })();
+    this.inFlight.set(cacheKey, request);
+    return request;
   }
 
   /**
@@ -372,7 +390,7 @@ class ApiService {
     return {
       success: true,
       data: {
-        matches,
+        matches: this.intern(matches),
         page: result.data.page || null
       },
       status: result.status
@@ -453,6 +471,9 @@ class ApiService {
     // Use the new API endpoint
     const url = `https://api.cricheroes.in/api/v1/scorecard/get-scorecard/${matchId}`;
     const cacheKey = `match_scorecard_${matchId}`;
+    // Re-opening a match within a few seconds reuses the last scorecard; live polling (30s) always refetches.
+    const cachedScorecard = this.getCachedResponse(cacheKey, 10_000);
+    if (cachedScorecard) return cachedScorecard;
 
     // Headers from the new API curl command
     const scorecardHeaders = {
@@ -476,8 +497,6 @@ class ApiService {
     };
 
     try {
-      console.log('Fetching match scorecard from new API:', { matchId, url });
-
       const response = await this.makeRequestWithRetry(url, {
         method: 'GET',
         headers: scorecardHeaders,
@@ -695,7 +714,7 @@ class ApiService {
     }
 
     // Map the API response to our expected format
-    const allMatches = (result.data.data || []).map((match: any) => ({
+    const mappedMatches = (result.data.data || []).map((match: any) => ({
       id: match.match_id,
       match_id: match.match_id,
       tournament_name: match.tournament_name || '',
@@ -740,7 +759,8 @@ class ApiService {
       } : undefined,
     }));
 
-    // Separate upcoming and live matches
+    // Separate upcoming and live matches (unchanged matches keep their previous objects)
+    const allMatches = this.intern(mappedMatches);
     const upcomingMatches = allMatches.filter((match: any) => match.status === 'upcoming');
     const liveMatches = allMatches.filter((match: any) => match.status === 'live');
 
@@ -809,7 +829,6 @@ class ApiService {
       key.startsWith('upcoming_live_matches_') || key.startsWith('unified_matches_')
     );
     keysToDelete.forEach(key => this.requestCache.delete(key));
-    console.log('🗑️ Cleared upcoming/live matches cache and unified matches cache');
   }
 
   /**
@@ -875,7 +894,7 @@ class ApiService {
   ): Promise<MatchResponse> {
     const playerId = '33835174'; // Default player ID from memory
     const url = `${this.baseApiUrl}/player/get-player-match/${playerId}?pagesize=${pageSize}&pageno=${pageNo}&datetime=${datetime}`;
-    const cacheKey = `player_past_matches_${playerId}_${pageNo}_${pageSize}_${datetime}`;
+    const cacheKey = `player_past_matches_${playerId}_${pageNo}_${pageSize}_${Math.floor(datetime / 30000)}`;
 
     const result = await this._fetchAndCache(
       url,
@@ -942,7 +961,7 @@ class ApiService {
       }));
 
     return {
-      matches: pastMatches,
+      matches: this.intern(pastMatches),
       page: result.data?.page || null,
       status: result.data?.status || 'success',
       config: result.data?.config || {}
@@ -1124,7 +1143,7 @@ class ApiService {
     return {
       status: result.data?.status || false,
       page: result.data?.page || { next: '' },
-      data: matches,
+      data: this.intern(matches),
       config: result.data?.config || { sponsor_data: [] }
     };
   }

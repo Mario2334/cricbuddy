@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MeshBackground } from '../../../ui/MeshBackground';
+import { useScreenActivity } from '../../../hooks/useScreenActivity';
 import { ScreenHeader } from '../../../ui/ScreenHeader';
 
 // Import components
@@ -36,6 +37,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
     posts: [],
     filteredPosts: [],
     isLoading: false,
+    isLoadingMore: false,
     isRefreshing: false,
     error: null,
     currentQuery: '',
@@ -160,6 +162,12 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
       handleFeedError(error instanceof Error ? error : new Error(String(error)), 'initialization');
     }
   }, [handleFeedError]);
+
+  // Background refreshes only while the Find tab is on show (and the app is in front).
+  useScreenActivity(active => {
+    if (active) feedManagerRef.current?.resume();
+    else feedManagerRef.current?.pause();
+  });
 
   // Initialize feed manager
   useEffect(() => {
@@ -330,7 +338,8 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
         }
       },
       {
-        hapticFeedback: FeedbackType.LIGHT,
+        // Reaching the end of the list isn't a tap: no haptic.
+        hapticFeedback: FeedbackType.NONE,
         trackAnalytics: true,
       }
     ).catch(error => {
@@ -472,20 +481,24 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
     />
   );
 
+  // Filter posts by ball type if selected (memoized: a new array would re-render every card)
+  const filteredPosts = useMemo(
+    () =>
+      selectedBallType
+        ? feedState.filteredPosts.filter(post => post.matchDetails.ballType === selectedBallType)
+        : feedState.filteredPosts,
+    [feedState.filteredPosts, selectedBallType],
+  );
+
   // Render post list
   const renderPostList = () => {
-    // Filter posts by ball type if selected
-    const filteredPosts = selectedBallType 
-      ? feedState.filteredPosts.filter(post => post.matchDetails.ballType === selectedBallType)
-      : feedState.filteredPosts;
-
     return (
       <PostListComponent
         posts={filteredPosts}
         loading={feedState.isLoading}
         error={feedState.error}
         refreshing={feedState.isRefreshing}
-        loadingMore={feedState.isLoading && feedState.currentPage > 1}
+        loadingMore={feedState.isLoadingMore}
         hasNextPage={feedState.hasMore}
         onRefresh={handleRefreshWithFeedback}
         onLoadMore={handleLoadMoreWithFeedback}

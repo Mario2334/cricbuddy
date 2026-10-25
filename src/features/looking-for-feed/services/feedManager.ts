@@ -17,6 +17,8 @@ export interface FeedState {
   posts: RecruitmentPost[];
   filteredPosts: RecruitmentPost[];
   isLoading: boolean;
+  /** A "load more" page is on its way (drives the list footer and blocks repeats). */
+  isLoadingMore: boolean;
   isRefreshing: boolean;
   error: string | null;
   currentQuery: string;
@@ -58,6 +60,8 @@ export class FeedManager {
   private state: FeedState;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private backgroundRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  /** The Find tab isn't on show: no background refreshes until it is again. */
+  private paused = false;
   private appStateSubscription: any = null;
   private isDestroyed: boolean = false;
 
@@ -113,8 +117,8 @@ export class FeedManager {
       // Fetch fresh data
       await this.fetchPosts(1, false);
       
-      // Start background refresh timer
-      this.startBackgroundRefresh();
+      // Start background refresh timer (unless the tab was left meanwhile)
+      if (!this.paused) this.startBackgroundRefresh();
       
       console.log('[FeedManager] Feed manager initialized successfully');
     } catch (error) {
@@ -227,7 +231,7 @@ export class FeedManager {
   /**
    * Refresh the feed data
    */
-  async refresh(): Promise<void> {
+  async refresh({ background = false }: { background?: boolean } = {}): Promise<void> {
     if (this.isDestroyed) return;
 
     console.log('[FeedManager] Refreshing feed data');
@@ -235,8 +239,8 @@ export class FeedManager {
     try {
       this.updateState({ isRefreshing: true, error: null });
       
-      // Clear cache to force fresh data
-      if (this.config.enableCaching) {
+      // Clear cache to force fresh data (a background refresh just refetches page 1)
+      if (this.config.enableCaching && !background) {
         await this.cacheService.clearAllCache();
       }
       
@@ -271,19 +275,38 @@ export class FeedManager {
    * Load more posts (pagination)
    */
   async loadMore(): Promise<void> {
-    if (this.isDestroyed || this.state.isLoading || !this.state.hasMore) {
+    if (this.isDestroyed || this.state.isLoading || this.state.isLoadingMore || !this.state.hasMore) {
       return;
     }
 
     console.log(`[FeedManager] Loading more posts, page ${this.state.currentPage + 1}`);
     
+    this.updateState({ isLoadingMore: true });
     try {
       await this.fetchPosts(this.state.currentPage + 1, true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load more posts';
       console.error('[FeedManager] Load more failed:', error);
       this.events.onError?.(errorMessage);
+    } finally {
+      if (!this.isDestroyed) this.updateState({ isLoadingMore: false });
     }
+  }
+
+  /** The tab went off screen: stop background refreshing. */
+  pause(): void {
+    this.paused = true;
+    if (this.backgroundRefreshTimer) {
+      clearTimeout(this.backgroundRefreshTimer);
+      this.backgroundRefreshTimer = null;
+    }
+  }
+
+  /** The tab is back on screen: catch up if the data went stale, then resume the timer. */
+  resume(): void {
+    if (this.isDestroyed || !this.paused) return;
+    this.paused = false;
+    this.handleAppResume();
   }
 
   /**
@@ -393,9 +416,16 @@ export class FeedManager {
         this.cricHeroesClient.transformToRecruitmentPost(rawPost)
       );
 
-      // Update state with new posts
-      const updatedPosts = append ? [...this.state.posts, ...newPosts] : newPosts;
-      const hasMore = recruitmentResponse.page?.next != null;
+      // Update state with new posts. Appends skip posts already listed; a page with
+      // nothing new means paging has run out (it used to append page 1 forever).
+      let updatedPosts = newPosts;
+      let hasMore = recruitmentResponse.page?.next != null;
+      if (append) {
+        const seen = new Set(this.state.posts.map(post => post.id));
+        const fresh = newPosts.filter(post => !seen.has(post.id));
+        updatedPosts = fresh.length ? [...this.state.posts, ...fresh] : this.state.posts;
+        if (fresh.length === 0) hasMore = false;
+      }
       const totalCount = recruitmentResponse.page?.total || updatedPosts.length;
 
       this.updateState({
@@ -479,6 +509,7 @@ export class FeedManager {
    * Handle app resume (foreground)
    */
   private async handleAppResume(): Promise<void> {
+    if (this.paused) return;
     console.log('[FeedManager] App resumed, checking for data refresh');
     
     // Check if data is stale and needs refresh
@@ -488,7 +519,7 @@ export class FeedManager {
       
       if (shouldRefresh) {
         console.log('[FeedManager] Data is stale, refreshing...');
-        await this.refresh();
+        await this.refresh({ background: true });
       }
     }
     
@@ -520,9 +551,9 @@ export class FeedManager {
     
     // Set up new timer
     this.backgroundRefreshTimer = setTimeout(() => {
-      if (!this.isDestroyed && AppState.currentState === 'active') {
+      if (!this.isDestroyed && !this.paused && AppState.currentState === 'active') {
         console.log('[FeedManager] Background refresh triggered');
-        this.refresh().catch(error => {
+        this.refresh({ background: true }).catch(error => {
           console.warn('[FeedManager] Background refresh failed:', error);
         });
       }
@@ -545,6 +576,7 @@ export class FeedManager {
       posts: [],
       filteredPosts: [],
       isLoading: false,
+      isLoadingMore: false,
       isRefreshing: false,
       error: null,
       currentQuery: '',

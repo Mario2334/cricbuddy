@@ -29,10 +29,45 @@ const initialSegment: SegmentState = {
 // A focus within this window reuses the last load instead of refetching.
 const FOCUS_REFRESH_MS = 30_000;
 
+const startMs = (m: Match) => getMatchStart(m)?.getTime() ?? 0;
+
+/** Dedupe by match id (first wins) and sort by start time, parsing each date once. */
+function uniqueSorted(list: Match[], dir: 'asc' | 'desc'): Match[] {
+  const byId = new Map<unknown, Match>();
+  for (const m of list) if (!byId.has(m.match_id)) byId.set(m.match_id, m);
+  const sign = dir === 'asc' ? 1 : -1;
+  return Array.from(byId.values())
+    .map(m => ({ m, t: startMs(m) }))
+    .sort((a, b) => (a.t - b.t) * sign)
+    .map(x => x.m);
+}
+
+/** Append a page, skipping matches already listed (a page can overlap the previous one). */
+function appendUnique(existing: Match[], page: Match[]): Match[] {
+  const seen = new Set(existing.map(m => m.match_id));
+  const fresh = page.filter(m => !seen.has(m.match_id));
+  return fresh.length ? [...existing, ...fresh] : existing;
+}
+
+const sameMatches = (a: Match[], b: Match[]) => a.length === b.length && a.every((m, i) => m === b[i]);
+
+function sameSegment(a: SegmentState, b: SegmentState): boolean {
+  return (
+    sameMatches(a.matches, b.matches) &&
+    a.loading === b.loading &&
+    a.refreshing === b.refreshing &&
+    a.loadingMore === b.loadingMore &&
+    a.error === b.error &&
+    a.nextPageUrl === b.nextPageUrl &&
+    a.loaded === b.loaded
+  );
+}
+
 /**
- * Upcoming / live / past matches for Home. The three loaders are the ones the
- * old per-tab screens used (same API calls, local-schedule merge, dedupe and
- * sort); they now live together so Home can show all of them at once.
+ * Upcoming / live / past matches for Home. Same API calls, local-schedule merge,
+ * dedupe and sort as the old per-tab screens. Each load makes one state update,
+ * and an update that changes nothing (a refetch on focus, mostly) is dropped, so
+ * Home doesn't re-render on every return from a match.
  */
 export function useHomeMatches() {
   const [segments, setSegments] = useState<Record<HomeSegment, SegmentState>>({
@@ -42,73 +77,72 @@ export function useHomeMatches() {
   });
   const [userRefreshing, setUserRefreshing] = useState(false);
   const lastRefresh = useRef(0);
+  const inFlight = useRef<Record<HomeSegment, boolean>>({ upcoming: false, live: false, past: false });
+  const segmentsRef = useRef(segments);
+  segmentsRef.current = segments;
 
   const patch = useCallback(
     (key: HomeSegment, p: Partial<SegmentState> | ((s: SegmentState) => Partial<SegmentState>)) => {
-      setSegments(prev => ({ ...prev, [key]: { ...prev[key], ...(typeof p === 'function' ? p(prev[key]) : p) } }));
+      setSegments(prev => {
+        const next = { ...prev[key], ...(typeof p === 'function' ? p(prev[key]) : p) };
+        return sameSegment(prev[key], next) ? prev : { ...prev, [key]: next };
+      });
     },
     [],
   );
 
   const loadUnified = useCallback(
-    async (key: 'upcoming' | 'live', pageUrl: string | null = null, isRefresh = false) => {
-      if (isRefresh) {
-        patch(key, s => (s.loaded ? { refreshing: true } : { loading: true }));
-      } else if (pageUrl) {
-        patch(key, { loadingMore: true });
-      } else {
-        patch(key, { loading: true });
-      }
+    async (key: 'upcoming' | 'live', pageUrl: string | null = null) => {
+      if (inFlight.current[key]) return;
+      inFlight.current[key] = true;
+      if (pageUrl) patch(key, { loadingMore: true });
+      else patch(key, s => (s.loaded ? {} : { loading: true }));
 
       try {
-        let segmentMatches: Match[] = [];
-        let nextPageUrl: string | null = null;
-
         if (pageUrl) {
           const result = await apiService.fetchMatchesFromUrl(pageUrl);
-          segmentMatches = result.matches.filter((match: Match) => match.status === key);
-          nextPageUrl = result.page?.next || null;
-        } else {
-          const result = key === 'upcoming' ? await apiService.getUpcomingMatches(1, 60) : await apiService.getLiveMatches(1, 60);
-          if (result.success && result.data) {
-            segmentMatches = result.data.matches || [];
-            nextPageUrl = result.data.page?.next || null;
-          } else {
-            throw new Error(result.error || `Failed to load ${key} matches`);
-          }
+          const segmentMatches = result.matches.filter((match: Match) => match.status === key);
+          patch(key, s => ({
+            matches: appendUnique(s.matches, segmentMatches),
+            nextPageUrl: result.page?.next || null,
+            error: null,
+            loaded: true,
+            loadingMore: false,
+          }));
+          return;
         }
 
-        if (isRefresh || !pageUrl) {
-          const localMatches = await getLocalScheduledMatches();
-          const localSegment = localMatches.filter(m => m.status === key);
-          const allMatches = [...localSegment, ...segmentMatches];
-          const uniqueMatches = Array.from(new Map(allMatches.map(item => [item.match_id, item])).values());
-          uniqueMatches.sort((a, b) => new Date(a.match_start_time).getTime() - new Date(b.match_start_time).getTime());
-          patch(key, { matches: uniqueMatches });
-        } else {
-          patch(key, s => ({ matches: [...s.matches, ...segmentMatches] }));
-        }
-
-        patch(key, { nextPageUrl, error: null, loaded: true });
+        const result: any = await apiService.getUpcomingAndLiveMatches(1, 60);
+        if (!result.success || !result.data) throw new Error(result.error || `Failed to load ${key} matches`);
+        const segmentMatches: Match[] = (key === 'upcoming' ? result.data.upcomingMatches : result.data.liveMatches) || [];
+        // A locally scheduled match the API already lists goes by the API's status,
+        // so it can't show as both "upcoming" (API) and "live" (local guess).
+        const apiIds = new Set((result.data.allMatches || []).map((m: Match) => m.match_id));
+        const localSegment = (await getLocalScheduledMatches()).filter(m => m.status === key && !apiIds.has(m.match_id));
+        patch(key, {
+          matches: uniqueSorted([...localSegment, ...segmentMatches], 'asc'),
+          nextPageUrl: result.data.page?.next || null,
+          error: null,
+          loaded: true,
+          loading: false,
+          loadingMore: false,
+        });
       } catch (err) {
         console.error(`Error loading ${key} matches:`, err);
-        patch(key, { error: `Failed to load ${key} matches`, loaded: true });
+        patch(key, { error: `Failed to load ${key} matches`, loaded: true, loading: false, loadingMore: false });
       } finally {
-        patch(key, { loading: false, refreshing: false, loadingMore: false });
+        inFlight.current[key] = false;
       }
     },
     [patch],
   );
 
   const loadPast = useCallback(
-    async (pageUrl: string | null = null, isRefresh = false) => {
-      if (isRefresh) {
-        patch('past', s => (s.loaded ? { refreshing: true } : { loading: true }));
-      } else if (pageUrl) {
-        patch('past', { loadingMore: true });
-      } else {
-        patch('past', { loading: true });
-      }
+    async (pageUrl: string | null = null) => {
+      if (inFlight.current.past) return;
+      inFlight.current.past = true;
+      if (pageUrl) patch('past', { loadingMore: true });
+      else patch('past', s => (s.loaded ? {} : { loading: true }));
 
       try {
         let pageNo = '1';
@@ -128,23 +162,31 @@ export function useHomeMatches() {
         }
         const response = await apiService.getPlayerPastMatches(parseInt(pageNo), 12);
         const { matches: pastMatches, page } = response;
+        const nextPageUrl = page?.next || null;
 
-        if (isRefresh || !pageUrl) {
-          const localMatches = await getLocalScheduledMatches();
-          const localPastMatches = localMatches.filter(m => m.status === 'past');
-          const allMatches = [...localPastMatches, ...pastMatches];
-          const uniqueMatches = Array.from(new Map(allMatches.map(item => [item.match_id, item])).values());
-          uniqueMatches.sort((a, b) => new Date(b.match_start_time).getTime() - new Date(a.match_start_time).getTime());
-          patch('past', { matches: uniqueMatches });
+        if (!pageUrl) {
+          const localPastMatches = (await getLocalScheduledMatches()).filter(m => m.status === 'past');
+          patch('past', {
+            matches: uniqueSorted([...localPastMatches, ...pastMatches], 'desc'),
+            nextPageUrl,
+            error: null,
+            loaded: true,
+            loading: false,
+            loadingMore: false,
+          });
         } else {
-          patch('past', s => ({ matches: [...s.matches, ...pastMatches] }));
+          patch('past', s => ({
+            matches: appendUnique(s.matches, pastMatches),
+            nextPageUrl,
+            error: null,
+            loaded: true,
+            loadingMore: false,
+          }));
         }
-
-        patch('past', { nextPageUrl: page?.next || null, error: null, loaded: true });
       } catch {
-        patch('past', { error: 'Failed to load past matches', loaded: true });
+        patch('past', { error: 'Failed to load past matches', loaded: true, loading: false, loadingMore: false });
       } finally {
-        patch('past', { loading: false, refreshing: false, loadingMore: false });
+        inFlight.current.past = false;
       }
     },
     [patch],
@@ -159,15 +201,15 @@ export function useHomeMatches() {
       const stale = Date.now() - lastRefresh.current > FOCUS_REFRESH_MS;
       if (!userInitiated && !stale) {
         // Still fresh: just re-merge locally scheduled matches via a cached reload.
-        await Promise.all([loadUnified('upcoming', null, true), loadUnified('live', null, true)]);
+        await Promise.all([loadUnified('upcoming'), loadUnified('live')]);
         return;
       }
       lastRefresh.current = Date.now();
       if (userInitiated) setUserRefreshing(true);
       apiService.clearUpcomingLiveCache();
-      const past = loadPast(null, true);
-      await loadUnified('upcoming', null, true);
-      await loadUnified('live', null, true);
+      const past = loadPast(null);
+      await loadUnified('upcoming');
+      await loadUnified('live');
       await past;
       setUserRefreshing(false);
     },
@@ -176,18 +218,18 @@ export function useHomeMatches() {
 
   const loadMore = useCallback(
     (key: HomeSegment) => {
-      const s = segments[key];
-      if (!s.nextPageUrl || s.loadingMore) return;
+      const s = segmentsRef.current[key];
+      if (!s.nextPageUrl || s.loadingMore || inFlight.current[key]) return;
       if (key === 'past') loadPast(s.nextPageUrl);
       else loadUnified(key, s.nextPageUrl);
     },
-    [segments, loadPast, loadUnified],
+    [loadPast, loadUnified],
   );
 
   const allMatches = useMemo(() => {
     const all = [...segments.live.matches, ...segments.upcoming.matches, ...segments.past.matches];
     return Array.from(new Map(all.map(m => [m.match_id, m])).values());
-  }, [segments]);
+  }, [segments.live.matches, segments.upcoming.matches, segments.past.matches]);
 
   const liveMatch = segments.live.matches[0] ?? null;
 

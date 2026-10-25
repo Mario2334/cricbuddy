@@ -37,10 +37,13 @@ export interface CacheStats {
   hitRate?: number; // Cache hit rate percentage
 }
 
+const CLEANUP_INTERVAL_MS = 60_000;
+
 export class CacheService {
   private readonly config: CacheConfig;
   private hitCount: number = 0;
   private missCount: number = 0;
+  private lastCleanup: number = 0;
 
   constructor(config?: Partial<CacheConfig>) {
     this.config = {
@@ -76,8 +79,11 @@ export class CacheService {
 
       await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
       
-      // Clean up old entries if we exceed max entries
-      await this.cleanupOldEntries();
+      // Clean up old entries if we exceed max entries (at most once a minute: it reads every entry)
+      if (Date.now() - this.lastCleanup > CLEANUP_INTERVAL_MS) {
+        this.lastCleanup = Date.now();
+        await this.cleanupOldEntries();
+      }
       
       console.log(`[CacheService] Cached recruitment posts with key: ${key}`);
     } catch (error) {
@@ -147,6 +153,24 @@ export class CacheService {
       console.log(`[CacheService] Cached individual post: ${post.id}`);
     } catch (error) {
       console.error('[CacheService] Failed to cache individual post:', error);
+    }
+  }
+
+  /**
+   * Cache many posts in one batched write.
+   */
+  async cachePosts(posts: RecruitmentPost[], ttl?: number): Promise<void> {
+    if (posts.length === 0) return;
+    try {
+      const now = Date.now();
+      const expiresAt = now + (ttl || this.config.defaultTTL);
+      const pairs: [string, string][] = posts.map(post => [
+        this.getCacheKey(`post_${post.id}`),
+        JSON.stringify({ data: post, timestamp: now, expiresAt, version: this.config.version } as CacheEntry<RecruitmentPost>),
+      ]);
+      await AsyncStorage.multiSet(pairs);
+    } catch (error) {
+      console.error('[CacheService] Failed to cache posts:', error);
     }
   }
 
@@ -311,21 +335,23 @@ export class CacheService {
         return;
       }
 
-      // Get all cache entries with timestamps
+      // Get all cache entries with timestamps (one batched read)
       const entries: Array<{ key: string; timestamp: number }> = [];
-      
-      for (const key of cacheKeys) {
+      const invalid: string[] = [];
+      const stored = await AsyncStorage.multiGet(cacheKeys);
+
+      for (const [key, data] of stored) {
         try {
-          const data = await AsyncStorage.getItem(key);
           if (data) {
             const cacheEntry: CacheEntry<any> = JSON.parse(data);
             entries.push({ key, timestamp: cacheEntry.timestamp });
           }
         } catch (error) {
           // Remove invalid entries
-          await AsyncStorage.removeItem(key);
+          invalid.push(key);
         }
       }
+      if (invalid.length) await AsyncStorage.multiRemove(invalid);
 
       // Sort by timestamp (oldest first)
       entries.sort((a, b) => a.timestamp - b.timestamp);

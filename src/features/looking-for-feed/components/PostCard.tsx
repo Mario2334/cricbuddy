@@ -10,6 +10,7 @@ import { Icon } from '../../../ui/Icon';
 import { IconTile } from '../../../ui/IconTile';
 import type { IconName } from '../../../ui/icons';
 import { PlayCard } from '../../../ui/PlayCard';
+import { MAX_STAGGERED_ITEMS } from '../../../theme/motion';
 import { relativeDayLabel, toDate } from '../../../utils/dates';
 import { BallType, RecruitmentPost } from '../types';
 
@@ -114,7 +115,8 @@ function PostCardBase({ post, index, now, onPress }: PostCardProps) {
 
   return (
     <PlayCard
-      animateIndex={index}
+      // Only the first screenful staggers in; later pages and scrolled-in cards just appear.
+      animateIndex={index < MAX_STAGGERED_ITEMS ? index : undefined}
       onPress={() => onPress(post)}
       // The feed's interaction handler already fires a haptic on press.
       haptic={false}

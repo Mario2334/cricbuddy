@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -36,10 +36,14 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
   const tabBarSpace = useTabBarSpace();
   const confetti = useConfetti();
   const { scrollY, onScroll } = useCollapsingHeader();
+  const lastStored = useRef<string | null | undefined>(undefined);
 
   const loadScheduledMatches = useCallback(async () => {
     try {
       const matchesData = await AsyncStorage.getItem('scheduledMatches');
+      // Focus reloads that find the same list keep the current Match objects (no re-render).
+      if (matchesData === lastStored.current) return;
+      lastStored.current = matchesData;
       if (matchesData) {
         const sortedMatches = sortByStartTime(JSON.parse(matchesData));
         setMatches(sortedMatches.map(convertScheduledMatchToMatch));
@@ -81,7 +85,9 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
       const stored = await AsyncStorage.getItem('scheduledMatches');
       if (stored) {
         const parsedMatches: ScheduledMatch[] = JSON.parse(stored).filter((m: ScheduledMatch) => m.matchId !== matchId);
-        await AsyncStorage.setItem('scheduledMatches', JSON.stringify(parsedMatches));
+        const next = JSON.stringify(parsedMatches);
+        await AsyncStorage.setItem('scheduledMatches', next);
+        lastStored.current = next;
         setMatches(sortByStartTime(parsedMatches).map(convertScheduledMatchToMatch));
         Toast.show({
           type: 'success',
@@ -134,6 +140,7 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
 
   const handleAdded = useCallback(
     (list: ScheduledMatch[], added: ScheduledMatch) => {
+      lastStored.current = JSON.stringify(list);
       setMatches(sortByStartTime(list).map(convertScheduledMatchToMatch));
       setSheetVisible(false);
       // Celebrate once the sheet has slid away so the confetti is on top.
@@ -172,6 +179,7 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
           onMatchPress={handleMatchPress}
           onRefresh={() => {
             setRefreshing(true);
+            lastStored.current = undefined;
             loadScheduledMatches();
           }}
           refreshing={refreshing}

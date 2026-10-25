@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeOut, LinearTransition, useReducedMotion } from 'react-native-reanimated';
+import Animated, { FadeOut, useReducedMotion } from 'react-native-reanimated';
 import type { Match } from '../../types/Match';
 import { colors, glass, palette, radii } from '../../theme';
 import { formatShortDate, isSameLocalDay, relativeDayLabel } from '../../utils/dates';
@@ -23,6 +23,8 @@ interface AgendaListProps {
 /** The selected day's matches, then the next few coming up. */
 export function AgendaList({ selectedDate, now, matches, onMatchPress, onRemoveMatch, onAddForDate }: AgendaListProps) {
   const reduced = useReducedMotion();
+  // Rows stagger in the first time they appear, not on every day tap.
+  const animated = useRef(new Set<string>());
 
   const dayMatches = useMemo(
     () =>
@@ -50,13 +52,13 @@ export function AgendaList({ selectedDate, now, matches, onMatchPress, onRemoveM
   const isPastDay = selectedDate.getTime() < new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
   const renderRow = (m: Match, i: number) => {
-    const card = <MatchCard match={m} now={now} onPress={onMatchPress} variant="compact" index={i} animateIn />;
+    const key = matchKey(m, i);
+    const animateIn = !animated.current.has(key);
+    if (animateIn) animated.current.add(key);
+    const card = <MatchCard match={m} now={now} onPress={onMatchPress} variant="compact" index={i} animateIn={animateIn} />;
+    // Exit fade only (for swipe-to-remove); a spring layout transition on every row was costly.
     return (
-      <Animated.View
-        key={matchKey(m, i)}
-        exiting={reduced ? undefined : FadeOut.duration(180)}
-        layout={reduced ? undefined : LinearTransition.springify().damping(16)}
-      >
+      <Animated.View key={key} exiting={reduced ? undefined : FadeOut.duration(180)}>
         {onRemoveMatch ? <SwipeableMatchRow onRemove={() => onRemoveMatch(m)}>{card}</SwipeableMatchRow> : card}
       </Animated.View>
     );

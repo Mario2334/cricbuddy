@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import type { Match } from '../types/Match';
@@ -50,6 +50,7 @@ const MatchCalendar: React.FC<MatchCalendarProps> = ({
   bottomSpace = 32,
   onScroll,
 }) => {
+  // Pauses by itself while the screen isn't on show.
   const now = useNow(60_000);
   const todayKey = toDateKey(now);
   const [selected, setSelected] = useState<Date>(() => startOfLocalDay(new Date()));
@@ -141,4 +142,4 @@ const styles = StyleSheet.create({
   weekCard: { paddingHorizontal: 10, paddingVertical: 4 },
 });
 
-export default MatchCalendar;
+export default memo(MatchCalendar);

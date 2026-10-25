@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
@@ -42,10 +42,13 @@ type Row =
 
 const SEGMENTS: HomeSegment[] = ['upcoming', 'live', 'past'];
 
+const keyExtractor = (item: Row, index: number) =>
+  item.type === 'match' ? matchKey(item.match, index) : item.type === 'skeleton' ? `sk-${item.id}` : item.type;
+
 const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const isFocused = useIsFocused();
-  const now = useNow(60_000, { enabled: isFocused });
+  // Pauses by itself while Home isn't on show.
+  const now = useNow(60_000);
   const tabBarSpace = useTabBarSpace();
   const { segments, refreshAll, loadMore, allMatches, liveMatch, nextMatch, userRefreshing, initialLoading } = useHomeMatches();
 
@@ -214,7 +217,14 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
     [selectedDate, now, tabSegments, segIndex, changeSegment, selectDate, openMatch, refreshAll, openAdd, segment],
   );
 
-  const header = (
+  const openAddToday = useCallback(() => openAdd(), [openAdd]);
+  const onEndReached = useCallback(() => {
+    if (!selectedDate) loadMore(segment);
+  }, [selectedDate, loadMore, segment]);
+  const onRefresh = useCallback(() => refreshAll(true), [refreshAll]);
+
+  // Memoized: the hero, week strip and their glass only re-render when their inputs change.
+  const header = useMemo(() => (
     <View>
       <PullBall scrollY={scrollY} refreshing={userRefreshing} />
       <View style={[styles.pad, styles.brandRow]}>
@@ -233,9 +243,8 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
           liveMatch={liveMatch}
           nextMatch={next}
           loading={initialLoading}
-          tickEnabled={isFocused}
           onPressMatch={openMatch}
-          onPressAdd={() => openAdd()}
+          onPressAdd={openAddToday}
           scrollY={scrollY}
         />
       </View>
@@ -245,15 +254,26 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
         </GlassView>
       </View>
     </View>
+  ), [scrollY, userRefreshing, now, liveMatch, next, initialLoading, openMatch, openAddToday, selectedDate, selectDate, markedDates]);
+
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={userRefreshing}
+        onRefresh={onRefresh}
+        tintColor={Platform.OS === 'ios' ? 'transparent' : colors.primary}
+        colors={[colors.primaryStrong]}
+        progressBackgroundColor={palette.white}
+      />
+    ),
+    [userRefreshing, onRefresh],
   );
 
   return (
     <MeshBackground style={{ paddingTop: insets.top }}>
       <Animated.FlatList
         data={rows}
-        keyExtractor={(item, index) =>
-          item.type === 'match' ? matchKey(item.match, index) : item.type === 'skeleton' ? `sk-${item.id}` : item.type
-        }
+        keyExtractor={keyExtractor}
         renderItem={renderItem}
         extraData={now}
         ListHeaderComponent={header}
@@ -262,10 +282,12 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={false}
+        // Match cards are heavy: mount a screenful and a bit, not the whole first page.
+        initialNumToRender={6}
+        maxToRenderPerBatch={4}
+        windowSize={7}
         contentContainerStyle={{ paddingBottom: tabBarSpace }}
-        onEndReached={() => {
-          if (!selectedDate) loadMore(segment);
-        }}
+        onEndReached={onEndReached}
         onEndReachedThreshold={0.3}
         ListFooterComponent={
           seg.loadingMore && !selectedDate ? (
@@ -274,15 +296,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProp> = ({ navigation }) => {
             </View>
           ) : null
         }
-        refreshControl={
-          <RefreshControl
-            refreshing={userRefreshing}
-            onRefresh={() => refreshAll(true)}
-            tintColor={Platform.OS === 'ios' ? 'transparent' : colors.primary}
-            colors={[colors.primaryStrong]}
-            progressBackgroundColor={palette.white}
-          />
-        }
+        refreshControl={refreshControl}
       />
     </MeshBackground>
   );
