@@ -1,0 +1,291 @@
+{
+ "headline": "Bat first, keep wickets for the finish, and attack Vishesh Reddy with our strongest bowling.",
+ "opposition": {
+  "summary": "INDIRA BRIGADE have 19 wins and 12 losses from 35 matches, with a listed win rate of 61.3%. Their last5 includes wins against Dev-Sena, Warriors Cricket Club and Trappers 11, an 8-run loss to RAPTORS XI and a walkover loss. They chased our 209/7 with 213/4, winning by 6 wickets.",
+  "likely_approach": "They should favour batting first: their aggregates show avg_bat_first 251 and 2 wins, against avg_chasing 219 and 1 win. Vishesh Reddy provides early pace at SR 196.9, with Chiraag Raj and Harshith Babu keeping the scoring moving through the middle.",
+  "key_threats": [
+   {
+    "player_id": 5439434,
+    "name": "Vishesh Reddy",
+    "role": "Opening batter",
+    "why": "319 runs in 3 innings at SR 196.9; recent 121(54), 79(33) and 119(75) make early wickets vital."
+   },
+   {
+    "player_id": 46503638,
+    "name": "Chiraag Raj",
+    "role": "Captain and all-rounder",
+    "why": "SR 181.3 and 80*(37) threaten the middle overs; 6 wickets at econ 6.25 also make him their key control bowler."
+   },
+   {
+    "player_id": 1025963,
+    "name": "Harshith Babu",
+    "role": "Wicket-keeper and middle-order batter",
+    "why": "112 runs at SR 155.6, including 35*(24), give them a reliable source of runs after early wickets."
+   },
+   {
+    "player_id": 2657818,
+    "name": "Mann Bhati",
+    "role": "Opening batter",
+    "why": "111(72) at SR 154.2 shows opening danger, though the sample is thin at 1 appearance."
+   },
+   {
+    "player_id": 2680006,
+    "name": "PRATHEEK S DAVEY",
+    "role": "Bowler",
+    "why": "7 wickets across 4 spells make him a wicket threat, although econ 8 gives us scoring chances."
+   },
+   {
+    "player_id": 2653195,
+    "name": "Poorna",
+    "role": "Bowler",
+    "why": "6 wickets across 3 spells include 4/40; attack loose balls without ignoring his wicket threat."
+   }
+  ],
+  "weaknesses": [
+   "Target loose balls from Poorna at econ 9.56 and Navneet Mishra at econ 8.33; avoid forcing shots against Chiraag Raj at econ 6.25.",
+   "Build dots against Adithya K. S, whose recent scores are 3(5), 14(11) and 1(2), and keep catching pressure when he arrives.",
+   "If Rahul Gowda plays, deny easy singles early; his 18(33) and SR 54.5 suggest a chance to slow the innings, but the sample is thin.",
+   "Keep attacking after the top order: PRATHEEK S DAVEY has 2 batting runs and P K Sri Chakri has 0 in their listed samples."
+  ]
+ },
+ "best_xii": [
+  {
+   "player_id": 23500230,
+   "name": "Vinit Dhoke",
+   "role": "wicket-keeper",
+   "is_twelfth": false,
+   "why": "Confirmed keeper and opener; opened 13 times, with 32*(32) showing he can stay through the opening spell."
+  },
+  {
+   "player_id": 595338,
+   "name": "Arun Garg",
+   "role": "batter",
+   "is_twelfth": false,
+   "why": "Confirmed top-order batter with 7 openings and recent 31(34) and 21(14)."
+  },
+  {
+   "player_id": 33835174,
+   "name": "Sanket Mokashi",
+   "role": "batter",
+   "is_twelfth": false,
+   "why": "557 runs at avg 46.42 and SR 151.8 make him the batting centre; he also provides keeper cover."
+  },
+  {
+   "player_id": 49480092,
+   "name": "Chinmay Karnad",
+   "role": "all-rounder",
+   "is_twelfth": false,
+   "why": "Avg 35.8 and recent 74*(67) support the middle order; 4 wickets at econ 6.92 offer bowling cover."
+  },
+  {
+   "player_id": 18832522,
+   "name": "Balaji Reddy",
+   "role": "all-rounder",
+   "is_twelfth": false,
+   "why": "11 wickets and recent 4/36 offer breakthroughs; 57(41) shows useful middle-order batting despite recent low scores."
+  },
+  {
+   "player_id": 21486313,
+   "name": "Piyush Singh",
+   "role": "all-rounder",
+   "is_twelfth": false,
+   "why": "23 wickets at econ 6.64 lead the attack; batting SR 163.4 supplies finishing power."
+  },
+  {
+   "player_id": 2027864,
+   "name": "Sumedh Pophali",
+   "role": "all-rounder",
+   "is_twelfth": false,
+   "why": "9 wickets at econ 5.81 provide control, while recent 15*(15) adds lower-middle-order support."
+  },
+  {
+   "player_id": 315203,
+   "name": "Mandar Muppidwar",
+   "role": "all-rounder",
+   "is_twelfth": false,
+   "why": "10 wickets at econ 6.34 earn selection despite batting avg 8.71."
+  },
+  {
+   "player_id": 1219243,
+   "name": "Abhishek",
+   "role": "bowler",
+   "is_twelfth": false,
+   "why": "10 wickets at econ 6.63 across 9 spells strengthen the confirmed attack."
+  },
+  {
+   "player_id": 832843,
+   "name": "Rupesh",
+   "role": "bowler",
+   "is_twelfth": false,
+   "why": "Confirmed bowling cover with 9 wickets; econ 8.12 and recent 0/27 (1.3) favour a reserve bowling role."
+  },
+  {
+   "player_id": 1400774,
+   "name": "Shiv Singh",
+   "role": "bowler",
+   "is_twelfth": false,
+   "why": "13 wickets at econ 6.56 across 14 spells provide an experienced control option."
+  },
+  {
+   "player_id": 10313520,
+   "name": "Aryan AS",
+   "role": "bowler",
+   "is_twelfth": true,
+   "why": "First reserve if his maybe becomes yes: 8 wickets at econ 4.65 and recent 39*(36) offer strong cover."
+  }
+ ],
+ "batting_order": [
+  {
+   "position": 1,
+   "player_id": 23500230,
+   "name": "Vinit Dhoke",
+   "why": "Keep his usual_pos 1 after 13 openings; SR 101.8 and 32*(32) support a steady start."
+  },
+  {
+   "position": 2,
+   "player_id": 595338,
+   "name": "Arun Garg",
+   "why": "Use his usual_pos 2 and 7 openings, with recent 31(34) and 21(14) providing continuity."
+  },
+  {
+   "position": 3,
+   "player_id": 33835174,
+   "name": "Sanket Mokashi",
+   "why": "Keep usual_pos 3 so his SR 151.8 and recent 65(37) can lift the rate after the opening stand."
+  },
+  {
+   "position": 4,
+   "player_id": 49480092,
+   "name": "Chinmay Karnad",
+   "why": "Usual_pos 4, SR 114 and recent 74*(67) make him the best middle-order rebuilding option."
+  },
+  {
+   "position": 5,
+   "player_id": 18832522,
+   "name": "Balaji Reddy",
+   "why": "Move slightly below usual_pos 4 after 5(7) and 4(6), while retaining his 57(41) scoring potential."
+  },
+  {
+   "position": 6,
+   "player_id": 21486313,
+   "name": "Piyush Singh",
+   "why": "Keep usual_pos 6 for his SR 163.4 and finishing evidence of 38(19) and 40(20)."
+  },
+  {
+   "position": 7,
+   "player_id": 2027864,
+   "name": "Sumedh Pophali",
+   "why": "Place below usual_pos 5.5 to support the finish, using SR 92.2 and recent 15*(15) to keep the strike moving."
+  },
+  {
+   "position": 8,
+   "player_id": 315203,
+   "name": "Mandar Muppidwar",
+   "why": "Drop below usual_pos 6 because SR 72.6 and recent 1(5), 3(10) and 1(3) favour a supporting role."
+  },
+  {
+   "position": 9,
+   "player_id": 1219243,
+   "name": "Abhishek",
+   "why": "Retain usual_pos 9 in the lower order, with SR 68.8 and recent 3*(2) offering brief support."
+  },
+  {
+   "position": 10,
+   "player_id": 832843,
+   "name": "Rupesh",
+   "why": "Bat below his usual_pos 9 with SR 66.3 and recent 4(4) and 5*(5), aiming to give the set batter strike."
+  },
+  {
+   "position": 11,
+   "player_id": 1400774,
+   "name": "Shiv Singh",
+   "why": "Keep usual_pos 11 because his batting sample is thin at 4 innings, despite SR 81.3 and recent 9(5)."
+  }
+ ],
+ "bowling_plan": {
+  "overs_total": 30,
+  "bowlers": [
+   {
+    "player_id": 21486313,
+    "name": "Piyush Singh",
+    "overs": 6,
+    "phases": [
+     "powerplay",
+     "death"
+    ],
+    "why": "23 wickets at econ 6.64 make him the first attack on Vishesh Reddy and the main closing option against Chiraag Raj."
+   },
+   {
+    "player_id": 2027864,
+    "name": "Sumedh Pophali",
+    "overs": 6,
+    "phases": [
+     "powerplay",
+     "middle"
+    ],
+    "why": "9 wickets at econ 5.81 offer control against Vishesh Reddy's SR 196.9 and pressure on Adithya K. S."
+   },
+   {
+    "player_id": 315203,
+    "name": "Mandar Muppidwar",
+    "overs": 6,
+    "phases": [
+     "middle",
+     "death"
+    ],
+    "why": "10 wickets at econ 6.34 support an attacking middle spell against Chiraag Raj and Harshith Babu."
+   },
+   {
+    "player_id": 1219243,
+    "name": "Abhishek",
+    "overs": 4,
+    "phases": [
+     "powerplay",
+     "middle"
+    ],
+    "why": "10 wickets at econ 6.63 and recent 0/25 (6) support a tight spell to deny Vishesh Reddy easy width."
+   },
+   {
+    "player_id": 1400774,
+    "name": "Shiv Singh",
+    "overs": 4,
+    "phases": [
+     "middle"
+    ],
+    "why": "13 wickets at econ 6.56 make him a control option against Harshith Babu's SR 155.6."
+   },
+   {
+    "player_id": 18832522,
+    "name": "Balaji Reddy",
+    "overs": 4,
+    "phases": [
+     "middle",
+     "death"
+    ],
+    "why": "11 wickets and recent 4/36 offer breakthroughs against Chiraag Raj, but econ 7.86 calls for short spells."
+   }
+  ],
+  "notes": "Use the competition's actual powerplay restrictions; they are not supplied. Bowl a tight line to Vishesh Reddy and avoid easy width. Keep catching pressure for new batters. Save Piyush Singh for the finish. Phase assignments are tactical: phase-specific figures and bowling styles are missing. Chinmay Karnad and Rupesh can replace allocated overs if needed, keeping the total at 30 and each bowler within 6. Aryan AS is outside the bowling plan."
+ },
+ "squad_gaps": {
+  "summary": "The gap check lists no issues. All 11 confirmed players start, with keeper cover from Vinit Dhoke and Sanket Mokashi. There are 8 listed bowling options. Aryan AS is the first reserve but remains maybe. Diwanshu and Sitesh K are unavailable and excluded.",
+  "needs": [
+   "Confirm Aryan AS before relying on him as first reserve.",
+   "Confirm the competition's powerplay restrictions and inspect the pitch and boundaries before play."
+  ],
+  "risks": [
+   "With exactly 11 yes players, any withdrawal makes a maybe player necessary to field the side.",
+   "Neither Aryan AS nor Pranav Pathe is needed for the current eleven; reserve availability remains uncertain.",
+   "The lower order is vulnerable: Mandar Muppidwar has batting avg 8.71, Abhishek 8.8, Rupesh 6.56 and Shiv Singh 8.67.",
+   "Bowling styles and phase-specific records are missing, so matchup and death-over roles need on-field adjustment."
+  ]
+ },
+ "ground_pitch": {
+  "summary": "Across 5 ground matches, batting first produced 4 wins and chasing 1. The first-innings average is 223 against 181 in the second innings. Dev-Sena's ground record is 3 played, 2 won and 1 lost. Pitch type and boundary sizes are missing, so there is no evidence for a surface or boundary advantage.",
+  "par_score": 223,
+  "bat_first_or_chase": "bat",
+  "why": "Bat first: 4 ground wins versus 1 chase win, with avg_first_inns 223; pitch type and boundary sizes are unknown."
+ },
+ "toss_call": "Win the toss and bat. Use 223 as the ground benchmark, while recognising INDIRA BRIGADE chased our 209/7 and average 251 batting first.",
+ "confidence": "medium"
+}

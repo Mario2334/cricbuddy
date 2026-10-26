@@ -38,3 +38,11 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# cricbuddy-api server (server/dist is covered by dist/ above)
+server/node_modules/
+server/.env
+server/.env.*
+!server/.env.example
+server/work/
+server/cache/

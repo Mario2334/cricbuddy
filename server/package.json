@@ -1,0 +1,21 @@
+{
+  "name": "cricbuddy-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Game-plan API for the CricBuddy app: CricHeroes facts, Grist storage, Codex analysis. Runs on the Veyden server.",
+  "engines": { "node": ">=20" },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test \"dist/__tests__/*.test.js\"",
+    "dev": "npm run build && node --env-file=.env.local dist/index.js",
+    "setup:grist": "npm run build && node dist/scripts/setup-grist.js",
+    "capture:fixtures": "npm run build && node dist/scripts/capture-fixtures.js",
+    "release": "bash release.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.8.3"
+  }
+}

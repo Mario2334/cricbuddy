@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useIsFocused } from '@react-navigation/native';
@@ -10,8 +10,10 @@ import { MeshBackground } from '../../ui/MeshBackground';
 import { TabViewSegmentedBar } from '../../ui/adapters/TabViewSegmentedBar';
 import { useNow } from '../../hooks/useNow';
 import { normalizeStatus } from '../../utils/matchDisplay';
+import { GamePlanTab } from '../../features/match-analytics/components/GamePlanTab';
+import type { GamePlanMatch } from '../../features/match-analytics/types';
 import { useMatchDetail } from './useMatchDetail';
-import type { MainTabRoute } from './types';
+import { TARGET_TEAM_ID, type MainTabRoute } from './types';
 import { MatchHero } from './MatchHero';
 import { MatchDetailLoading } from './MatchDetailLoading';
 import { InfoTab } from './InfoTab';
@@ -59,6 +61,21 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
   const firstLoad = md.loading && !md.scorecard;
   const goBack = useCallback(() => navigation.goBack(), [navigation]);
 
+  // What the Game plan tab needs to know about this match (the server re-checks it against our fixtures).
+  const gamePlanMatch = useMemo<GamePlanMatch>(() => {
+    const names = [md.teamNames.team1, md.teamNames.team2];
+    return {
+      matchId: md.matchId,
+      ourTeamId: md.teamIds?.ours ?? TARGET_TEAM_ID,
+      opponentTeamId: md.teamIds?.opponent ?? null,
+      opponentName: md.teamIds?.opponentName || names.find(n => n && !/dev-?sena/i.test(n)) || names[1] || 'Opposition',
+      groundId: md.matchData?.ground_id || md.groundId,
+      groundName: md.matchData?.ground_name || md.groundName,
+      overs: md.matchData?.overs || undefined,
+      startTime: md.matchData?.match_start_time || md.matchStartTime,
+    };
+  }, [md.matchId, md.teamIds, md.teamNames, md.matchData, md.groundId, md.groundName, md.matchStartTime]);
+
   // Scenes are rendered from current state on every render (never SceneMap).
   const renderScene = ({ route: tab }: SceneRendererProps & { route: MainTabRoute }) => {
     switch (tab.key) {
@@ -75,13 +92,15 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
             onRefresh={md.onRefresh}
           />
         );
+      case 'gameplan':
+        return <GamePlanTab match={gamePlanMatch} />;
       default:
         return null;
     }
   };
 
   const renderTabBar = (props: SceneRendererProps & { navigationState: NavigationState<MainTabRoute> }) => (
-    <TabViewSegmentedBar {...props} icons={{ info: 'info', scorecard: 'bat' }} style={styles.mainTabs} />
+    <TabViewSegmentedBar {...props} icons={{ info: 'info', scorecard: 'bat', gameplan: 'strategy' }} style={styles.mainTabs} />
   );
 
   let body: React.ReactNode;

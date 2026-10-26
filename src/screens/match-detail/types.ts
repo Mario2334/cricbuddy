@@ -20,8 +20,10 @@ export interface ScorecardRoute {
   innings: Innings;
 }
 
+export type MainTabKey = 'info' | 'scorecard' | 'gameplan';
+
 export interface MainTabRoute {
-  key: string;
+  key: MainTabKey;
   title: string;
 }
 

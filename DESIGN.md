@@ -125,6 +125,7 @@ A modern light theme: a soft emerald / teal / lime mesh behind frosted-glass sur
   - Match cards have a link `IconButton`, and long-press copies.
   - The Today hero blocks copy on long-press.
   - MatchDetail has a link button in the hero and in the Share card.
+- **Game plan** (`src/features/match-analytics/`): a third MatchDetail tab, present only for an upcoming Dev-Sena match (tab state is keyed, so it comes and goes without shifting the Info/Scorecard indexes). It talks to `cricbuddy-api` (`server/`, tailnet-only on the Veyden server): tap a player to mark yes/maybe/no (saved in one debounced PUT, squad-gap check comes back with it), then "Build game plan" queues a Codex run. Polling runs every 5 s only while a job is active, focused and foregrounded. Facts render as soon as they are fetched; the AI prose fills in when the model finishes.
 - **Production builds** strip `console.log` (`babel-plugin-transform-remove-console`, production env only).
 
 ## 6. Security & Authentication

@@ -1,0 +1,46 @@
+[
+ {
+  "title": "Matches",
+  "value": 35
+ },
+ {
+  "title": "Upcoming",
+  "value": 3
+ },
+ {
+  "title": "Won",
+  "value": 19
+ },
+ {
+  "title": "Lost",
+  "value": 12
+ },
+ {
+  "title": "Tie",
+  "value": 1
+ },
+ {
+  "title": "Drawn",
+  "value": 0
+ },
+ {
+  "title": "NR",
+  "value": 0
+ },
+ {
+  "title": "Win",
+  "value": "61.3%"
+ },
+ {
+  "title": "Toss Won",
+  "value": 13
+ },
+ {
+  "title": "Bat First",
+  "value": 12
+ },
+ {
+  "title": "Field First",
+  "value": 1
+ }
+]

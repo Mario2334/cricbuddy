@@ -96,9 +96,43 @@ export default [
     },
   },
   {
+    // cricbuddy-api (server/): plain Node 20, compiled with its own tsconfig.
+    files: ['server/**/*.ts'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        Buffer: 'readonly',
+        console: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
+        Response: 'readonly',
+        RequestInit: 'readonly',
+        Headers: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        NodeJS: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     ignores: [
       'node_modules/**',
       'dist/**',
+      'server/dist/**',
+      'server/node_modules/**',
       'build/**',
       '.expo/**',
       'ios/**',

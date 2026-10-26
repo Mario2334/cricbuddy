@@ -1,0 +1,4005 @@
+{
+ "job": {
+  "id": 2,
+  "match_id": 27811137,
+  "status": "done",
+  "requested_at": "2026-10-25T18:49:44.000Z",
+  "started_at": "2026-10-25T18:49:44.000Z",
+  "finished_at": "2026-10-25T18:51:13.000Z",
+  "error": null,
+  "headline": "Bat first, keep wickets for the finish, and attack Vishesh Reddy with our strongest bowling.",
+  "facts": {
+   "generated_at": "2026-10-25T18:49:46.162Z",
+   "match": {
+    "match_id": 27811137,
+    "status": "upcoming",
+    "start": "2026-10-31T01:45:00.000Z",
+    "overs": 30,
+    "ball_type": "LEATHER",
+    "match_type": "Limited Overs",
+    "tournament": "Namma Legends Greenfields Cup - 2026(ED 1)",
+    "our_team_id": 5179117,
+    "our_team": "Dev-Sena",
+    "opponent_team_id": 11573344,
+    "opponent_name": "INDIRA BRIGADE",
+    "ground_id": 1201916,
+    "ground_name": "Legends Green Fields",
+    "city": "Bengaluru (Bangalore)"
+   },
+   "ground_info": {
+    "id": 1201916,
+    "name": "Legends Green Fields",
+    "city": "Bengaluru (Bangalore)",
+    "pitch_types": [],
+    "shortest_boundary": null,
+    "longest_boundary": null,
+    "ground_type": ""
+   },
+   "our_team": {
+    "id": 5179117,
+    "name": "Dev-Sena",
+    "last10": [
+     {
+      "match_id": 26933291,
+      "date": "2026-10-24",
+      "opponent": "KNCC-Kings Of The North Cricket Club",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "210/10",
+      "their_score": "171/10",
+      "margin": "39 runs",
+      "ground": "Lakedew Lions Green Park"
+     },
+     {
+      "match_id": 27763883,
+      "date": "2026-10-20",
+      "opponent": "RAPTORS XI",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "182/6",
+      "their_score": "186/1",
+      "margin": "9 wickets",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27763876,
+      "date": "2026-10-20",
+      "opponent": "INDIRA BRIGADE",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "209/7",
+      "their_score": "213/4",
+      "margin": "6 wickets",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27731935,
+      "date": "2026-10-18",
+      "opponent": "BigBoyz",
+      "result": "won",
+      "batted_first": null,
+      "our_score": "",
+      "their_score": "",
+      "margin": "walkover",
+      "ground": "Aastha Turf Ground"
+     },
+     {
+      "match_id": 27262599,
+      "date": "2026-10-10",
+      "opponent": "Strikers XIs",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "223/10",
+      "their_score": "206/10",
+      "margin": "17 runs",
+      "ground": "Aastha Turf Ground"
+     },
+     {
+      "match_id": 27082182,
+      "date": "2026-09-26",
+      "opponent": "Wolves -XI",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "213/8",
+      "their_score": "195/10",
+      "margin": "18 runs",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 26702282,
+      "date": "2026-09-19",
+      "opponent": "Skywalkers Sports",
+      "result": "won",
+      "batted_first": false,
+      "our_score": "65/2",
+      "their_score": "63/10",
+      "margin": "8 wickets",
+      "ground": "Namma Cricket Ground (Namma Green A)"
+     },
+     {
+      "match_id": 26992542,
+      "date": "2026-09-12",
+      "opponent": "Fyorix Cricket Club",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "188/10",
+      "their_score": "191/4",
+      "margin": "6 wickets",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 26885977,
+      "date": "2026-09-06",
+      "opponent": "Destructive Daityas",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "252/8",
+      "their_score": "132/10",
+      "margin": "120 runs",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 26900399,
+      "date": "2026-09-05",
+      "opponent": "D Men 11s",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "150/9",
+      "their_score": "151/4",
+      "margin": "6 wickets",
+      "ground": "Axi Cricket Park Ground - A"
+     }
+    ],
+    "vs_opponent": [
+     {
+      "match_id": 27763876,
+      "date": "2026-10-20",
+      "opponent": "INDIRA BRIGADE",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "209/7",
+      "their_score": "213/4",
+      "margin": "6 wickets",
+      "ground": "Namma Legends"
+     }
+    ]
+   },
+   "opposition": {
+    "id": 11573344,
+    "name": "INDIRA BRIGADE",
+    "totals": {
+     "matches": 35,
+     "won": 19,
+     "lost": 12,
+     "win_pct": "61.3%",
+     "toss_won": 13,
+     "bat_first": 12,
+     "field_first": 1
+    },
+    "last5": [
+     {
+      "match_id": 27665083,
+      "date": "2026-10-20",
+      "opponent": "RAPTORS XI",
+      "result": "lost",
+      "batted_first": false,
+      "our_score": "225/7",
+      "their_score": "233/9",
+      "margin": "8 runs",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27763876,
+      "date": "2026-10-20",
+      "opponent": "Dev-Sena",
+      "result": "won",
+      "batted_first": false,
+      "our_score": "213/4",
+      "their_score": "209/7",
+      "margin": "6 wickets",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27446298,
+      "date": "2026-10-10",
+      "opponent": "Warriors Cricket Club",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "235/9",
+      "their_score": "117/10",
+      "margin": "118 runs",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 27439752,
+      "date": "2026-10-03",
+      "opponent": "Trappers 11",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "267/3",
+      "their_score": "214/7",
+      "margin": "53 runs (bad light and dl par score )",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 27256425,
+      "date": "2026-09-22",
+      "opponent": "OC Lethals",
+      "result": "lost",
+      "batted_first": null,
+      "our_score": "",
+      "their_score": "",
+      "margin": "walkover",
+      "ground": "CricHaven"
+     }
+    ],
+    "aggregates": {
+     "avg_bat_first": 251,
+     "avg_chasing": 219,
+     "wins_bat_first": 2,
+     "wins_chasing": 1,
+     "avg_wkts_lost": 5.8
+    },
+    "batters": [
+     {
+      "player_id": 5439434,
+      "name": "Vishesh Reddy",
+      "appearances": 3,
+      "batting": {
+       "inns": 3,
+       "runs": 319,
+       "balls": 162,
+       "outs": 3,
+       "hs": 121,
+       "avg": 106.33,
+       "sr": 196.9,
+       "fours": 27,
+       "sixes": 20,
+       "positions": [
+        2,
+        2,
+        2
+       ],
+       "usual_pos": 2,
+       "pos_bucket": "top",
+       "opened": 3,
+       "recent": [
+        "121(54)",
+        "79(33)",
+        "119(75)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 6,
+       "runs": 1,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 1,
+       "avg": 1,
+       "best": "1/1",
+       "recent": [
+        "1/1 (1)"
+       ]
+      },
+      "kept": 1,
+      "bowl_rate": 0.33
+     },
+     {
+      "player_id": 46503638,
+      "name": "Chiraag Raj",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 116,
+       "balls": 64,
+       "outs": 2,
+       "hs": 80,
+       "avg": 58,
+       "sr": 181.3,
+       "fours": 17,
+       "sixes": 2,
+       "positions": [
+        1,
+        3,
+        4,
+        5
+       ],
+       "usual_pos": 3.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "1(2)",
+        "80*(37)",
+        "15(16)",
+        "20*(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 72,
+       "runs": 75,
+       "wkts": 6,
+       "maidens": 0,
+       "econ": 6.25,
+       "avg": 12.5,
+       "best": "4/32",
+       "recent": [
+        "4/32 (3)",
+        "0/11 (3)",
+        "2/32 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     {
+      "player_id": 1025963,
+      "name": "Harshith Babu",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 112,
+       "balls": 72,
+       "outs": 3,
+       "hs": 41,
+       "avg": 37.33,
+       "sr": 155.6,
+       "fours": 13,
+       "sixes": 4,
+       "positions": [
+        4,
+        4,
+        5,
+        4
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "35*(24)",
+        "11(8)",
+        "25(16)",
+        "41(24)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 1,
+       "runs": 0,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 0,
+       "avg": 0,
+       "best": "1/0",
+       "recent": [
+        "1/0 (0.1)"
+       ]
+      },
+      "kept": 1,
+      "bowl_rate": 0.25
+     },
+     {
+      "player_id": 2657818,
+      "name": "Mann Bhati",
+      "appearances": 1,
+      "batting": {
+       "inns": 1,
+       "runs": 111,
+       "balls": 72,
+       "outs": 1,
+       "hs": 111,
+       "avg": 111,
+       "sr": 154.2,
+       "fours": 14,
+       "sixes": 4,
+       "positions": [
+        1
+       ],
+       "usual_pos": 1,
+       "pos_bucket": "top",
+       "opened": 1,
+       "recent": [
+        "111(72)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 12,
+       "runs": 20,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": 10,
+       "avg": null,
+       "best": "0/20",
+       "recent": [
+        "0/20 (2)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 2653192,
+      "name": "Adithya K. S",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 65,
+       "balls": 58,
+       "outs": 4,
+       "hs": 47,
+       "avg": 16.25,
+       "sr": 112.1,
+       "fours": 7,
+       "sixes": 2,
+       "positions": [
+        6,
+        5,
+        6,
+        2
+       ],
+       "usual_pos": 5.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "3(5)",
+        "14(11)",
+        "1(2)",
+        "47(40)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 12,
+       "runs": 22,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 11,
+       "avg": 22,
+       "best": "1/22",
+       "recent": [
+        "1/22 (2)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.25
+     },
+     {
+      "player_id": 24361236,
+      "name": "Ashwath Reddy",
+      "appearances": 2,
+      "batting": {
+       "inns": 2,
+       "runs": 35,
+       "balls": 30,
+       "outs": 1,
+       "hs": 35,
+       "avg": 35,
+       "sr": 116.7,
+       "fours": 4,
+       "sixes": 0,
+       "positions": [
+        3,
+        6
+       ],
+       "usual_pos": 4.5,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "35(30)",
+        "0*(0)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 6,
+       "runs": 15,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": 15,
+       "avg": null,
+       "best": "0/15",
+       "recent": [
+        "0/15 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.5
+     },
+     {
+      "player_id": 43026646,
+      "name": "Rahul Gowda",
+      "appearances": 1,
+      "batting": {
+       "inns": 1,
+       "runs": 18,
+       "balls": 33,
+       "outs": 1,
+       "hs": 18,
+       "avg": 18,
+       "sr": 54.5,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        3
+       ],
+       "usual_pos": 3,
+       "pos_bucket": "top",
+       "opened": 0,
+       "recent": [
+        "18(33)"
+       ]
+      },
+      "bowling": {
+       "inns": 0,
+       "balls": 0,
+       "runs": 0,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": null,
+       "avg": null,
+       "best": null,
+       "recent": []
+      },
+      "kept": 1,
+      "bowl_rate": 0
+     }
+    ],
+    "bowlers": [
+     {
+      "player_id": 2680006,
+      "name": "PRATHEEK S DAVEY",
+      "appearances": 4,
+      "batting": {
+       "inns": 2,
+       "runs": 2,
+       "balls": 7,
+       "outs": 2,
+       "hs": 2,
+       "avg": 1,
+       "sr": 28.6,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        5,
+        8
+       ],
+       "usual_pos": 6.5,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "0(1)",
+        "2(6)"
+       ]
+      },
+      "bowling": {
+       "inns": 4,
+       "balls": 90,
+       "runs": 120,
+       "wkts": 7,
+       "maidens": 0,
+       "econ": 8,
+       "avg": 17.14,
+       "best": "3/25",
+       "recent": [
+        "3/38 (4)",
+        "0/30 (3)",
+        "3/25 (4)",
+        "1/27 (4)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 46503638,
+      "name": "Chiraag Raj",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 116,
+       "balls": 64,
+       "outs": 2,
+       "hs": 80,
+       "avg": 58,
+       "sr": 181.3,
+       "fours": 17,
+       "sixes": 2,
+       "positions": [
+        1,
+        3,
+        4,
+        5
+       ],
+       "usual_pos": 3.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "1(2)",
+        "80*(37)",
+        "15(16)",
+        "20*(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 72,
+       "runs": 75,
+       "wkts": 6,
+       "maidens": 0,
+       "econ": 6.25,
+       "avg": 12.5,
+       "best": "4/32",
+       "recent": [
+        "4/32 (3)",
+        "0/11 (3)",
+        "2/32 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     {
+      "player_id": 2653195,
+      "name": "Poorna",
+      "appearances": 4,
+      "batting": {
+       "inns": 2,
+       "runs": 12,
+       "balls": 11,
+       "outs": 1,
+       "hs": 12,
+       "avg": 12,
+       "sr": 109.1,
+       "fours": 0,
+       "sixes": 1,
+       "positions": [
+        9,
+        7
+       ],
+       "usual_pos": 8,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "0*(0)",
+        "12(11)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 54,
+       "runs": 86,
+       "wkts": 6,
+       "maidens": 0,
+       "econ": 9.56,
+       "avg": 14.33,
+       "best": "4/40",
+       "recent": [
+        "4/40 (4)",
+        "1/16 (2)",
+        "1/30 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     {
+      "player_id": 7906326,
+      "name": "Navneet Mishra",
+      "appearances": 3,
+      "batting": {
+       "inns": 1,
+       "runs": 10,
+       "balls": 8,
+       "outs": 0,
+       "hs": 10,
+       "avg": null,
+       "sr": 125,
+       "fours": 0,
+       "sixes": 1,
+       "positions": [
+        11
+       ],
+       "usual_pos": 10,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "10*(8)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 54,
+       "runs": 75,
+       "wkts": 3,
+       "maidens": 0,
+       "econ": 8.33,
+       "avg": 25,
+       "best": "1/19",
+       "recent": [
+        "1/24 (3)",
+        "1/32 (3)",
+        "1/19 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 39289094,
+      "name": "Hitesh",
+      "appearances": 3,
+      "batting": {
+       "inns": 1,
+       "runs": 5,
+       "balls": 7,
+       "outs": 0,
+       "hs": 5,
+       "avg": null,
+       "sr": 71.4,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        10
+       ],
+       "usual_pos": 11,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "5*(7)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 24,
+       "runs": 25,
+       "wkts": 2,
+       "maidens": 0,
+       "econ": 6.25,
+       "avg": 12.5,
+       "best": "2/25",
+       "recent": [
+        "2/25 (4)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.33
+     },
+     {
+      "player_id": 155273,
+      "name": "P K Sri Chakri",
+      "appearances": 3,
+      "batting": {
+       "inns": 2,
+       "runs": 0,
+       "balls": 1,
+       "outs": 2,
+       "hs": 0,
+       "avg": 0,
+       "sr": 0,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        8,
+        9
+       ],
+       "usual_pos": 8.5,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "0(0)",
+        "0(1)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 42,
+       "runs": 55,
+       "wkts": 2,
+       "maidens": 0,
+       "econ": 7.86,
+       "avg": 27.5,
+       "best": "2/7",
+       "recent": [
+        "0/26 (2)",
+        "0/22 (2)",
+        "2/7 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 1025963,
+      "name": "Harshith Babu",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 112,
+       "balls": 72,
+       "outs": 3,
+       "hs": 41,
+       "avg": 37.33,
+       "sr": 155.6,
+       "fours": 13,
+       "sixes": 4,
+       "positions": [
+        4,
+        4,
+        5,
+        4
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "35*(24)",
+        "11(8)",
+        "25(16)",
+        "41(24)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 1,
+       "runs": 0,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 0,
+       "avg": 0,
+       "best": "1/0",
+       "recent": [
+        "1/0 (0.1)"
+       ]
+      },
+      "kept": 1,
+      "bowl_rate": 0.25
+     }
+    ],
+    "captain": "Chiraag Raj",
+    "keeper": "Harshith Babu"
+   },
+   "ground": {
+    "sample": 5,
+    "matches": [
+     {
+      "match_id": 27446298,
+      "date": "2026-10-10",
+      "team_a": "INDIRA BRIGADE",
+      "team_b": "Warriors Cricket Club",
+      "first_inns": "235/9 (30 ov)",
+      "second_inns": "117/10 (21.3 ov)",
+      "winner": "INDIRA BRIGADE",
+      "chased": false
+     },
+     {
+      "match_id": 27439752,
+      "date": "2026-10-03",
+      "team_a": "INDIRA BRIGADE",
+      "team_b": "Trappers 11",
+      "first_inns": "267/3 (30 ov)",
+      "second_inns": "214/7 (27.1 ov)",
+      "winner": "INDIRA BRIGADE",
+      "chased": false
+     },
+     {
+      "match_id": 27082182,
+      "date": "2026-09-26",
+      "team_a": "Dev-Sena",
+      "team_b": "Wolves -XI",
+      "first_inns": "213/8 (30 ov)",
+      "second_inns": "195/10 (27.3 ov)",
+      "winner": "Dev-Sena",
+      "chased": false
+     },
+     {
+      "match_id": 27042405,
+      "date": "2026-09-20",
+      "team_a": "INDIRA BRIGADE",
+      "team_b": "Straight-Drive",
+      "first_inns": "210/8 (30 ov)",
+      "second_inns": "189/10 (29 ov)",
+      "winner": "INDIRA BRIGADE",
+      "chased": false
+     },
+     {
+      "match_id": 26992542,
+      "date": "2026-09-12",
+      "team_a": "Dev-Sena",
+      "team_b": "Fyorix Cricket Club",
+      "first_inns": "188/10 (26.5 ov)",
+      "second_inns": "191/4 (24.1 ov)",
+      "winner": "Fyorix Cricket Club",
+      "chased": true
+     }
+    ],
+    "aggregates": {
+     "avg_first_inns": 223,
+     "avg_second_inns": 181,
+     "bat_first_wins": 4,
+     "chase_wins": 1,
+     "highest": 267,
+     "lowest": 117,
+     "avg_wkts_first_inns": 7.6
+    },
+    "our_record": {
+     "played": 3,
+     "won": 2,
+     "lost": 1
+    }
+   },
+   "pool": [
+    {
+     "player_id": 1219243,
+     "name": "Abhishek",
+     "photo": "https://media.cricheroes.in/user_profile/1733037578779_mz0icB28b297.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-09-26",
+     "agg": {
+      "player_id": 1219243,
+      "name": "Abhishek",
+      "appearances": 9,
+      "batting": {
+       "inns": 9,
+       "runs": 44,
+       "balls": 64,
+       "outs": 5,
+       "hs": 16,
+       "avg": 8.8,
+       "sr": 68.8,
+       "fours": 1,
+       "sixes": 1,
+       "positions": [
+        10,
+        8,
+        9,
+        10,
+        8,
+        9,
+        9,
+        7,
+        9
+       ],
+       "usual_pos": 9,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "3*(2)",
+        "3(7)",
+        "6(5)",
+        "0(1)",
+        "1*(1)"
+       ]
+      },
+      "bowling": {
+       "inns": 9,
+       "balls": 227,
+       "runs": 251,
+       "wkts": 10,
+       "maidens": 0,
+       "econ": 6.63,
+       "avg": 25.1,
+       "best": "3/7",
+       "recent": [
+        "0/25 (6)",
+        "0/40 (2)",
+        "3/7 (3.5)",
+        "2/22 (4.1)",
+        "0/32 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 595338,
+     "name": "Arun Garg",
+     "photo": "https://media.cricheroes.in/default/user_profile.png",
+     "hand": "RHB",
+     "skill_hint": "BAT",
+     "role": "batter",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 595338,
+      "name": "Arun Garg",
+      "appearances": 13,
+      "batting": {
+       "inns": 13,
+       "runs": 261,
+       "balls": 263,
+       "outs": 12,
+       "hs": 63,
+       "avg": 21.75,
+       "sr": 99.2,
+       "fours": 31,
+       "sixes": 7,
+       "positions": [
+        2,
+        2,
+        4,
+        6,
+        2,
+        2,
+        6,
+        2,
+        3,
+        2,
+        2,
+        3,
+        4
+       ],
+       "usual_pos": 2,
+       "pos_bucket": "top",
+       "opened": 7,
+       "recent": [
+        "31(34)",
+        "21(14)",
+        "2(6)",
+        "1(9)",
+        "2(5)"
+       ]
+      },
+      "bowling": {
+       "inns": 0,
+       "balls": 0,
+       "runs": 0,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": null,
+       "avg": null,
+       "best": null,
+       "recent": []
+      },
+      "kept": 0,
+      "bowl_rate": 0
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 10313520,
+     "name": "Aryan AS",
+     "photo": "https://media.cricheroes.in/user_profile/1737795235053_YUhtOrnZDVRn.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "medium",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-10",
+     "agg": {
+      "player_id": 10313520,
+      "name": "Aryan AS",
+      "appearances": 5,
+      "batting": {
+       "inns": 4,
+       "runs": 72,
+       "balls": 60,
+       "outs": 2,
+       "hs": 39,
+       "avg": 36,
+       "sr": 120,
+       "fours": 10,
+       "sixes": 0,
+       "positions": [
+        9,
+        8,
+        11,
+        8
+       ],
+       "usual_pos": 8.5,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "39*(36)",
+        "19(11)",
+        "7*(4)",
+        "7(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 5,
+       "balls": 138,
+       "runs": 107,
+       "wkts": 8,
+       "maidens": 2,
+       "econ": 4.65,
+       "avg": 13.38,
+       "best": "4/37",
+       "recent": [
+        "0/30 (6)",
+        "1/16 (5.1)",
+        "2/2 (1.5)",
+        "4/37 (4)",
+        "1/22 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "maybe"
+    },
+    {
+     "player_id": 18832522,
+     "name": "Balaji Reddy",
+     "photo": "https://media.cricheroes.in/user_profile/1771557751639_0yGu3WaSAPd5.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 18832522,
+      "name": "Balaji Reddy",
+      "appearances": 7,
+      "batting": {
+       "inns": 6,
+       "runs": 125,
+       "balls": 124,
+       "outs": 6,
+       "hs": 57,
+       "avg": 20.83,
+       "sr": 100.8,
+       "fours": 17,
+       "sixes": 0,
+       "positions": [
+        8,
+        3,
+        2,
+        3,
+        5,
+        6
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "5(7)",
+        "4(6)",
+        "30(37)",
+        "57(41)",
+        "4(4)"
+       ]
+      },
+      "bowling": {
+       "inns": 7,
+       "balls": 142,
+       "runs": 186,
+       "wkts": 11,
+       "maidens": 0,
+       "econ": 7.86,
+       "avg": 16.91,
+       "best": "4/36",
+       "recent": [
+        "4/36 (4.4)",
+        "1/25 (2)",
+        "1/43 (4)",
+        "2/26 (6)",
+        "1/10 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 49480092,
+     "name": "Chinmay Karnad",
+     "photo": "https://media.cricheroes.in/user_profile/1788160529234_6i9MI2qA1HRf.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 49480092,
+      "name": "Chinmay Karnad",
+      "appearances": 7,
+      "batting": {
+       "inns": 6,
+       "runs": 179,
+       "balls": 157,
+       "outs": 5,
+       "hs": 74,
+       "avg": 35.8,
+       "sr": 114,
+       "fours": 18,
+       "sixes": 7,
+       "positions": [
+        6,
+        5,
+        4,
+        3,
+        4,
+        4
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "8(10)",
+        "39(30)",
+        "74*(67)",
+        "5(12)",
+        "1(2)"
+       ]
+      },
+      "bowling": {
+       "inns": 5,
+       "balls": 72,
+       "runs": 83,
+       "wkts": 4,
+       "maidens": 0,
+       "econ": 6.92,
+       "avg": 20.75,
+       "best": "3/28",
+       "recent": [
+        "0/8 (2)",
+        "0/23 (2)",
+        "3/28 (4)",
+        "0/18 (3)",
+        "1/6 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.71
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 315203,
+     "name": "Mandar Muppidwar",
+     "photo": "https://media.cricheroes.in/default/user_profile.png",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-10",
+     "agg": {
+      "player_id": 315203,
+      "name": "Mandar Muppidwar",
+      "appearances": 8,
+      "batting": {
+       "inns": 7,
+       "runs": 61,
+       "balls": 84,
+       "outs": 7,
+       "hs": 28,
+       "avg": 8.71,
+       "sr": 72.6,
+       "fours": 4,
+       "sixes": 0,
+       "positions": [
+        8,
+        7,
+        7,
+        6,
+        6,
+        6,
+        4
+       ],
+       "usual_pos": 6,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "1(5)",
+        "3(10)",
+        "1(3)",
+        "28(24)",
+        "8(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 6,
+       "balls": 124,
+       "runs": 131,
+       "wkts": 10,
+       "maidens": 0,
+       "econ": 6.34,
+       "avg": 13.1,
+       "best": "4/30",
+       "recent": [
+        "1/36 (5)",
+        "4/30 (3.3)",
+        "2/3 (2)",
+        "1/4 (0.2)",
+        "2/34 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 21486313,
+     "name": "Piyush Singh",
+     "photo": "https://media.cricheroes.in/user_profile/1792214103650_VlYNJQZZDRvF.jpg",
+     "hand": "RHB",
+     "skill_hint": "ALL",
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 21486313,
+      "name": "Piyush Singh",
+      "appearances": 14,
+      "batting": {
+       "inns": 12,
+       "runs": 219,
+       "balls": 134,
+       "outs": 12,
+       "hs": 49,
+       "avg": 18.25,
+       "sr": 163.4,
+       "fours": 14,
+       "sixes": 17,
+       "positions": [
+        5,
+        6,
+        5,
+        9,
+        9,
+        6,
+        6,
+        8,
+        4,
+        8,
+        7,
+        6
+       ],
+       "usual_pos": 6,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "1(2)",
+        "4(6)",
+        "38(19)",
+        "40(20)",
+        "4(8)"
+       ]
+      },
+      "bowling": {
+       "inns": 14,
+       "balls": 414,
+       "runs": 458,
+       "wkts": 23,
+       "maidens": 3,
+       "econ": 6.64,
+       "avg": 19.91,
+       "best": "4/43",
+       "recent": [
+        "3/26 (6)",
+        "0/23 (2)",
+        "0/28 (2.1)",
+        "2/37 (6)",
+        "3/32 (6.5)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 17153446,
+     "name": "Pranav Pathe",
+     "photo": "https://media.cricheroes.in/user_profile/1685432331392_196MJzosyYAX.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-09-06",
+     "agg": {
+      "player_id": 17153446,
+      "name": "Pranav Pathe",
+      "appearances": 6,
+      "batting": {
+       "inns": 5,
+       "runs": 98,
+       "balls": 64,
+       "outs": 4,
+       "hs": 64,
+       "avg": 24.5,
+       "sr": 153.1,
+       "fours": 13,
+       "sixes": 1,
+       "positions": [
+        7,
+        7,
+        5,
+        9,
+        3
+       ],
+       "usual_pos": 7,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "64*(38)",
+        "0(2)",
+        "2(2)",
+        "31(19)",
+        "1(3)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 28,
+       "runs": 34,
+       "wkts": 2,
+       "maidens": 0,
+       "econ": 7.29,
+       "avg": 17,
+       "best": "2/17",
+       "recent": [
+        "0/11 (1)",
+        "2/17 (2.4)",
+        "0/6 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.5
+     },
+     "availability": "maybe"
+    },
+    {
+     "player_id": 832843,
+     "name": "Rupesh",
+     "photo": "https://media.cricheroes.in/user_profile/1749366864728_PTbb7qA4ftkZ.jpeg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 832843,
+      "name": "Rupesh",
+      "appearances": 17,
+      "batting": {
+       "inns": 11,
+       "runs": 59,
+       "balls": 89,
+       "outs": 9,
+       "hs": 15,
+       "avg": 6.56,
+       "sr": 66.3,
+       "fours": 8,
+       "sixes": 0,
+       "positions": [
+        9,
+        8,
+        10,
+        7,
+        10,
+        9,
+        5,
+        10,
+        10,
+        7,
+        7
+       ],
+       "usual_pos": 9,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "4(4)",
+        "5*(5)",
+        "7(11)",
+        "4(5)",
+        "0(1)"
+       ]
+      },
+      "bowling": {
+       "inns": 11,
+       "balls": 235,
+       "runs": 318,
+       "wkts": 9,
+       "maidens": 1,
+       "econ": 8.12,
+       "avg": 35.33,
+       "best": "5/8",
+       "recent": [
+        "0/27 (1.3)",
+        "2/34 (4)",
+        "0/22 (4)",
+        "0/8 (1.5)",
+        "1/15 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.65
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 33835174,
+     "name": "Sanket Mokashi",
+     "photo": "https://media.cricheroes.in/user_profile/1737692532056_Nd3PQTvS88mu.jpeg",
+     "hand": "LHB",
+     "skill_hint": null,
+     "role": "batter",
+     "confidence": "high",
+     "can_keep": true,
+     "part_time_bowler": true,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-20",
+     "agg": {
+      "player_id": 33835174,
+      "name": "Sanket Mokashi",
+      "appearances": 12,
+      "batting": {
+       "inns": 12,
+       "runs": 557,
+       "balls": 367,
+       "outs": 12,
+       "hs": 101,
+       "avg": 46.42,
+       "sr": 151.8,
+       "fours": 78,
+       "sixes": 15,
+       "positions": [
+        4,
+        1,
+        4,
+        8,
+        3,
+        1,
+        1,
+        3,
+        3,
+        4,
+        3,
+        3
+       ],
+       "usual_pos": 3,
+       "pos_bucket": "top",
+       "opened": 3,
+       "recent": [
+        "27(21)",
+        "36(28)",
+        "65(37)",
+        "30(18)",
+        "87(58)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 6,
+       "runs": 23,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": 23,
+       "avg": null,
+       "best": "0/23",
+       "recent": [
+        "0/23 (1)"
+       ]
+      },
+      "kept": 3,
+      "bowl_rate": 0.08
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 1400774,
+     "name": "Shiv Singh",
+     "photo": "https://media.cricheroes.in/user_profile/1734786218589_LCFx2rLKCu5Q.jpeg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 1400774,
+      "name": "Shiv Singh",
+      "appearances": 14,
+      "batting": {
+       "inns": 4,
+       "runs": 26,
+       "balls": 32,
+       "outs": 3,
+       "hs": 9,
+       "avg": 8.67,
+       "sr": 81.3,
+       "fours": 5,
+       "sixes": 0,
+       "positions": [
+        11,
+        11,
+        7,
+        11
+       ],
+       "usual_pos": 11,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "9(5)",
+        "9*(17)",
+        "6(5)",
+        "2(5)"
+       ]
+      },
+      "bowling": {
+       "inns": 14,
+       "balls": 352,
+       "runs": 385,
+       "wkts": 13,
+       "maidens": 1,
+       "econ": 6.56,
+       "avg": 29.62,
+       "best": "3/57",
+       "recent": [
+        "0/18 (4)",
+        "0/23 (2)",
+        "1/39 (4)",
+        "3/57 (6)",
+        "1/33 (5)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 2027864,
+     "name": "Sumedh Pophali",
+     "photo": "https://media.cricheroes.in/user_profile/1684667364714_lKvWHZ4Oz8yl.jpg",
+     "hand": "RHB",
+     "skill_hint": "ALL",
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 2027864,
+      "name": "Sumedh Pophali",
+      "appearances": 11,
+      "batting": {
+       "inns": 8,
+       "runs": 94,
+       "balls": 102,
+       "outs": 6,
+       "hs": 26,
+       "avg": 15.67,
+       "sr": 92.2,
+       "fours": 12,
+       "sixes": 0,
+       "positions": [
+        7,
+        6,
+        6,
+        5,
+        6,
+        1,
+        5,
+        5
+       ],
+       "usual_pos": 5.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "15*(15)",
+        "9(11)",
+        "26(27)",
+        "11*(15)",
+        "8(10)"
+       ]
+      },
+      "bowling": {
+       "inns": 8,
+       "balls": 186,
+       "runs": 180,
+       "wkts": 9,
+       "maidens": 0,
+       "econ": 5.81,
+       "avg": 20,
+       "best": "3/29",
+       "recent": [
+        "1/17 (1)",
+        "0/24 (4)",
+        "3/29 (6)",
+        "1/20 (6)",
+        "0/15 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.73
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 23500230,
+     "name": "Vinit Dhoke",
+     "photo": "https://media.cricheroes.in/user_profile/1774096909675_7FjTJNICGmzI.jpg",
+     "hand": "RHB",
+     "skill_hint": "BAT",
+     "role": "wicket-keeper",
+     "confidence": "high",
+     "can_keep": true,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 23500230,
+      "name": "Vinit Dhoke",
+      "appearances": 13,
+      "batting": {
+       "inns": 13,
+       "runs": 174,
+       "balls": 171,
+       "outs": 12,
+       "hs": 32,
+       "avg": 14.5,
+       "sr": 101.8,
+       "fours": 26,
+       "sixes": 4,
+       "positions": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1
+       ],
+       "usual_pos": 1,
+       "pos_bucket": "top",
+       "opened": 13,
+       "recent": [
+        "12(18)",
+        "1(9)",
+        "32*(32)",
+        "0(2)",
+        "5(3)"
+       ]
+      },
+      "bowling": {
+       "inns": 0,
+       "balls": 0,
+       "runs": 0,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": null,
+       "avg": null,
+       "best": null,
+       "recent": []
+      },
+      "kept": 10,
+      "bowl_rate": 0
+     },
+     "availability": "yes"
+    }
+   ],
+   "unavailable": [
+    {
+     "player_id": 5934444,
+     "name": "Diwanshu",
+     "role": "bowler"
+    },
+    {
+     "player_id": 15774946,
+     "name": "Sitesh K",
+     "role": "bowler"
+    }
+   ],
+   "gaps": {
+    "yes": 11,
+    "maybe": 2,
+    "no": 2,
+    "counts": {
+     "batters": 2,
+     "bowlers": 3,
+     "allrounders": 5,
+     "keepers": 2
+    },
+    "bowling_options": 8,
+    "overs": 30,
+    "max_overs_per_bowler": 6,
+    "issues": []
+   },
+   "availability_known": true
+  }
+ },
+ "report": {
+  "id": 2,
+  "facts": {
+   "generated_at": "2026-10-25T18:49:46.162Z",
+   "match": {
+    "match_id": 27811137,
+    "status": "upcoming",
+    "start": "2026-10-31T01:45:00.000Z",
+    "overs": 30,
+    "ball_type": "LEATHER",
+    "match_type": "Limited Overs",
+    "tournament": "Namma Legends Greenfields Cup - 2026(ED 1)",
+    "our_team_id": 5179117,
+    "our_team": "Dev-Sena",
+    "opponent_team_id": 11573344,
+    "opponent_name": "INDIRA BRIGADE",
+    "ground_id": 1201916,
+    "ground_name": "Legends Green Fields",
+    "city": "Bengaluru (Bangalore)"
+   },
+   "ground_info": {
+    "id": 1201916,
+    "name": "Legends Green Fields",
+    "city": "Bengaluru (Bangalore)",
+    "pitch_types": [],
+    "shortest_boundary": null,
+    "longest_boundary": null,
+    "ground_type": ""
+   },
+   "our_team": {
+    "id": 5179117,
+    "name": "Dev-Sena",
+    "last10": [
+     {
+      "match_id": 26933291,
+      "date": "2026-10-24",
+      "opponent": "KNCC-Kings Of The North Cricket Club",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "210/10",
+      "their_score": "171/10",
+      "margin": "39 runs",
+      "ground": "Lakedew Lions Green Park"
+     },
+     {
+      "match_id": 27763883,
+      "date": "2026-10-20",
+      "opponent": "RAPTORS XI",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "182/6",
+      "their_score": "186/1",
+      "margin": "9 wickets",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27763876,
+      "date": "2026-10-20",
+      "opponent": "INDIRA BRIGADE",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "209/7",
+      "their_score": "213/4",
+      "margin": "6 wickets",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27731935,
+      "date": "2026-10-18",
+      "opponent": "BigBoyz",
+      "result": "won",
+      "batted_first": null,
+      "our_score": "",
+      "their_score": "",
+      "margin": "walkover",
+      "ground": "Aastha Turf Ground"
+     },
+     {
+      "match_id": 27262599,
+      "date": "2026-10-10",
+      "opponent": "Strikers XIs",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "223/10",
+      "their_score": "206/10",
+      "margin": "17 runs",
+      "ground": "Aastha Turf Ground"
+     },
+     {
+      "match_id": 27082182,
+      "date": "2026-09-26",
+      "opponent": "Wolves -XI",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "213/8",
+      "their_score": "195/10",
+      "margin": "18 runs",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 26702282,
+      "date": "2026-09-19",
+      "opponent": "Skywalkers Sports",
+      "result": "won",
+      "batted_first": false,
+      "our_score": "65/2",
+      "their_score": "63/10",
+      "margin": "8 wickets",
+      "ground": "Namma Cricket Ground (Namma Green A)"
+     },
+     {
+      "match_id": 26992542,
+      "date": "2026-09-12",
+      "opponent": "Fyorix Cricket Club",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "188/10",
+      "their_score": "191/4",
+      "margin": "6 wickets",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 26885977,
+      "date": "2026-09-06",
+      "opponent": "Destructive Daityas",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "252/8",
+      "their_score": "132/10",
+      "margin": "120 runs",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 26900399,
+      "date": "2026-09-05",
+      "opponent": "D Men 11s",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "150/9",
+      "their_score": "151/4",
+      "margin": "6 wickets",
+      "ground": "Axi Cricket Park Ground - A"
+     }
+    ],
+    "vs_opponent": [
+     {
+      "match_id": 27763876,
+      "date": "2026-10-20",
+      "opponent": "INDIRA BRIGADE",
+      "result": "lost",
+      "batted_first": true,
+      "our_score": "209/7",
+      "their_score": "213/4",
+      "margin": "6 wickets",
+      "ground": "Namma Legends"
+     }
+    ]
+   },
+   "opposition": {
+    "id": 11573344,
+    "name": "INDIRA BRIGADE",
+    "totals": {
+     "matches": 35,
+     "won": 19,
+     "lost": 12,
+     "win_pct": "61.3%",
+     "toss_won": 13,
+     "bat_first": 12,
+     "field_first": 1
+    },
+    "last5": [
+     {
+      "match_id": 27665083,
+      "date": "2026-10-20",
+      "opponent": "RAPTORS XI",
+      "result": "lost",
+      "batted_first": false,
+      "our_score": "225/7",
+      "their_score": "233/9",
+      "margin": "8 runs",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27763876,
+      "date": "2026-10-20",
+      "opponent": "Dev-Sena",
+      "result": "won",
+      "batted_first": false,
+      "our_score": "213/4",
+      "their_score": "209/7",
+      "margin": "6 wickets",
+      "ground": "Namma Legends"
+     },
+     {
+      "match_id": 27446298,
+      "date": "2026-10-10",
+      "opponent": "Warriors Cricket Club",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "235/9",
+      "their_score": "117/10",
+      "margin": "118 runs",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 27439752,
+      "date": "2026-10-03",
+      "opponent": "Trappers 11",
+      "result": "won",
+      "batted_first": true,
+      "our_score": "267/3",
+      "their_score": "214/7",
+      "margin": "53 runs (bad light and dl par score )",
+      "ground": "Legends Green Fields"
+     },
+     {
+      "match_id": 27256425,
+      "date": "2026-09-22",
+      "opponent": "OC Lethals",
+      "result": "lost",
+      "batted_first": null,
+      "our_score": "",
+      "their_score": "",
+      "margin": "walkover",
+      "ground": "CricHaven"
+     }
+    ],
+    "aggregates": {
+     "avg_bat_first": 251,
+     "avg_chasing": 219,
+     "wins_bat_first": 2,
+     "wins_chasing": 1,
+     "avg_wkts_lost": 5.8
+    },
+    "batters": [
+     {
+      "player_id": 5439434,
+      "name": "Vishesh Reddy",
+      "appearances": 3,
+      "batting": {
+       "inns": 3,
+       "runs": 319,
+       "balls": 162,
+       "outs": 3,
+       "hs": 121,
+       "avg": 106.33,
+       "sr": 196.9,
+       "fours": 27,
+       "sixes": 20,
+       "positions": [
+        2,
+        2,
+        2
+       ],
+       "usual_pos": 2,
+       "pos_bucket": "top",
+       "opened": 3,
+       "recent": [
+        "121(54)",
+        "79(33)",
+        "119(75)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 6,
+       "runs": 1,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 1,
+       "avg": 1,
+       "best": "1/1",
+       "recent": [
+        "1/1 (1)"
+       ]
+      },
+      "kept": 1,
+      "bowl_rate": 0.33
+     },
+     {
+      "player_id": 46503638,
+      "name": "Chiraag Raj",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 116,
+       "balls": 64,
+       "outs": 2,
+       "hs": 80,
+       "avg": 58,
+       "sr": 181.3,
+       "fours": 17,
+       "sixes": 2,
+       "positions": [
+        1,
+        3,
+        4,
+        5
+       ],
+       "usual_pos": 3.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "1(2)",
+        "80*(37)",
+        "15(16)",
+        "20*(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 72,
+       "runs": 75,
+       "wkts": 6,
+       "maidens": 0,
+       "econ": 6.25,
+       "avg": 12.5,
+       "best": "4/32",
+       "recent": [
+        "4/32 (3)",
+        "0/11 (3)",
+        "2/32 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     {
+      "player_id": 1025963,
+      "name": "Harshith Babu",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 112,
+       "balls": 72,
+       "outs": 3,
+       "hs": 41,
+       "avg": 37.33,
+       "sr": 155.6,
+       "fours": 13,
+       "sixes": 4,
+       "positions": [
+        4,
+        4,
+        5,
+        4
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "35*(24)",
+        "11(8)",
+        "25(16)",
+        "41(24)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 1,
+       "runs": 0,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 0,
+       "avg": 0,
+       "best": "1/0",
+       "recent": [
+        "1/0 (0.1)"
+       ]
+      },
+      "kept": 1,
+      "bowl_rate": 0.25
+     },
+     {
+      "player_id": 2657818,
+      "name": "Mann Bhati",
+      "appearances": 1,
+      "batting": {
+       "inns": 1,
+       "runs": 111,
+       "balls": 72,
+       "outs": 1,
+       "hs": 111,
+       "avg": 111,
+       "sr": 154.2,
+       "fours": 14,
+       "sixes": 4,
+       "positions": [
+        1
+       ],
+       "usual_pos": 1,
+       "pos_bucket": "top",
+       "opened": 1,
+       "recent": [
+        "111(72)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 12,
+       "runs": 20,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": 10,
+       "avg": null,
+       "best": "0/20",
+       "recent": [
+        "0/20 (2)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 2653192,
+      "name": "Adithya K. S",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 65,
+       "balls": 58,
+       "outs": 4,
+       "hs": 47,
+       "avg": 16.25,
+       "sr": 112.1,
+       "fours": 7,
+       "sixes": 2,
+       "positions": [
+        6,
+        5,
+        6,
+        2
+       ],
+       "usual_pos": 5.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "3(5)",
+        "14(11)",
+        "1(2)",
+        "47(40)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 12,
+       "runs": 22,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 11,
+       "avg": 22,
+       "best": "1/22",
+       "recent": [
+        "1/22 (2)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.25
+     },
+     {
+      "player_id": 24361236,
+      "name": "Ashwath Reddy",
+      "appearances": 2,
+      "batting": {
+       "inns": 2,
+       "runs": 35,
+       "balls": 30,
+       "outs": 1,
+       "hs": 35,
+       "avg": 35,
+       "sr": 116.7,
+       "fours": 4,
+       "sixes": 0,
+       "positions": [
+        3,
+        6
+       ],
+       "usual_pos": 4.5,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "35(30)",
+        "0*(0)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 6,
+       "runs": 15,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": 15,
+       "avg": null,
+       "best": "0/15",
+       "recent": [
+        "0/15 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.5
+     },
+     {
+      "player_id": 43026646,
+      "name": "Rahul Gowda",
+      "appearances": 1,
+      "batting": {
+       "inns": 1,
+       "runs": 18,
+       "balls": 33,
+       "outs": 1,
+       "hs": 18,
+       "avg": 18,
+       "sr": 54.5,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        3
+       ],
+       "usual_pos": 3,
+       "pos_bucket": "top",
+       "opened": 0,
+       "recent": [
+        "18(33)"
+       ]
+      },
+      "bowling": {
+       "inns": 0,
+       "balls": 0,
+       "runs": 0,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": null,
+       "avg": null,
+       "best": null,
+       "recent": []
+      },
+      "kept": 1,
+      "bowl_rate": 0
+     }
+    ],
+    "bowlers": [
+     {
+      "player_id": 2680006,
+      "name": "PRATHEEK S DAVEY",
+      "appearances": 4,
+      "batting": {
+       "inns": 2,
+       "runs": 2,
+       "balls": 7,
+       "outs": 2,
+       "hs": 2,
+       "avg": 1,
+       "sr": 28.6,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        5,
+        8
+       ],
+       "usual_pos": 6.5,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "0(1)",
+        "2(6)"
+       ]
+      },
+      "bowling": {
+       "inns": 4,
+       "balls": 90,
+       "runs": 120,
+       "wkts": 7,
+       "maidens": 0,
+       "econ": 8,
+       "avg": 17.14,
+       "best": "3/25",
+       "recent": [
+        "3/38 (4)",
+        "0/30 (3)",
+        "3/25 (4)",
+        "1/27 (4)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 46503638,
+      "name": "Chiraag Raj",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 116,
+       "balls": 64,
+       "outs": 2,
+       "hs": 80,
+       "avg": 58,
+       "sr": 181.3,
+       "fours": 17,
+       "sixes": 2,
+       "positions": [
+        1,
+        3,
+        4,
+        5
+       ],
+       "usual_pos": 3.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "1(2)",
+        "80*(37)",
+        "15(16)",
+        "20*(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 72,
+       "runs": 75,
+       "wkts": 6,
+       "maidens": 0,
+       "econ": 6.25,
+       "avg": 12.5,
+       "best": "4/32",
+       "recent": [
+        "4/32 (3)",
+        "0/11 (3)",
+        "2/32 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     {
+      "player_id": 2653195,
+      "name": "Poorna",
+      "appearances": 4,
+      "batting": {
+       "inns": 2,
+       "runs": 12,
+       "balls": 11,
+       "outs": 1,
+       "hs": 12,
+       "avg": 12,
+       "sr": 109.1,
+       "fours": 0,
+       "sixes": 1,
+       "positions": [
+        9,
+        7
+       ],
+       "usual_pos": 8,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "0*(0)",
+        "12(11)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 54,
+       "runs": 86,
+       "wkts": 6,
+       "maidens": 0,
+       "econ": 9.56,
+       "avg": 14.33,
+       "best": "4/40",
+       "recent": [
+        "4/40 (4)",
+        "1/16 (2)",
+        "1/30 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     {
+      "player_id": 7906326,
+      "name": "Navneet Mishra",
+      "appearances": 3,
+      "batting": {
+       "inns": 1,
+       "runs": 10,
+       "balls": 8,
+       "outs": 0,
+       "hs": 10,
+       "avg": null,
+       "sr": 125,
+       "fours": 0,
+       "sixes": 1,
+       "positions": [
+        11
+       ],
+       "usual_pos": 10,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "10*(8)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 54,
+       "runs": 75,
+       "wkts": 3,
+       "maidens": 0,
+       "econ": 8.33,
+       "avg": 25,
+       "best": "1/19",
+       "recent": [
+        "1/24 (3)",
+        "1/32 (3)",
+        "1/19 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 39289094,
+      "name": "Hitesh",
+      "appearances": 3,
+      "batting": {
+       "inns": 1,
+       "runs": 5,
+       "balls": 7,
+       "outs": 0,
+       "hs": 5,
+       "avg": null,
+       "sr": 71.4,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        10
+       ],
+       "usual_pos": 11,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "5*(7)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 24,
+       "runs": 25,
+       "wkts": 2,
+       "maidens": 0,
+       "econ": 6.25,
+       "avg": 12.5,
+       "best": "2/25",
+       "recent": [
+        "2/25 (4)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.33
+     },
+     {
+      "player_id": 155273,
+      "name": "P K Sri Chakri",
+      "appearances": 3,
+      "batting": {
+       "inns": 2,
+       "runs": 0,
+       "balls": 1,
+       "outs": 2,
+       "hs": 0,
+       "avg": 0,
+       "sr": 0,
+       "fours": 0,
+       "sixes": 0,
+       "positions": [
+        8,
+        9
+       ],
+       "usual_pos": 8.5,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "0(0)",
+        "0(1)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 42,
+       "runs": 55,
+       "wkts": 2,
+       "maidens": 0,
+       "econ": 7.86,
+       "avg": 27.5,
+       "best": "2/7",
+       "recent": [
+        "0/26 (2)",
+        "0/22 (2)",
+        "2/7 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     {
+      "player_id": 1025963,
+      "name": "Harshith Babu",
+      "appearances": 4,
+      "batting": {
+       "inns": 4,
+       "runs": 112,
+       "balls": 72,
+       "outs": 3,
+       "hs": 41,
+       "avg": 37.33,
+       "sr": 155.6,
+       "fours": 13,
+       "sixes": 4,
+       "positions": [
+        4,
+        4,
+        5,
+        4
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "35*(24)",
+        "11(8)",
+        "25(16)",
+        "41(24)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 1,
+       "runs": 0,
+       "wkts": 1,
+       "maidens": 0,
+       "econ": 0,
+       "avg": 0,
+       "best": "1/0",
+       "recent": [
+        "1/0 (0.1)"
+       ]
+      },
+      "kept": 1,
+      "bowl_rate": 0.25
+     }
+    ],
+    "captain": "Chiraag Raj",
+    "keeper": "Harshith Babu"
+   },
+   "ground": {
+    "sample": 5,
+    "matches": [
+     {
+      "match_id": 27446298,
+      "date": "2026-10-10",
+      "team_a": "INDIRA BRIGADE",
+      "team_b": "Warriors Cricket Club",
+      "first_inns": "235/9 (30 ov)",
+      "second_inns": "117/10 (21.3 ov)",
+      "winner": "INDIRA BRIGADE",
+      "chased": false
+     },
+     {
+      "match_id": 27439752,
+      "date": "2026-10-03",
+      "team_a": "INDIRA BRIGADE",
+      "team_b": "Trappers 11",
+      "first_inns": "267/3 (30 ov)",
+      "second_inns": "214/7 (27.1 ov)",
+      "winner": "INDIRA BRIGADE",
+      "chased": false
+     },
+     {
+      "match_id": 27082182,
+      "date": "2026-09-26",
+      "team_a": "Dev-Sena",
+      "team_b": "Wolves -XI",
+      "first_inns": "213/8 (30 ov)",
+      "second_inns": "195/10 (27.3 ov)",
+      "winner": "Dev-Sena",
+      "chased": false
+     },
+     {
+      "match_id": 27042405,
+      "date": "2026-09-20",
+      "team_a": "INDIRA BRIGADE",
+      "team_b": "Straight-Drive",
+      "first_inns": "210/8 (30 ov)",
+      "second_inns": "189/10 (29 ov)",
+      "winner": "INDIRA BRIGADE",
+      "chased": false
+     },
+     {
+      "match_id": 26992542,
+      "date": "2026-09-12",
+      "team_a": "Dev-Sena",
+      "team_b": "Fyorix Cricket Club",
+      "first_inns": "188/10 (26.5 ov)",
+      "second_inns": "191/4 (24.1 ov)",
+      "winner": "Fyorix Cricket Club",
+      "chased": true
+     }
+    ],
+    "aggregates": {
+     "avg_first_inns": 223,
+     "avg_second_inns": 181,
+     "bat_first_wins": 4,
+     "chase_wins": 1,
+     "highest": 267,
+     "lowest": 117,
+     "avg_wkts_first_inns": 7.6
+    },
+    "our_record": {
+     "played": 3,
+     "won": 2,
+     "lost": 1
+    }
+   },
+   "pool": [
+    {
+     "player_id": 1219243,
+     "name": "Abhishek",
+     "photo": "https://media.cricheroes.in/user_profile/1733037578779_mz0icB28b297.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-09-26",
+     "agg": {
+      "player_id": 1219243,
+      "name": "Abhishek",
+      "appearances": 9,
+      "batting": {
+       "inns": 9,
+       "runs": 44,
+       "balls": 64,
+       "outs": 5,
+       "hs": 16,
+       "avg": 8.8,
+       "sr": 68.8,
+       "fours": 1,
+       "sixes": 1,
+       "positions": [
+        10,
+        8,
+        9,
+        10,
+        8,
+        9,
+        9,
+        7,
+        9
+       ],
+       "usual_pos": 9,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "3*(2)",
+        "3(7)",
+        "6(5)",
+        "0(1)",
+        "1*(1)"
+       ]
+      },
+      "bowling": {
+       "inns": 9,
+       "balls": 227,
+       "runs": 251,
+       "wkts": 10,
+       "maidens": 0,
+       "econ": 6.63,
+       "avg": 25.1,
+       "best": "3/7",
+       "recent": [
+        "0/25 (6)",
+        "0/40 (2)",
+        "3/7 (3.5)",
+        "2/22 (4.1)",
+        "0/32 (3)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 595338,
+     "name": "Arun Garg",
+     "photo": "https://media.cricheroes.in/default/user_profile.png",
+     "hand": "RHB",
+     "skill_hint": "BAT",
+     "role": "batter",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 595338,
+      "name": "Arun Garg",
+      "appearances": 13,
+      "batting": {
+       "inns": 13,
+       "runs": 261,
+       "balls": 263,
+       "outs": 12,
+       "hs": 63,
+       "avg": 21.75,
+       "sr": 99.2,
+       "fours": 31,
+       "sixes": 7,
+       "positions": [
+        2,
+        2,
+        4,
+        6,
+        2,
+        2,
+        6,
+        2,
+        3,
+        2,
+        2,
+        3,
+        4
+       ],
+       "usual_pos": 2,
+       "pos_bucket": "top",
+       "opened": 7,
+       "recent": [
+        "31(34)",
+        "21(14)",
+        "2(6)",
+        "1(9)",
+        "2(5)"
+       ]
+      },
+      "bowling": {
+       "inns": 0,
+       "balls": 0,
+       "runs": 0,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": null,
+       "avg": null,
+       "best": null,
+       "recent": []
+      },
+      "kept": 0,
+      "bowl_rate": 0
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 10313520,
+     "name": "Aryan AS",
+     "photo": "https://media.cricheroes.in/user_profile/1737795235053_YUhtOrnZDVRn.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "medium",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-10",
+     "agg": {
+      "player_id": 10313520,
+      "name": "Aryan AS",
+      "appearances": 5,
+      "batting": {
+       "inns": 4,
+       "runs": 72,
+       "balls": 60,
+       "outs": 2,
+       "hs": 39,
+       "avg": 36,
+       "sr": 120,
+       "fours": 10,
+       "sixes": 0,
+       "positions": [
+        9,
+        8,
+        11,
+        8
+       ],
+       "usual_pos": 8.5,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "39*(36)",
+        "19(11)",
+        "7*(4)",
+        "7(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 5,
+       "balls": 138,
+       "runs": 107,
+       "wkts": 8,
+       "maidens": 2,
+       "econ": 4.65,
+       "avg": 13.38,
+       "best": "4/37",
+       "recent": [
+        "0/30 (6)",
+        "1/16 (5.1)",
+        "2/2 (1.5)",
+        "4/37 (4)",
+        "1/22 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "maybe"
+    },
+    {
+     "player_id": 18832522,
+     "name": "Balaji Reddy",
+     "photo": "https://media.cricheroes.in/user_profile/1771557751639_0yGu3WaSAPd5.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 18832522,
+      "name": "Balaji Reddy",
+      "appearances": 7,
+      "batting": {
+       "inns": 6,
+       "runs": 125,
+       "balls": 124,
+       "outs": 6,
+       "hs": 57,
+       "avg": 20.83,
+       "sr": 100.8,
+       "fours": 17,
+       "sixes": 0,
+       "positions": [
+        8,
+        3,
+        2,
+        3,
+        5,
+        6
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "5(7)",
+        "4(6)",
+        "30(37)",
+        "57(41)",
+        "4(4)"
+       ]
+      },
+      "bowling": {
+       "inns": 7,
+       "balls": 142,
+       "runs": 186,
+       "wkts": 11,
+       "maidens": 0,
+       "econ": 7.86,
+       "avg": 16.91,
+       "best": "4/36",
+       "recent": [
+        "4/36 (4.4)",
+        "1/25 (2)",
+        "1/43 (4)",
+        "2/26 (6)",
+        "1/10 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 49480092,
+     "name": "Chinmay Karnad",
+     "photo": "https://media.cricheroes.in/user_profile/1788160529234_6i9MI2qA1HRf.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 49480092,
+      "name": "Chinmay Karnad",
+      "appearances": 7,
+      "batting": {
+       "inns": 6,
+       "runs": 179,
+       "balls": 157,
+       "outs": 5,
+       "hs": 74,
+       "avg": 35.8,
+       "sr": 114,
+       "fours": 18,
+       "sixes": 7,
+       "positions": [
+        6,
+        5,
+        4,
+        3,
+        4,
+        4
+       ],
+       "usual_pos": 4,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "8(10)",
+        "39(30)",
+        "74*(67)",
+        "5(12)",
+        "1(2)"
+       ]
+      },
+      "bowling": {
+       "inns": 5,
+       "balls": 72,
+       "runs": 83,
+       "wkts": 4,
+       "maidens": 0,
+       "econ": 6.92,
+       "avg": 20.75,
+       "best": "3/28",
+       "recent": [
+        "0/8 (2)",
+        "0/23 (2)",
+        "3/28 (4)",
+        "0/18 (3)",
+        "1/6 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.71
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 315203,
+     "name": "Mandar Muppidwar",
+     "photo": "https://media.cricheroes.in/default/user_profile.png",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-10",
+     "agg": {
+      "player_id": 315203,
+      "name": "Mandar Muppidwar",
+      "appearances": 8,
+      "batting": {
+       "inns": 7,
+       "runs": 61,
+       "balls": 84,
+       "outs": 7,
+       "hs": 28,
+       "avg": 8.71,
+       "sr": 72.6,
+       "fours": 4,
+       "sixes": 0,
+       "positions": [
+        8,
+        7,
+        7,
+        6,
+        6,
+        6,
+        4
+       ],
+       "usual_pos": 6,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "1(5)",
+        "3(10)",
+        "1(3)",
+        "28(24)",
+        "8(9)"
+       ]
+      },
+      "bowling": {
+       "inns": 6,
+       "balls": 124,
+       "runs": 131,
+       "wkts": 10,
+       "maidens": 0,
+       "econ": 6.34,
+       "avg": 13.1,
+       "best": "4/30",
+       "recent": [
+        "1/36 (5)",
+        "4/30 (3.3)",
+        "2/3 (2)",
+        "1/4 (0.2)",
+        "2/34 (6)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.75
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 21486313,
+     "name": "Piyush Singh",
+     "photo": "https://media.cricheroes.in/user_profile/1792214103650_VlYNJQZZDRvF.jpg",
+     "hand": "RHB",
+     "skill_hint": "ALL",
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 21486313,
+      "name": "Piyush Singh",
+      "appearances": 14,
+      "batting": {
+       "inns": 12,
+       "runs": 219,
+       "balls": 134,
+       "outs": 12,
+       "hs": 49,
+       "avg": 18.25,
+       "sr": 163.4,
+       "fours": 14,
+       "sixes": 17,
+       "positions": [
+        5,
+        6,
+        5,
+        9,
+        9,
+        6,
+        6,
+        8,
+        4,
+        8,
+        7,
+        6
+       ],
+       "usual_pos": 6,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "1(2)",
+        "4(6)",
+        "38(19)",
+        "40(20)",
+        "4(8)"
+       ]
+      },
+      "bowling": {
+       "inns": 14,
+       "balls": 414,
+       "runs": 458,
+       "wkts": 23,
+       "maidens": 3,
+       "econ": 6.64,
+       "avg": 19.91,
+       "best": "4/43",
+       "recent": [
+        "3/26 (6)",
+        "0/23 (2)",
+        "0/28 (2.1)",
+        "2/37 (6)",
+        "3/32 (6.5)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 17153446,
+     "name": "Pranav Pathe",
+     "photo": "https://media.cricheroes.in/user_profile/1685432331392_196MJzosyYAX.jpg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-09-06",
+     "agg": {
+      "player_id": 17153446,
+      "name": "Pranav Pathe",
+      "appearances": 6,
+      "batting": {
+       "inns": 5,
+       "runs": 98,
+       "balls": 64,
+       "outs": 4,
+       "hs": 64,
+       "avg": 24.5,
+       "sr": 153.1,
+       "fours": 13,
+       "sixes": 1,
+       "positions": [
+        7,
+        7,
+        5,
+        9,
+        3
+       ],
+       "usual_pos": 7,
+       "pos_bucket": "middle",
+       "opened": 0,
+       "recent": [
+        "64*(38)",
+        "0(2)",
+        "2(2)",
+        "31(19)",
+        "1(3)"
+       ]
+      },
+      "bowling": {
+       "inns": 3,
+       "balls": 28,
+       "runs": 34,
+       "wkts": 2,
+       "maidens": 0,
+       "econ": 7.29,
+       "avg": 17,
+       "best": "2/17",
+       "recent": [
+        "0/11 (1)",
+        "2/17 (2.4)",
+        "0/6 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.5
+     },
+     "availability": "maybe"
+    },
+    {
+     "player_id": 832843,
+     "name": "Rupesh",
+     "photo": "https://media.cricheroes.in/user_profile/1749366864728_PTbb7qA4ftkZ.jpeg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 832843,
+      "name": "Rupesh",
+      "appearances": 17,
+      "batting": {
+       "inns": 11,
+       "runs": 59,
+       "balls": 89,
+       "outs": 9,
+       "hs": 15,
+       "avg": 6.56,
+       "sr": 66.3,
+       "fours": 8,
+       "sixes": 0,
+       "positions": [
+        9,
+        8,
+        10,
+        7,
+        10,
+        9,
+        5,
+        10,
+        10,
+        7,
+        7
+       ],
+       "usual_pos": 9,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "4(4)",
+        "5*(5)",
+        "7(11)",
+        "4(5)",
+        "0(1)"
+       ]
+      },
+      "bowling": {
+       "inns": 11,
+       "balls": 235,
+       "runs": 318,
+       "wkts": 9,
+       "maidens": 1,
+       "econ": 8.12,
+       "avg": 35.33,
+       "best": "5/8",
+       "recent": [
+        "0/27 (1.3)",
+        "2/34 (4)",
+        "0/22 (4)",
+        "0/8 (1.5)",
+        "1/15 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.65
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 33835174,
+     "name": "Sanket Mokashi",
+     "photo": "https://media.cricheroes.in/user_profile/1737692532056_Nd3PQTvS88mu.jpeg",
+     "hand": "LHB",
+     "skill_hint": null,
+     "role": "batter",
+     "confidence": "high",
+     "can_keep": true,
+     "part_time_bowler": true,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-20",
+     "agg": {
+      "player_id": 33835174,
+      "name": "Sanket Mokashi",
+      "appearances": 12,
+      "batting": {
+       "inns": 12,
+       "runs": 557,
+       "balls": 367,
+       "outs": 12,
+       "hs": 101,
+       "avg": 46.42,
+       "sr": 151.8,
+       "fours": 78,
+       "sixes": 15,
+       "positions": [
+        4,
+        1,
+        4,
+        8,
+        3,
+        1,
+        1,
+        3,
+        3,
+        4,
+        3,
+        3
+       ],
+       "usual_pos": 3,
+       "pos_bucket": "top",
+       "opened": 3,
+       "recent": [
+        "27(21)",
+        "36(28)",
+        "65(37)",
+        "30(18)",
+        "87(58)"
+       ]
+      },
+      "bowling": {
+       "inns": 1,
+       "balls": 6,
+       "runs": 23,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": 23,
+       "avg": null,
+       "best": "0/23",
+       "recent": [
+        "0/23 (1)"
+       ]
+      },
+      "kept": 3,
+      "bowl_rate": 0.08
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 1400774,
+     "name": "Shiv Singh",
+     "photo": "https://media.cricheroes.in/user_profile/1734786218589_LCFx2rLKCu5Q.jpeg",
+     "hand": "RHB",
+     "skill_hint": null,
+     "role": "bowler",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 1400774,
+      "name": "Shiv Singh",
+      "appearances": 14,
+      "batting": {
+       "inns": 4,
+       "runs": 26,
+       "balls": 32,
+       "outs": 3,
+       "hs": 9,
+       "avg": 8.67,
+       "sr": 81.3,
+       "fours": 5,
+       "sixes": 0,
+       "positions": [
+        11,
+        11,
+        7,
+        11
+       ],
+       "usual_pos": 11,
+       "pos_bucket": "lower",
+       "opened": 0,
+       "recent": [
+        "9(5)",
+        "9*(17)",
+        "6(5)",
+        "2(5)"
+       ]
+      },
+      "bowling": {
+       "inns": 14,
+       "balls": 352,
+       "runs": 385,
+       "wkts": 13,
+       "maidens": 1,
+       "econ": 6.56,
+       "avg": 29.62,
+       "best": "3/57",
+       "recent": [
+        "0/18 (4)",
+        "0/23 (2)",
+        "1/39 (4)",
+        "3/57 (6)",
+        "1/33 (5)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 1
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 2027864,
+     "name": "Sumedh Pophali",
+     "photo": "https://media.cricheroes.in/user_profile/1684667364714_lKvWHZ4Oz8yl.jpg",
+     "hand": "RHB",
+     "skill_hint": "ALL",
+     "role": "all-rounder",
+     "confidence": "high",
+     "can_keep": false,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 2027864,
+      "name": "Sumedh Pophali",
+      "appearances": 11,
+      "batting": {
+       "inns": 8,
+       "runs": 94,
+       "balls": 102,
+       "outs": 6,
+       "hs": 26,
+       "avg": 15.67,
+       "sr": 92.2,
+       "fours": 12,
+       "sixes": 0,
+       "positions": [
+        7,
+        6,
+        6,
+        5,
+        6,
+        1,
+        5,
+        5
+       ],
+       "usual_pos": 5.5,
+       "pos_bucket": "middle",
+       "opened": 1,
+       "recent": [
+        "15*(15)",
+        "9(11)",
+        "26(27)",
+        "11*(15)",
+        "8(10)"
+       ]
+      },
+      "bowling": {
+       "inns": 8,
+       "balls": 186,
+       "runs": 180,
+       "wkts": 9,
+       "maidens": 0,
+       "econ": 5.81,
+       "avg": 20,
+       "best": "3/29",
+       "recent": [
+        "1/17 (1)",
+        "0/24 (4)",
+        "3/29 (6)",
+        "1/20 (6)",
+        "0/15 (1)"
+       ]
+      },
+      "kept": 0,
+      "bowl_rate": 0.73
+     },
+     "availability": "yes"
+    },
+    {
+     "player_id": 23500230,
+     "name": "Vinit Dhoke",
+     "photo": "https://media.cricheroes.in/user_profile/1774096909675_7FjTJNICGmzI.jpg",
+     "hand": "RHB",
+     "skill_hint": "BAT",
+     "role": "wicket-keeper",
+     "confidence": "high",
+     "can_keep": true,
+     "part_time_bowler": false,
+     "in_roster": true,
+     "override": "auto",
+     "last_played": "2026-10-24",
+     "agg": {
+      "player_id": 23500230,
+      "name": "Vinit Dhoke",
+      "appearances": 13,
+      "batting": {
+       "inns": 13,
+       "runs": 174,
+       "balls": 171,
+       "outs": 12,
+       "hs": 32,
+       "avg": 14.5,
+       "sr": 101.8,
+       "fours": 26,
+       "sixes": 4,
+       "positions": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1
+       ],
+       "usual_pos": 1,
+       "pos_bucket": "top",
+       "opened": 13,
+       "recent": [
+        "12(18)",
+        "1(9)",
+        "32*(32)",
+        "0(2)",
+        "5(3)"
+       ]
+      },
+      "bowling": {
+       "inns": 0,
+       "balls": 0,
+       "runs": 0,
+       "wkts": 0,
+       "maidens": 0,
+       "econ": null,
+       "avg": null,
+       "best": null,
+       "recent": []
+      },
+      "kept": 10,
+      "bowl_rate": 0
+     },
+     "availability": "yes"
+    }
+   ],
+   "unavailable": [
+    {
+     "player_id": 5934444,
+     "name": "Diwanshu",
+     "role": "bowler"
+    },
+    {
+     "player_id": 15774946,
+     "name": "Sitesh K",
+     "role": "bowler"
+    }
+   ],
+   "gaps": {
+    "yes": 11,
+    "maybe": 2,
+    "no": 2,
+    "counts": {
+     "batters": 2,
+     "bowlers": 3,
+     "allrounders": 5,
+     "keepers": 2
+    },
+    "bowling_options": 8,
+    "overs": 30,
+    "max_overs_per_bowler": 6,
+    "issues": []
+   },
+   "availability_known": true
+  },
+  "ai": {
+   "headline": "Bat first, keep wickets for the finish, and attack Vishesh Reddy with our strongest bowling.",
+   "opposition": {
+    "summary": "INDIRA BRIGADE have 19 wins and 12 losses from 35 matches, with a listed win rate of 61.3%. Their last5 includes wins against Dev-Sena, Warriors Cricket Club and Trappers 11, an 8-run loss to RAPTORS XI and a walkover loss. They chased our 209/7 with 213/4, winning by 6 wickets.",
+    "likely_approach": "They should favour batting first: their aggregates show avg_bat_first 251 and 2 wins, against avg_chasing 219 and 1 win. Vishesh Reddy provides early pace at SR 196.9, with Chiraag Raj and Harshith Babu keeping the scoring moving through the middle.",
+    "key_threats": [
+     {
+      "player_id": 5439434,
+      "name": "Vishesh Reddy",
+      "role": "Opening batter",
+      "why": "319 runs in 3 innings at SR 196.9; recent 121(54), 79(33) and 119(75) make early wickets vital."
+     },
+     {
+      "player_id": 46503638,
+      "name": "Chiraag Raj",
+      "role": "Captain and all-rounder",
+      "why": "SR 181.3 and 80*(37) threaten the middle overs; 6 wickets at econ 6.25 also make him their key control bowler."
+     },
+     {
+      "player_id": 1025963,
+      "name": "Harshith Babu",
+      "role": "Wicket-keeper and middle-order batter",
+      "why": "112 runs at SR 155.6, including 35*(24), give them a reliable source of runs after early wickets."
+     },
+     {
+      "player_id": 2657818,
+      "name": "Mann Bhati",
+      "role": "Opening batter",
+      "why": "111(72) at SR 154.2 shows opening danger, though the sample is thin at 1 appearance."
+     },
+     {
+      "player_id": 2680006,
+      "name": "PRATHEEK S DAVEY",
+      "role": "Bowler",
+      "why": "7 wickets across 4 spells make him a wicket threat, although econ 8 gives us scoring chances."
+     },
+     {
+      "player_id": 2653195,
+      "name": "Poorna",
+      "role": "Bowler",
+      "why": "6 wickets across 3 spells include 4/40; attack loose balls without ignoring his wicket threat."
+     }
+    ],
+    "weaknesses": [
+     "Target loose balls from Poorna at econ 9.56 and Navneet Mishra at econ 8.33; avoid forcing shots against Chiraag Raj at econ 6.25.",
+     "Build dots against Adithya K. S, whose recent scores are 3(5), 14(11) and 1(2), and keep catching pressure when he arrives.",
+     "If Rahul Gowda plays, deny easy singles early; his 18(33) and SR 54.5 suggest a chance to slow the innings, but the sample is thin.",
+     "Keep attacking after the top order: PRATHEEK S DAVEY has 2 batting runs and P K Sri Chakri has 0 in their listed samples."
+    ]
+   },
+   "best_xii": [
+    {
+     "player_id": 23500230,
+     "name": "Vinit Dhoke",
+     "role": "wicket-keeper",
+     "is_twelfth": false,
+     "why": "Confirmed keeper and opener; opened 13 times, with 32*(32) showing he can stay through the opening spell."
+    },
+    {
+     "player_id": 595338,
+     "name": "Arun Garg",
+     "role": "batter",
+     "is_twelfth": false,
+     "why": "Confirmed top-order batter with 7 openings and recent 31(34) and 21(14)."
+    },
+    {
+     "player_id": 33835174,
+     "name": "Sanket Mokashi",
+     "role": "batter",
+     "is_twelfth": false,
+     "why": "557 runs at avg 46.42 and SR 151.8 make him the batting centre; he also provides keeper cover."
+    },
+    {
+     "player_id": 49480092,
+     "name": "Chinmay Karnad",
+     "role": "all-rounder",
+     "is_twelfth": false,
+     "why": "Avg 35.8 and recent 74*(67) support the middle order; 4 wickets at econ 6.92 offer bowling cover."
+    },
+    {
+     "player_id": 18832522,
+     "name": "Balaji Reddy",
+     "role": "all-rounder",
+     "is_twelfth": false,
+     "why": "11 wickets and recent 4/36 offer breakthroughs; 57(41) shows useful middle-order batting despite recent low scores."
+    },
+    {
+     "player_id": 21486313,
+     "name": "Piyush Singh",
+     "role": "all-rounder",
+     "is_twelfth": false,
+     "why": "23 wickets at econ 6.64 lead the attack; batting SR 163.4 supplies finishing power."
+    },
+    {
+     "player_id": 2027864,
+     "name": "Sumedh Pophali",
+     "role": "all-rounder",
+     "is_twelfth": false,
+     "why": "9 wickets at econ 5.81 provide control, while recent 15*(15) adds lower-middle-order support."
+    },
+    {
+     "player_id": 315203,
+     "name": "Mandar Muppidwar",
+     "role": "all-rounder",
+     "is_twelfth": false,
+     "why": "10 wickets at econ 6.34 earn selection despite batting avg 8.71."
+    },
+    {
+     "player_id": 1219243,
+     "name": "Abhishek",
+     "role": "bowler",
+     "is_twelfth": false,
+     "why": "10 wickets at econ 6.63 across 9 spells strengthen the confirmed attack."
+    },
+    {
+     "player_id": 832843,
+     "name": "Rupesh",
+     "role": "bowler",
+     "is_twelfth": false,
+     "why": "Confirmed bowling cover with 9 wickets; econ 8.12 and recent 0/27 (1.3) favour a reserve bowling role."
+    },
+    {
+     "player_id": 1400774,
+     "name": "Shiv Singh",
+     "role": "bowler",
+     "is_twelfth": false,
+     "why": "13 wickets at econ 6.56 across 14 spells provide an experienced control option."
+    },
+    {
+     "player_id": 10313520,
+     "name": "Aryan AS",
+     "role": "bowler",
+     "is_twelfth": true,
+     "why": "First reserve if his maybe becomes yes: 8 wickets at econ 4.65 and recent 39*(36) offer strong cover."
+    }
+   ],
+   "batting_order": [
+    {
+     "position": 1,
+     "player_id": 23500230,
+     "name": "Vinit Dhoke",
+     "why": "Keep his usual_pos 1 after 13 openings; SR 101.8 and 32*(32) support a steady start."
+    },
+    {
+     "position": 2,
+     "player_id": 595338,
+     "name": "Arun Garg",
+     "why": "Use his usual_pos 2 and 7 openings, with recent 31(34) and 21(14) providing continuity."
+    },
+    {
+     "position": 3,
+     "player_id": 33835174,
+     "name": "Sanket Mokashi",
+     "why": "Keep usual_pos 3 so his SR 151.8 and recent 65(37) can lift the rate after the opening stand."
+    },
+    {
+     "position": 4,
+     "player_id": 49480092,
+     "name": "Chinmay Karnad",
+     "why": "Usual_pos 4, SR 114 and recent 74*(67) make him the best middle-order rebuilding option."
+    },
+    {
+     "position": 5,
+     "player_id": 18832522,
+     "name": "Balaji Reddy",
+     "why": "Move slightly below usual_pos 4 after 5(7) and 4(6), while retaining his 57(41) scoring potential."
+    },
+    {
+     "position": 6,
+     "player_id": 21486313,
+     "name": "Piyush Singh",
+     "why": "Keep usual_pos 6 for his SR 163.4 and finishing evidence of 38(19) and 40(20)."
+    },
+    {
+     "position": 7,
+     "player_id": 2027864,
+     "name": "Sumedh Pophali",
+     "why": "Place below usual_pos 5.5 to support the finish, using SR 92.2 and recent 15*(15) to keep the strike moving."
+    },
+    {
+     "position": 8,
+     "player_id": 315203,
+     "name": "Mandar Muppidwar",
+     "why": "Drop below usual_pos 6 because SR 72.6 and recent 1(5), 3(10) and 1(3) favour a supporting role."
+    },
+    {
+     "position": 9,
+     "player_id": 1219243,
+     "name": "Abhishek",
+     "why": "Retain usual_pos 9 in the lower order, with SR 68.8 and recent 3*(2) offering brief support."
+    },
+    {
+     "position": 10,
+     "player_id": 832843,
+     "name": "Rupesh",
+     "why": "Bat below his usual_pos 9 with SR 66.3 and recent 4(4) and 5*(5), aiming to give the set batter strike."
+    },
+    {
+     "position": 11,
+     "player_id": 1400774,
+     "name": "Shiv Singh",
+     "why": "Keep usual_pos 11 because his batting sample is thin at 4 innings, despite SR 81.3 and recent 9(5)."
+    }
+   ],
+   "bowling_plan": {
+    "overs_total": 30,
+    "bowlers": [
+     {
+      "player_id": 21486313,
+      "name": "Piyush Singh",
+      "overs": 6,
+      "phases": [
+       "powerplay",
+       "death"
+      ],
+      "why": "23 wickets at econ 6.64 make him the first attack on Vishesh Reddy and the main closing option against Chiraag Raj."
+     },
+     {
+      "player_id": 2027864,
+      "name": "Sumedh Pophali",
+      "overs": 6,
+      "phases": [
+       "powerplay",
+       "middle"
+      ],
+      "why": "9 wickets at econ 5.81 offer control against Vishesh Reddy's SR 196.9 and pressure on Adithya K. S."
+     },
+     {
+      "player_id": 315203,
+      "name": "Mandar Muppidwar",
+      "overs": 6,
+      "phases": [
+       "middle",
+       "death"
+      ],
+      "why": "10 wickets at econ 6.34 support an attacking middle spell against Chiraag Raj and Harshith Babu."
+     },
+     {
+      "player_id": 1219243,
+      "name": "Abhishek",
+      "overs": 4,
+      "phases": [
+       "powerplay",
+       "middle"
+      ],
+      "why": "10 wickets at econ 6.63 and recent 0/25 (6) support a tight spell to deny Vishesh Reddy easy width."
+     },
+     {
+      "player_id": 1400774,
+      "name": "Shiv Singh",
+      "overs": 4,
+      "phases": [
+       "middle"
+      ],
+      "why": "13 wickets at econ 6.56 make him a control option against Harshith Babu's SR 155.6."
+     },
+     {
+      "player_id": 18832522,
+      "name": "Balaji Reddy",
+      "overs": 4,
+      "phases": [
+       "middle",
+       "death"
+      ],
+      "why": "11 wickets and recent 4/36 offer breakthroughs against Chiraag Raj, but econ 7.86 calls for short spells."
+     }
+    ],
+    "notes": "Use the competition's actual powerplay restrictions; they are not supplied. Bowl a tight line to Vishesh Reddy and avoid easy width. Keep catching pressure for new batters. Save Piyush Singh for the finish. Phase assignments are tactical: phase-specific figures and bowling styles are missing. Chinmay Karnad and Rupesh can replace allocated overs if needed, keeping the total at 30 and each bowler within 6. Aryan AS is outside the bowling plan."
+   },
+   "squad_gaps": {
+    "summary": "The gap check lists no issues. All 11 confirmed players start, with keeper cover from Vinit Dhoke and Sanket Mokashi. There are 8 listed bowling options. Aryan AS is the first reserve but remains maybe. Diwanshu and Sitesh K are unavailable and excluded.",
+    "needs": [
+     "Confirm Aryan AS before relying on him as first reserve.",
+     "Confirm the competition's powerplay restrictions and inspect the pitch and boundaries before play."
+    ],
+    "risks": [
+     "With exactly 11 yes players, any withdrawal makes a maybe player necessary to field the side.",
+     "Neither Aryan AS nor Pranav Pathe is needed for the current eleven; reserve availability remains uncertain.",
+     "The lower order is vulnerable: Mandar Muppidwar has batting avg 8.71, Abhishek 8.8, Rupesh 6.56 and Shiv Singh 8.67.",
+     "Bowling styles and phase-specific records are missing, so matchup and death-over roles need on-field adjustment."
+    ]
+   },
+   "ground_pitch": {
+    "summary": "Across 5 ground matches, batting first produced 4 wins and chasing 1. The first-innings average is 223 against 181 in the second innings. Dev-Sena's ground record is 3 played, 2 won and 1 lost. Pitch type and boundary sizes are missing, so there is no evidence for a surface or boundary advantage.",
+    "par_score": 223,
+    "bat_first_or_chase": "bat",
+    "why": "Bat first: 4 ground wins versus 1 chase win, with avg_first_inns 223; pitch type and boundary sizes are unknown."
+   },
+   "toss_call": "Win the toss and bat. Use 223 as the ground benchmark, while recognising INDIRA BRIGADE chased our 209/7 and average 251 batting first.",
+   "confidence": "medium"
+  },
+  "finished_at": "2026-10-25T18:51:13.000Z",
+  "model": "gpt-6-astra"
+ },
+ "stale": false
+}

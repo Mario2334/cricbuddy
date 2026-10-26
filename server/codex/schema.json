@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GamePlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["headline", "opposition", "best_xii", "batting_order", "bowling_plan", "squad_gaps", "ground_pitch", "toss_call", "confidence"],
+  "properties": {
+    "headline": { "type": "string" },
+    "opposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "likely_approach", "key_threats", "weaknesses"],
+      "properties": {
+        "summary": { "type": "string" },
+        "likely_approach": { "type": "string" },
+        "key_threats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["player_id", "name", "role", "why"],
+            "properties": {
+              "player_id": { "type": ["integer", "null"] },
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "why": { "type": "string" }
+            }
+          }
+        },
+        "weaknesses": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "best_xii": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["player_id", "name", "role", "is_twelfth", "why"],
+        "properties": {
+          "player_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["batter", "bowler", "all-rounder", "wicket-keeper"] },
+          "is_twelfth": { "type": "boolean" },
+          "why": { "type": "string" }
+        }
+      }
+    },
+    "batting_order": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["position", "player_id", "name", "why"],
+        "properties": {
+          "position": { "type": "integer" },
+          "player_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "why": { "type": "string" }
+        }
+      }
+    },
+    "bowling_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overs_total", "bowlers", "notes"],
+      "properties": {
+        "overs_total": { "type": "integer" },
+        "bowlers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["player_id", "name", "overs", "phases", "why"],
+            "properties": {
+              "player_id": { "type": "integer" },
+              "name": { "type": "string" },
+              "overs": { "type": "integer" },
+              "phases": { "type": "array", "items": { "type": "string", "enum": ["powerplay", "middle", "death"] } },
+              "why": { "type": "string" }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "squad_gaps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "needs", "risks"],
+      "properties": {
+        "summary": { "type": "string" },
+        "needs": { "type": "array", "items": { "type": "string" } },
+        "risks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ground_pitch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "par_score", "bat_first_or_chase", "why"],
+      "properties": {
+        "summary": { "type": "string" },
+        "par_score": { "type": ["integer", "null"] },
+        "bat_first_or_chase": { "type": "string", "enum": ["bat", "chase", "either"] },
+        "why": { "type": "string" }
+      }
+    },
+    "toss_call": { "type": "string" },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] }
+  }
+}

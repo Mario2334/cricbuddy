@@ -4,11 +4,18 @@
     "strict": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["jest", "react-native"],
+    "types": [
+      "jest",
+      "react-native"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "phosphor-react-native/src/icons/*": ["node_modules/phosphor-react-native/lib/typescript/icons/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "phosphor-react-native/src/icons/*": [
+        "node_modules/phosphor-react-native/lib/typescript/icons/*"
+      ]
     }
   },
   "include": [
@@ -16,5 +23,9 @@
     "**/*.tsx",
     "src/**/*",
     "App.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "server"
   ]
 }

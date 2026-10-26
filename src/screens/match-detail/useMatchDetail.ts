@@ -18,6 +18,7 @@ import { toDate } from '../../utils/dates';
 import { getRememberedMatch } from '../../utils/matchRegistry';
 import { buildCricHeroesMatchUrl } from '../../utils/matchLinks';
 import { copyMatchLink as copyLinkToClipboard } from '../../utils/copyMatchLink';
+import { resolveTeamIds } from '../../features/match-analytics/utils/teamIds';
 import { detectMatchStatus } from './matchStatus';
 import {
   extractPlayersFromScorecard as extractPlayers,
@@ -28,6 +29,7 @@ import {
   BALL_JERSEY_OPTIONS,
   TARGET_TEAM_ID,
   type Innings,
+  type MainTabKey,
   type MainTabRoute,
   type ScorecardData,
   type ScorecardRoute,
@@ -36,6 +38,11 @@ import {
 /** Live scorecards poll this often while on show. */
 const LIVE_REFRESH_MS = 30_000;
 const NO_ROUTES: ScorecardRoute[] = [];
+const BASE_TAB_ROUTES: MainTabRoute[] = [
+  { key: 'info', title: 'Info' },
+  { key: 'scorecard', title: 'Scorecard' },
+];
+const GAME_PLAN_ROUTE: MainTabRoute = { key: 'gameplan', title: 'Game plan' };
 
 // Helper function to check if either team in the match is team 5179117
 const isTeam5179117InMatch = (match: any) => {
@@ -83,14 +90,10 @@ export function useMatchDetail(params: MatchDetailParams) {
   const [groundLoading, setGroundLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [mainTabIndex, setMainTabIndex] = useState<number>(
-    defaultTab === 'scorecard' ? 1 : 0
-  );
+  // CHANGED: the main tab is keyed, so the Game plan tab can appear for an
+  // upcoming Dev-Sena match without shifting the other tabs' indexes.
+  const [mainTabKey, setMainTabKey] = useState<MainTabKey>(defaultTab ?? 'info');
   const [scorecardTabIndex, setScorecardTabIndex] = useState<number>(0);
-  const [mainTabRoutes] = useState<MainTabRoute[]>([
-    { key: 'info', title: 'Info' },
-    { key: 'scorecard', title: 'Scorecard' }
-  ]);
   const [showGroundDropdown, setShowGroundDropdown] = useState<boolean>(false);
   const [selectedGroundForWhatsApp, setSelectedGroundForWhatsApp] = useState<Ground | null>(null);
   const [availableGrounds, setAvailableGrounds] = useState<Ground[]>([]);
@@ -135,6 +138,16 @@ export function useMatchDetail(params: MatchDetailParams) {
     [scorecard, remembered, matchData, matchStartTime],
   );
 
+  // The Game plan tab exists only for an upcoming Dev-Sena match.
+  const showGamePlan = isTeam5179117Match && matchStatus === 'upcoming';
+  const mainTabRoutes = useMemo<MainTabRoute[]>(() => (showGamePlan ? [...BASE_TAB_ROUTES, GAME_PLAN_ROUTE] : BASE_TAB_ROUTES), [showGamePlan]);
+  const mainTabIndex = Math.max(0, mainTabRoutes.findIndex(r => r.key === mainTabKey));
+  const setMainTabIndex = useStableCallback((index: number) => {
+    const key = mainTabRoutes[index]?.key;
+    if (key) setMainTabKey(key);
+  });
+  const teamIds = useMemo(() => resolveTeamIds(matchData, scorecard), [matchData, scorecard]);
+
   // CHANGED: routes are derived (no effect + extra render, no empty-routes frame).
   const scorecardRoutes = useMemo<ScorecardRoute[]>(() => {
     const inningsArr = scorecard?.pageProps?.scorecard;
@@ -157,7 +170,7 @@ export function useMatchDetail(params: MatchDetailParams) {
   // CHANGED: live auto-refresh runs only while the match is live, the scorecard
   // tab is showing, the screen is focused and the app is in the foreground, and
   // catches up at once when coming back. Refreshes are silent.
-  const autoRefreshing = matchStatus === 'live' && mainTabIndex === 1;
+  const autoRefreshing = matchStatus === 'live' && mainTabKey === 'scorecard';
   const refreshTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastFetchAt = useRef(0);
   useScreenActivity(active => {
@@ -644,8 +657,10 @@ export function useMatchDetail(params: MatchDetailParams) {
     refreshing,
     error,
     mainTabIndex,
+    mainTabKey,
     scorecardTabIndex,
     mainTabRoutes,
+    teamIds,
     scorecardRoutes,
     matchStatus,
     autoRefreshing,

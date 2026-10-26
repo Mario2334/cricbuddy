@@ -1,0 +1,23 @@
+[Unit]
+Description=CricBuddy game-plan API (CricHeroes facts, Grist storage, Codex analysis)
+After=network-online.target docker.service tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/apps/cricbuddy-api
+EnvironmentFile=/root/apps/cricbuddy-api/.env
+Environment=HOME=/root
+Environment=PATH=/root/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+ExecStart=__NODE__ /root/apps/cricbuddy-api/dist/index.js
+Restart=always
+RestartSec=5
+Nice=10
+# The box has 4 GB with little to spare; Codex runs as our child, so this covers both.
+MemoryHigh=900M
+MemoryMax=1200M
+OOMScoreAdjust=500
+
+[Install]
+WantedBy=multi-user.target
