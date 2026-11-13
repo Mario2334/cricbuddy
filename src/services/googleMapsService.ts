@@ -1,4 +1,4 @@
-import Constants from 'expo-constants';
+import { CRICBUDDY_API_URL } from '../config/server';
 
 export interface GoogleMapsPlace {
   place_id: string;
@@ -20,18 +20,17 @@ export interface GoogleMapsSearchResponse {
 
 class GoogleMapsService {
   private apiKey: string;
-  private baseUrl = 'https://maps.googleapis.com/maps/api/place';
+  private baseUrl = CRICBUDDY_API_URL + '/api/places';
 
   constructor() {
     // Get Google Maps API key from app configuration
-    this.apiKey = Constants.expoConfig?.extra?.googleMapsApiKey || 
-                  'AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo'; // Fallback to the key from app.json
+    this.apiKey = '';
   }
 
   async searchPlaces(query: string): Promise<GoogleMapsPlace[]> {
     try {
       const encodedQuery = encodeURIComponent(query);
-      const url = `${this.baseUrl}/textsearch/json?query=${encodedQuery}&key=${this.apiKey}`;
+      const url = `${this.baseUrl}/search?query=${encodedQuery}`;
 
       const response = await fetch(url);
       const data: GoogleMapsSearchResponse = await response.json();

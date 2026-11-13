@@ -1,5 +1,6 @@
+import { Alert } from '../platform/dialog';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import {
   createMaterialTopTabNavigator,
   type MaterialTopTabBarProps,

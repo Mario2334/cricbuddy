@@ -1,5 +1,7 @@
+import { Share } from '../../../platform/share';
+import { Alert } from '../../../platform/dialog';
 import React from 'react';
-import { View, StyleSheet, ScrollView, Linking, Alert, Share } from 'react-native';
+import { View, StyleSheet, ScrollView, Linking, } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 import { RecruitmentPost } from '../types';

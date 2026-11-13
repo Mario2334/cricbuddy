@@ -1,7 +1,9 @@
+import { Alert } from '../platform/dialog';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { useScreenActivity } from '../hooks/useScreenActivity';
 import { useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { calendarRepository } from '../services/calendarRepository';
 import Toast from 'react-native-toast-message';
 
 import MatchCalendar from '../components/MatchCalendar';
@@ -40,7 +42,7 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
 
   const loadScheduledMatches = useCallback(async () => {
     try {
-      const matchesData = await AsyncStorage.getItem('scheduledMatches');
+      const matchesData = JSON.stringify(await calendarRepository.list());
       // Focus reloads that find the same list keep the current Match objects (no re-render).
       if (matchesData === lastStored.current) return;
       lastStored.current = matchesData;
@@ -71,6 +73,8 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
     }, [loadScheduledMatches]),
   );
 
+  useScreenActivity(active => { if (active) void loadScheduledMatches(); });
+
   // Home's "Add a match" lands here with a day to pre-select.
   const openAddFor = route.params?.openAddFor;
   useEffect(() => {
@@ -82,11 +86,11 @@ const CalendarScreen: React.FC<CalendarScreenNavigationProp> = ({ navigation, ro
 
   const removeFromSchedule = useCallback(async (matchId: string) => {
     try {
-      const stored = await AsyncStorage.getItem('scheduledMatches');
+      const stored = JSON.stringify(await calendarRepository.list());
       if (stored) {
         const parsedMatches: ScheduledMatch[] = JSON.parse(stored).filter((m: ScheduledMatch) => m.matchId !== matchId);
         const next = JSON.stringify(parsedMatches);
-        await AsyncStorage.setItem('scheduledMatches', next);
+        await calendarRepository.remove(matchId);
         lastStored.current = next;
         setMatches(sortByStartTime(parsedMatches).map(convertScheduledMatchToMatch));
         Toast.show({

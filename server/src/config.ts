@@ -42,8 +42,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, root: string = 
   if (!docId && env.CRICBUDDY_ALLOW_NO_DOC !== '1') {
     throw new Error('GRIST_DOC_ID is required: run `npm run setup:grist` once and put the printed id in .env');
   }
-  const cacheDir = str(env.CACHE_DIR, path.join(root, 'cache'));
-  const workDir = str(env.WORK_DIR, path.join(root, 'work'));
+  // Versioned releases share runtime data at the service's stable application root.
+  const runtimeRoot = str(env.RUNTIME_ROOT, root);
+  const cacheDir = str(env.CACHE_DIR, path.join(runtimeRoot, 'cache'));
+  const workDir = str(env.WORK_DIR, path.join(runtimeRoot, 'work'));
   return {
     port: num(env.PORT, 8787),
     host: str(env.HOST, '127.0.0.1'),
@@ -67,14 +69,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, root: string = 
     ourWindow: num(env.OUR_WINDOW, 10),
     oppWindow: num(env.OPP_WINDOW, 5),
     groundWindow: num(env.GROUND_WINDOW, 5),
-    cacheDir: path.resolve(root, cacheDir),
-    workDir: path.resolve(root, workDir),
+    cacheDir: path.resolve(runtimeRoot, cacheDir),
+    workDir: path.resolve(runtimeRoot, workDir),
     codexDir: path.join(root, 'codex'),
     cricheroes: {
-      // The same public web-client credentials the app ships with (src/services/apiService.ts).
-      apiKey: str(env.CH_API_KEY, 'cr!CkH3r0s'),
-      authorization: str(env.CH_AUTHORIZATION, '167a0e60-4ecf-11f0-9aaf-65c0aaccdb8b'),
-      udid: str(env.CH_UDID, 'b06d1d63f90cf3493b39e534c59b6935'),
+      // Provider credentials stay in the server environment.
+      apiKey: str(env.CH_API_KEY, ''),
+      authorization: str(env.CH_AUTHORIZATION, ''),
+      udid: str(env.CH_UDID, ''),
     },
     version: str(env.npm_package_version, '0.1.0'),
   };

@@ -2,10 +2,10 @@
 // MatchDetailScreen (dependency arrays and quirks included). Intentional
 // changes are marked "CHANGED:".
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from '../../platform/dialog';
+import { calendarRepository } from '../../services/calendarRepository';
 import Toast from 'react-native-toast-message';
-import Clipboard from '@react-native-clipboard/clipboard';
+import Clipboard from '../../platform/clipboard';
 import type { Ground } from '../../types/Ground';
 import type { Match } from '../../types/Match';
 import type { RootStackParamList } from '../../types/navigation';
@@ -77,12 +77,17 @@ function shareUnchangedInnings(prev: ScorecardData | null, next: ScorecardData):
 export type MatchDetailParams = RootStackParamList['MatchDetail'];
 
 export function useMatchDetail(params: MatchDetailParams) {
-  const { matchId, tournamentName, teamNames, groundName, groundId, city, matchStartTime, defaultTab } = params;
+  const { matchId, tournamentName: routeTournamentName, teamNames: routeTeamNames, groundName: routeGroundName, groundId: routeGroundId, city: routeCity, matchStartTime, defaultTab } = params;
   const confetti = useConfetti();
   // CHANGED: a match opened from a list card renders at once from what the card had.
   const remembered = getRememberedMatch(matchId);
   const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
   const [matchData, setMatchData] = useState<Match | null>(remembered ?? null);
+  const tournamentName = routeTournamentName || matchData?.tournament_name || '';
+  const groundName = routeGroundName || matchData?.ground_name;
+  const groundId = routeGroundId || matchData?.ground_id || scorecard?.pageProps?.matchData?.ground_id;
+  const city = routeCity || matchData?.city_name;
+  const teamNames = routeTeamNames ?? {team1: matchData?.team_a || '', team2: matchData?.team_b || ''};
   const [groundData, setGroundData] = useState<Ground | null>(null);
   // `loading` is the first load only; `updating` is a silent (live/pull) refresh.
   const [loading, setLoading] = useState<boolean>(true);
@@ -118,11 +123,10 @@ export function useMatchDetail(params: MatchDetailParams) {
   useEffect(() => {
     fetchMatchData();
     fetchScorecard();
-    if (groundId) {
-      fetchGroundDetail();
-    }
     checkIfMatchIsScheduled();
   }, []);
+
+  useEffect(() => { if (groundId) void fetchGroundDetail(); }, [groundId]);
 
   // CHANGED: status is derived from the scorecard (API status first, then the
   // result, then the innings with a 12h recency guard) instead of an innings
@@ -296,6 +300,10 @@ export function useMatchDetail(params: MatchDetailParams) {
     setMatchData(prev => {
       if (!prev) return prev;
       const patch: Partial<Match> = {};
+      const raw = scorecard?.pageProps?.matchData as any;
+      if (!prev.team_a && raw?.team_a?.name) patch.team_a = raw.team_a.name;
+      if (!prev.team_b && raw?.team_b?.name) patch.team_b = raw.team_b.name;
+      if (!prev.tournament_name && info.tournamentName) patch.tournament_name = info.tournamentName;
       if (!prev.tournament_round_name && info.tournamentRound) patch.tournament_round_name = info.tournamentRound;
       if (!prev.ground_name && info.groundName) patch.ground_name = info.groundName;
       if (!prev.match_result && typeof info.matchResult === 'string' && info.matchResult) patch.match_result = info.matchResult;
@@ -396,10 +404,10 @@ export function useMatchDetail(params: MatchDetailParams) {
     searchGoogleMapsPlaces();
   };
 
-  const copyToWhatsAppWithSelectedPlace = () => {
+  const copyToWhatsAppWithSelectedPlace = async () => {
     try {
       const message = generateWhatsAppMessage();
-      Clipboard.setString(message);
+      await Clipboard.setString(message);
       setShowGoogleMapsModal(false);
       // CHANGED: success Alert became a playful toast + confetti.
       Toast.show({ type: 'success', text1: 'Copied! Paste it in WhatsApp', position: 'bottom' });
@@ -470,9 +478,9 @@ export function useMatchDetail(params: MatchDetailParams) {
     openPaymentDialog(fees);
   };
 
-  const copyPaymentMessageFromDialog = () => {
+  const copyPaymentMessageFromDialog = async () => {
     try {
-      Clipboard.setString(paymentMessage);
+      await Clipboard.setString(paymentMessage);
       setShowPaymentDialog(false);
       Toast.show({
         type: 'success',
@@ -514,10 +522,12 @@ export function useMatchDetail(params: MatchDetailParams) {
   );
   const copyMatchLink = useStableCallback(() => copyLinkToClipboard(matchLink));
 
+  useScreenActivity(active => { if (active) void checkIfMatchIsScheduled(); });
+
   // Scheduling functions
   const checkIfMatchIsScheduled = async () => {
     try {
-      const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
+      const scheduledMatches = JSON.stringify(await calendarRepository.list());
       if (scheduledMatches) {
         const matches = JSON.parse(scheduledMatches);
         const isCurrentMatchScheduled = matches.some((match: any) => match.matchId === matchId);
@@ -545,7 +555,7 @@ export function useMatchDetail(params: MatchDetailParams) {
 
     setSchedulingLoading(true);
     try {
-      const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
+      const scheduledMatches = JSON.stringify(await calendarRepository.list());
       let matches = scheduledMatches ? JSON.parse(scheduledMatches) : [];
 
       const matchToSchedule: any = {
@@ -567,7 +577,7 @@ export function useMatchDetail(params: MatchDetailParams) {
       const alreadyScheduled = matches.some((match: any) => match.matchId === matchId);
       if (!alreadyScheduled) {
         matches.push(matchToSchedule);
-        await AsyncStorage.setItem('scheduledMatches', JSON.stringify(matches));
+        await calendarRepository.put(matchToSchedule);
         setIsScheduled(true);
         console.log('Match scheduled successfully');
 
@@ -607,13 +617,13 @@ export function useMatchDetail(params: MatchDetailParams) {
   const unscheduleMatch = async () => {
     setSchedulingLoading(true);
     try {
-      const scheduledMatches = await AsyncStorage.getItem('scheduledMatches');
+      const scheduledMatches = JSON.stringify(await calendarRepository.list());
       if (scheduledMatches) {
         let matches = JSON.parse(scheduledMatches);
 
         // Remove from local storage
         matches = matches.filter((match: any) => match.matchId !== matchId);
-        await AsyncStorage.setItem('scheduledMatches', JSON.stringify(matches));
+        await calendarRepository.remove(matchId);
         setIsScheduled(false);
 
         Toast.show({

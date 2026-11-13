@@ -63,7 +63,7 @@ describe('CricHeroes API Client', () => {
 
             // Verify URL structure
             expect(typeof url).toBe('string');
-            expect(url).toContain('https://cricheroes.in/api/v1/looking/get-looking-for-feed');
+            expect(url).toContain('https://veyden.tail2874a5.ts.net:8787/api/cricheroes/looking/get-looking-for-feed');
             expect(url).toContain('cityid=');
             expect(url).toContain('typeid=1');
 
@@ -79,20 +79,11 @@ describe('CricHeroes API Client', () => {
               expect(options.method).toBe('GET');
               expect(options.headers).toBeDefined();
 
-              // Verify required authentication headers
+              // Credentials belong to Veyden, never the client request.
               const headers = options.headers as Record<string, string>;
-              expect(headers['api-key']).toBe('cr!CkH3r0s');
-              expect(headers['Authorization']).toBe('d4f4dc30-4a88-11f0-939e-1b491f4b7e9e');
-              expect(headers['udid']).toBe('BFA05B08-7B26-548A-908F-3D09DB8D824E');
-              expect(headers['Accept']).toBe('application/json');
-              expect(headers['Content-Type']).toBe('application/json');
-              expect(headers['Host']).toBe('cricheroes.in');
-              expect(headers['User-Agent']).toContain('CricHeroes');
-
-              // Verify additional headers
-              expect(headers['is-white-label']).toBe('0');
-              expect(headers['app-environment']).toBe('debug');
-              expect(headers['device-type']).toBe('ios');
+              expect(headers['api-key']).toBeUndefined();
+              expect(headers['Authorization']).toBeUndefined();
+              expect(headers['udid']).toBeUndefined();
             }
 
             // Clear mock for next iteration
@@ -380,4 +371,10 @@ describe('CricHeroes API Client', () => {
       expect(transformed.createdAt).toBeInstanceOf(Date);
     });
   });
+});
+
+test('recruitment posts with omitted ground type still transform', () => {
+  const client = new CricHeroesApiClient();
+  const raw = {_id:'test',user_id:1,user_name:'Player',what_value:'Batsman',ball_type_id:[1],city_id:[1798],latitude:'0',longitude:'0'} as CricHeroesRecruitmentPost;
+  expect(() => client.transformToRecruitmentPost(raw)).not.toThrow();
 });

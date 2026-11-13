@@ -56,6 +56,7 @@ export class CricHeroesClient {
       accept: 'application/json, text/plain, */*',
       'api-key': c.apiKey,
       authorization: c.authorization,
+      ...(process.env.CH_COOKIE ? {cookie:process.env.CH_COOKIE} : {}),
       udid: c.udid,
       'device-type': 'Chrome: 137.0.0.0',
       origin: 'https://cricheroes.com',
@@ -80,7 +81,7 @@ export class CricHeroesClient {
       await this.throttle();
       let res: Response;
       try {
-        res = await this.fetchFn(`${this.baseUrl}${path}`, { headers: this.headers(), signal: AbortSignal.timeout(this.timeoutMs) });
+        res = await this.fetchFn(`${this.baseUrl}${path}`, { headers: this.headers(), signal: AbortSignal.timeout(this.timeoutMs), redirect: 'error' });
       } catch (e) {
         if (attempt++ >= this.retries) throw new CricHeroesError(0, `CricHeroes unreachable: ${(e as Error).message}`);
         await this.backoff(attempt, null);

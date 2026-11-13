@@ -1,3 +1,4 @@
+import { protectedFetch } from '../../../services/protectedFetch';
 /**
  * HTTP client for cricbuddy-api (server/ in this repo). The server is tailnet-only; Tailscale adds the
  * identity header on the way in, so the app sends none. GETs retry briefly, writes never do.
@@ -54,7 +55,7 @@ export class AnalyticsApiClient {
 
   constructor(deps: AnalyticsApiClientDeps = {}) {
     this.baseUrl = (deps.baseUrl ?? CRICBUDDY_API_URL).replace(/\/+$/, '');
-    this.fetchFn = deps.fetchFn ?? ((input, init) => fetch(input, init));
+    this.fetchFn = deps.fetchFn ?? ((input, init) => protectedFetch(input, init));
     this.timeoutMs = deps.timeoutMs ?? 15_000;
     this.retries = deps.retries ?? 2;
     this.retryDelayMs = deps.retryDelayMs ?? 600;

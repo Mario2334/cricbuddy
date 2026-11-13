@@ -32,9 +32,6 @@
         "LSApplicationQueriesSchemes": [
           "comgooglemaps"
         ]
-      },
-      "config": {
-        "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
       }
     },
     "android": {
@@ -43,9 +40,6 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "config": {
-        "googleMapsApiKey": "AIzaSyAd84lRshTbxQhXkjr9ocgh32BnyC1ucoo"
-      },
       "package": "com.sanket.django.cricbuddy",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -53,7 +47,9 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
     },
     "extra": {
       "eas": {

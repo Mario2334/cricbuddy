@@ -23,7 +23,7 @@ The contract lives in `src/types.ts`; the app keeps a verbatim copy in `src/feat
 ```
 cd server && npm ci
 npm test                       # builds, then node --test on dist/__tests__
-cp .env.example .env.local     # GRIST_URL=https://veyden.tail2874a5.ts.net:8484, ALLOWED_USERS=*, GRIST_DOC_ID=…
+cp .env.example .env.local     # GRIST_URL=https://veyden.tail2874a5.ts.net:8484, ALLOWED_USERS=*, DEV_AUTH=1, GRIST_DOC_ID=…
 npm run dev                    # http://localhost:8787 (Codex runs locally; or set CODEX_FAKE)
 npm run capture:fixtures       # refresh src/__tests__/fixtures from the live API
 ```
@@ -34,3 +34,5 @@ npm run capture:fixtures       # refresh src/__tests__/fixtures from the live AP
 3. `bash server/release.sh` (builds + tests here, ships `dist/`, installs `cricbuddy-api.service`, `tailscale serve --https=8787`).
 
 Later releases: `bash server/release.sh`. Logs: `journalctl -u cricbuddy-api -f`. If Codex says the login expired: `codex login` over ssh on veyden.
+
+PWA hosting, calendar migration, offline behavior, and the remaining device acceptance steps are documented in [PWA-ROLLOUT.md](PWA-ROLLOUT.md).

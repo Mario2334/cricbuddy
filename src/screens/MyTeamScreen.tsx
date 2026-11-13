@@ -1,5 +1,6 @@
+import { Alert } from '../platform/dialog';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { TabView, type SceneRendererProps, type NavigationState } from 'react-native-tab-view';
 import apiService from '../services/apiService';

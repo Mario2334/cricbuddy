@@ -12,7 +12,10 @@ export function tailnetUser(req: http.IncomingMessage): string | null {
 
 /** Allow only known logins. `['*']` turns the check off (local development). */
 export function requireTailnetUser(req: http.IncomingMessage, allowed: string[]): string | null {
-  if (allowed.includes('*')) return tailnetUser(req);
+  if (allowed.includes('*')) {
+    if (process.env.NODE_ENV === 'production' || process.env.DEV_AUTH !== '1') throw new HttpError(403, 'Development access disabled');
+    return tailnetUser(req) ?? 'local-development';
+  }
   const user = tailnetUser(req);
   if (!user) throw new HttpError(401, 'No tailnet identity on this request', 'no_identity');
   if (!allowed.includes(user)) throw new HttpError(403, `${user} is not allowed here`, 'forbidden');

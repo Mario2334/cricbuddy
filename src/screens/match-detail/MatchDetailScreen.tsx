@@ -59,7 +59,7 @@ export default function MatchDetailScreen({ route, navigation }: Props) {
   // CHANGED: only the very first load replaces the body; live/pull refreshes
   // keep the UI mounted and show a small spinning ball in the hero instead.
   const firstLoad = md.loading && !md.scorecard;
-  const goBack = useCallback(() => navigation.goBack(), [navigation]);
+  const goBack = useCallback(() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('HomeList'), [navigation]);
 
   // What the Game plan tab needs to know about this match (the server re-checks it against our fixtures).
   const gamePlanMatch = useMemo<GamePlanMatch>(() => {

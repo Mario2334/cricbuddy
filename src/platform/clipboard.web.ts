@@ -1,0 +1,1 @@
+export default { async setString(text: string) { try { await navigator.clipboard.writeText(text); } catch { window.prompt('Copy this text manually:', text); throw new Error('Clipboard unavailable'); } }, async getString() { try { return await navigator.clipboard.readText(); } catch { return window.prompt('Paste the match link here:') ?? ''; } } };

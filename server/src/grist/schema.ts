@@ -19,6 +19,7 @@ export const AVAILABILITY_CHOICES = ['yes', 'maybe', 'no', 'unknown'];
 export const JOB_CHOICES = ['queued', 'fetching', 'thinking', 'done', 'failed'];
 
 export const SCHEMA: Record<string, GristColumn[]> = {
+  ScheduledMatches: [col('user', 'User', 'Text'), col('match_id', 'Match id', 'Text'), col('payload', 'Match (JSON)', 'Text'), col('deleted', 'Deleted', 'Bool'), dt('updated_at', 'Updated')],
   [TABLES.Players]: [
     col('player_id', 'Player id', 'Int'),
     col('name', 'Name', 'Text'),

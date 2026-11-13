@@ -1,3 +1,5 @@
+import { CRICBUDDY_API_URL } from '../../../config/server';
+import { protectedFetch } from '../../../services/protectedFetch';
 /**
  * CricHeroes API Client for Looking For Feed
  * 
@@ -79,41 +81,14 @@ export class CricHeroesApiClient {
   private readonly cacheService: CacheService;
 
   constructor(cacheService?: CacheService) {
-    this.baseUrl = 'https://cricheroes.in/api/v1';
-    this.apiKey = 'cr!CkH3r0s';
-    this.authorization = 'd4f4dc30-4a88-11f0-939e-1b491f4b7e9e';
-    this.deviceId = 'BFA05B08-7B26-548A-908F-3D09DB8D824E';
+    this.baseUrl = CRICBUDDY_API_URL + '/api/cricheroes';
+    this.apiKey = '';
+    this.authorization = '';
+    this.deviceId = '';
     this.userAgent = 'CricHeroes/11.7.2 (com.cricheroes.cricheroes; build:359; iOS 26.2.0) Alamofire/5.3.0';
     this.cacheService = cacheService || defaultCacheService;
 
-    this.defaultHeaders = {
-      'Host': 'cricheroes.in',
-      'is-white-label': '0',
-      'BBDFE7305E21531F2F4BD0C321BEDC37': 'EB6BCD0923CBDE33B64EA29A09095D06',
-      '6f7da8dc0af66b4f815369934d1af9bf': 'C8EF6AB22D48B5B7AF7D05E0077F051BE7E8B8BD8B3F68A4E178D2007985ACC4955D512EE82CC2FAFAF72DE061D446B8',
-      '14BF8AC398576A807F214B286E6506EA': 'CD4712042F72C1B9CF94C30715D3D72F',
-      'User-Agent': this.userAgent,
-      '59C5E215222C10EA43A0D10D72F431AB': '4D31C6A435757C8122D89172D9E3BF57',
-      'app-environment': 'debug',
-      'ios-version': '26.2.0',
-      'udid': this.deviceId,
-      '4E559607BC7F82FE9746AA76C388E6A0': '2A5E586E08B686CACB295746A5488D14',
-      '9B1B3E6121CCB9BE642A921BD930EA9F': '062375E0A811ACDCAD9191BE418B9E74',
-      'Connection': 'keep-alive',
-      '069F4D735691EE67395EDE10ABE98533': '282F97FB5606B977D9DA326DEFFC67BF402384EC2CE21A5144F04349B50565F777215B492E59B59FA5E296DF092EAA42',
-      'app-mode': 'alpha',
-      '80D8DCE1C394894F2846D46D3767EA970CC8EE72A457C3AAA35F79627FD13728': '5409BD46FE98598D313E380AA77B60DE',
-      'Authorization': this.authorization,
-      'Accept-Language': 'en-US;q=1.0',
-      'device-info': 'model:iPad Pro (12.9-inch) (3rd generation)',
-      'device-type': 'ios',
-      'Accept': 'application/json',
-      'app-version': '11.7.2',
-      'api-key': this.apiKey,
-      'app-version-code': '359',
-      'app-name': 'cricheroes',
-      'Content-Type': 'application/json',
-    };
+    this.defaultHeaders = {};
   }
 
   /**
@@ -140,7 +115,7 @@ export class CricHeroesApiClient {
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
         try {
-          const response = await fetch(url, {
+          const response = await protectedFetch(url, {
             method,
             headers: requestHeaders,
             body: body ? JSON.stringify(body) : undefined,
@@ -205,7 +180,7 @@ export class CricHeroesApiClient {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-            const response = await fetch(url, {
+            const response = await protectedFetch(url, {
               method,
               headers: requestHeaders,
               body: body ? JSON.stringify(body) : undefined,
@@ -409,13 +384,13 @@ export class CricHeroesApiClient {
         rating: rawPost.is_pro ? 4.5 : undefined, // Pro users get higher rating
       },
       requirements: {
-        positionsNeeded: [rawPost.what_value], // Single position from what_value
+        positionsNeeded: [rawPost.what_value || 'Player'], // Single position from what_value
         skillLevel: this.mapSkillLevel('intermediate'), // Default to intermediate
         teamType: this.mapTeamType('casual'), // Default to casual
         description: rawPost.comment || '',
       },
       matchDetails: {
-        ballType: this.mapBallTypeFromId(rawPost.ball_type_id[0] || 1),
+        ballType: this.mapBallTypeFromId(rawPost.ball_type_id?.[0] || 1),
         groundType: this.mapGroundTypeFromString(rawPost.ground_type),
         matchFormat: this.mapMatchFormat('t20'), // Default to T20
         comments: rawPost.comment || '',
@@ -423,7 +398,7 @@ export class CricHeroesApiClient {
       location: {
         latitude: parseFloat(rawPost.latitude),
         longitude: parseFloat(rawPost.longitude),
-        cityId: rawPost.city_id[0] || 0,
+        cityId: rawPost.city_id?.[0] || 0,
         cityName: rawPost.city_name,
         venue: rawPost.where2_value || rawPost.ground_name,
       },
@@ -489,7 +464,7 @@ export class CricHeroesApiClient {
    */
   private mapGroundTypeFromString(groundType: string) {
     const { GroundType } = require('../types');
-    const lowerType = groundType.toLowerCase();
+    const lowerType = (groundType || '').toLowerCase();
     if (lowerType.includes('turf')) return GroundType.TURF;
     if (lowerType.includes('matting')) return GroundType.MATTING;
     if (lowerType.includes('concrete')) return GroundType.CONCRETE;

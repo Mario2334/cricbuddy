@@ -10,7 +10,11 @@ EnvironmentFile=/root/apps/cricbuddy-api/.env
 Environment=HOME=/root
 Environment=PATH=/root/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=NODE_ENV=production
-ExecStart=__NODE__ /root/apps/cricbuddy-api/dist/index.js
+Environment=RUNTIME_ROOT=/root/apps/cricbuddy-api
+Environment=CACHE_DIR=/root/apps/cricbuddy-api/cache
+Environment=WORK_DIR=/root/apps/cricbuddy-api/work
+Environment=WEB_ROOT=/root/apps/cricbuddy-api/current/web
+ExecStart=__NODE__ /root/apps/cricbuddy-api/current/dist/index.js
 Restart=always
 RestartSec=5
 Nice=10

@@ -5,7 +5,7 @@
  * and staleness detection for offline support.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../../../platform/feedStorage';
 import { RecruitmentPost } from '../types';
 import { CricHeroesRecruitmentResponse } from './cricHeroesApiClient';
 

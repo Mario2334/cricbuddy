@@ -1,9 +1,10 @@
+import { Alert } from '../../../platform/dialog';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   StyleSheet,
   Modal,
-  Alert,
+
 } from 'react-native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { MeshBackground } from '../../../ui/MeshBackground';
@@ -21,12 +22,12 @@ import FeedManager, { FeedState, FeedManagerEvents } from '../services/feedManag
 import { RecruitmentPost, AIQuery, BallType } from '../types';
 import { TabParamList } from '../../../types/navigation';
 import { errorHandler, LookingForFeedError, ErrorType } from '../utils/errorHandler';
-import { 
-  handleTap, 
-  handleSearch, 
-  handleRefresh, 
+import {
+  handleTap,
+  handleSearch,
+  handleRefresh,
   InteractionType,
-  FeedbackType 
+  FeedbackType
 } from '../utils/interactionHandler';
 
 type LookingForFeedTabProps = BottomTabScreenProps<TabParamList, 'LookingForFeed'>;
@@ -64,7 +65,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Error handling
   const handleFeedError = useCallback((error: Error | LookingForFeedError, context?: string) => {
     console.error(`[LookingForFeedTab] Error in ${context}:`, error);
-    
+
     const handledError = errorHandler.handleError(error, {
       component: 'LookingForFeedTab',
       action: context,
@@ -96,7 +97,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Retry mechanism
   const handleRetry = useCallback(async (error?: LookingForFeedError) => {
     console.log('[LookingForFeedTab] Retrying after error');
-    
+
     try {
       retryCountRef.current++;
       setLastError(null);
@@ -116,7 +117,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
         // Reinitialize if feed manager is null
         await initializeFeedManager();
       }
-      
+
       retryCountRef.current = 0; // Reset on success
     } catch (retryError) {
       console.error('[LookingForFeedTab] Retry failed:', retryError);
@@ -128,7 +129,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   const initializeFeedManager = useCallback(async () => {
     try {
       console.log('[LookingForFeedTab] Initializing feed manager');
-      
+
       const events: FeedManagerEvents = {
         onStateChange: (state: FeedState) => {
           setFeedState(state);
@@ -172,7 +173,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Initialize feed manager
   useEffect(() => {
     if (isInitializedRef.current) return;
-    
+
     initializeFeedManager();
     isInitializedRef.current = true;
 
@@ -190,7 +191,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('[LookingForFeedTab] Tab focused, checking for refresh');
-      
+
       try {
         if (feedManagerRef.current && feedManagerRef.current.hasData()) {
           // Only refresh if we haven't fetched data recently
@@ -198,7 +199,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
           if (state.lastFetchTime) {
             const timeSinceLastFetch = Date.now() - state.lastFetchTime.getTime();
             const shouldRefresh = timeSinceLastFetch > 5 * 60 * 1000; // 5 minutes
-            
+
             if (shouldRefresh) {
               feedManagerRef.current.refresh().catch(error => {
                 handleFeedError(error, 'tabFocusRefresh');
@@ -225,7 +226,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Search handlers with interaction feedback
   const handleQuerySubmit = useCallback(async (query: AIQuery) => {
     console.log('[LookingForFeedTab] Processing query:', query.rawQuery);
-    
+
     await handleSearch(
       {
         component: 'LookingForFeedTab',
@@ -249,7 +250,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
 
   const handleQueryClear = useCallback(() => {
     console.log('[LookingForFeedTab] Clearing query');
-    
+
     handleTap(
       {
         component: 'LookingForFeedTab',
@@ -273,7 +274,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
 
   const handleBallTypeFilter = useCallback((ballType: BallType | null) => {
     console.log('[LookingForFeedTab] Ball type filter changed:', ballType);
-    
+
     handleTap(
       {
         component: 'LookingForFeedTab',
@@ -301,7 +302,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Post list handlers with interaction feedback
   const handleRefreshWithFeedback = useCallback(async () => {
     console.log('[LookingForFeedTab] Refreshing posts');
-    
+
     await handleRefresh(
       {
         component: 'LookingForFeedTab',
@@ -324,7 +325,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
 
   const handleLoadMoreWithFeedback = useCallback(async () => {
     console.log('[LookingForFeedTab] Loading more posts');
-    
+
     await handleTap(
       {
         component: 'LookingForFeedTab',
@@ -349,14 +350,14 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
 
   const handlePostPressWithFeedback = useCallback((post: RecruitmentPost) => {
     console.log('[LookingForFeedTab] Post pressed:', post.id);
-    
+
     handleTap(
       {
         component: 'LookingForFeedTab',
         action: 'postPress',
         itemId: post.id,
         timestamp: new Date(),
-        additionalData: { 
+        additionalData: {
           postType: post.requirements.teamType,
           skillLevel: post.requirements.skillLevel,
           positions: post.requirements.positionsNeeded,
@@ -378,7 +379,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Post detail handlers with interaction feedback
   const handlePostDetailCloseWithFeedback = useCallback(() => {
     console.log('[LookingForFeedTab] Closing post detail');
-    
+
     handleTap(
       {
         component: 'LookingForFeedTab',
@@ -401,7 +402,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
 
   const handleContactPressWithFeedback = useCallback((contactInfo: RecruitmentPost['user']['contactDetails']) => {
     console.log('[LookingForFeedTab] Contact pressed:', contactInfo);
-    
+
     // Track contact interaction
     handleTap(
       {
@@ -430,13 +431,13 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
   // Error boundary handlers
   const handleErrorBoundaryError = useCallback((error: Error, errorInfo: React.ErrorInfo) => {
     console.error('[LookingForFeedTab] Error boundary caught error:', error, errorInfo);
-    
+
     handleFeedError(error, 'errorBoundary');
   }, [handleFeedError]);
 
   const handleErrorBoundaryRetry = useCallback(() => {
     console.log('[LookingForFeedTab] Error boundary retry');
-    
+
     handleTap(
       {
         component: 'LookingForFeedTab',
@@ -449,13 +450,13 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
         setLastError(null);
         setSelectedPost(null);
         setShowPostDetail(false);
-        
+
         // Reinitialize feed manager
         if (feedManagerRef.current) {
           feedManagerRef.current.destroy();
           feedManagerRef.current = null;
         }
-        
+
         isInitializedRef.current = false;
         initializeFeedManager();
       },
@@ -550,7 +551,7 @@ const LookingForFeedTab: React.FC<LookingForFeedTabProps> = ({ navigation }) => 
           >
             {renderSearchInterface()}
           </ErrorBoundary>
-          
+
           {/* Post List */}
           <View style={styles.listContainer}>
             <ErrorBoundary

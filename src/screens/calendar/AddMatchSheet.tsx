@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Clipboard from '../../platform/clipboard';
+import { calendarRepository } from '../../services/calendarRepository';
 import Toast from 'react-native-toast-message';
 import Animated, { FadeIn, FadeInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { ScheduledMatch } from '../../types/Match';
@@ -82,7 +82,7 @@ export function AddMatchSheet({ visible, initialDate, markedDates, onClose, onAd
       const parsedMatch = parseCricHeroesUrl(urlInput.trim());
 
       // Already scheduled?
-      const existingMatches = await AsyncStorage.getItem('scheduledMatches');
+      const existingMatches = JSON.stringify(await calendarRepository.list());
       if (existingMatches) {
         const scheduledMatchesList: ScheduledMatch[] = JSON.parse(existingMatches);
         if (scheduledMatchesList.some(match => match.matchId === parsedMatch.matchId)) {
@@ -157,10 +157,10 @@ export function AddMatchSheet({ visible, initialDate, markedDates, onClose, onAd
     if (!details) return;
     try {
       const matchToAdd: ScheduledMatch = { ...details, matchStartTime: when.toISOString() };
-      const existingMatches = await AsyncStorage.getItem('scheduledMatches');
+      const existingMatches = JSON.stringify(await calendarRepository.list());
       const scheduledMatchesList: ScheduledMatch[] = existingMatches ? JSON.parse(existingMatches) : [];
       scheduledMatchesList.push(matchToAdd);
-      await AsyncStorage.setItem('scheduledMatches', JSON.stringify(scheduledMatchesList));
+      await calendarRepository.put(matchToAdd);
       reset();
       onAdded(scheduledMatchesList, matchToAdd);
     } catch (err) {

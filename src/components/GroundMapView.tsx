@@ -1,8 +1,9 @@
+import { Alert } from '../platform/dialog';
 import React, { memo, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
+
   Linking,
   Platform,
 } from 'react-native';

@@ -1,0 +1,1 @@
+export const Share = { async share(data: {message: string; title?: string}) { try { if (navigator.share) await navigator.share({text:data.message,title:data.title}); else window.prompt('Copy to share:',data.message); } catch(e) { if ((e as Error).name !== 'AbortError') throw e; } } };

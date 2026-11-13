@@ -1,3 +1,5 @@
+import { CRICBUDDY_API_URL } from '../config/server';
+import { protectedFetch } from './protectedFetch';
 /**
  * API Service Module
  * 
@@ -64,7 +66,7 @@ class ApiService {
   private readonly cricHeroesHeaders: Record<string, string>;
   private readonly cookies: string;
   constructor() {
-    this.baseApiUrl = 'https://api.cricheroes.in/api/v1';
+    this.baseApiUrl = CRICBUDDY_API_URL + '/api/cricheroes';
     this.baseSiteUrl = 'https://cricheroes.com';
 
     // Request throttling and caching
@@ -81,33 +83,8 @@ class ApiService {
       lastUpdated: null
     };
 
-    // Common headers for CricHeroes API
-    this.cricHeroesHeaders = {
-      'accept': 'application/json, text/plain, */*',
-      'accept-language': 'en-US,en;q=0.9,gu;q=0.8,ja;q=0.7',
-      'api-key': 'cr!CkH3r0s',
-      'authorization': '167a0e60-4ecf-11f0-9aaf-65c0aaccdb8b',
-      'device-type': 'Chrome: 137.0.0.0',
-      'dnt': '1',
-      'origin': 'https://cricheroes.com',
-      'priority': 'u=1, i',
-      'referer': 'https://cricheroes.com/',
-      'sec-ch-ua': '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'cross-site',
-      'udid': 'b06d1d63f90cf3493b39e534c59b6935',
-      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-    };
-
-    // Cookies for authentication (keeping these for specific endpoints that need them)
-    this.cookies = [
-      'udid=b06d1d63f90cf3493b39e534c59b6935',
-      'Authorization=d65d0380-4ec1-11f0-beae-1ffc65a06b34',
-      'current_user=%7B%22user_id%22%3A33835174%2C%22country_id%22%3A1%2C%22country_code%22%3A%22%2B91%22%2C%22mobile%22%3A%228484996704%22%2C%22name%22%3A%22Sanket%20Mokashi%22%7D',
-    ].join('; ');
+    this.cricHeroesHeaders = {};
+    this.cookies = '';
   }
 
   /**
@@ -203,7 +180,7 @@ class ApiService {
   async makeRequestWithRetry(url: string, options: RequestOptions): Promise<Response> {
     await this.throttleRequest();
 
-    const response = await fetch(url, options);
+    const response = await protectedFetch(url, options);
 
     if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please wait and use the refresh button to try again.');
@@ -429,7 +406,7 @@ class ApiService {
     }
 
     try {
-      const response = await fetch(this.baseSiteUrl, {
+      const response = await protectedFetch(this.baseSiteUrl, {
         method: 'GET',
         headers: {
           'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
@@ -469,32 +446,14 @@ class ApiService {
     teamNames: string
   ): Promise<ApiResponse<unknown>> {
     // Use the new API endpoint
-    const url = `https://api.cricheroes.in/api/v1/scorecard/get-scorecard/${matchId}`;
+    const url = `${this.baseApiUrl}/scorecard/get-scorecard/${matchId}`;
     const cacheKey = `match_scorecard_${matchId}`;
     // Re-opening a match within a few seconds reuses the last scorecard; live polling (30s) always refetches.
     const cachedScorecard = this.getCachedResponse(cacheKey, 10_000);
     if (cachedScorecard) return cachedScorecard;
 
     // Headers from the new API curl command
-    const scorecardHeaders = {
-      'accept': 'application/json, text/plain, */*',
-      'accept-language': 'en-US,en;q=0.9,gu;q=0.8,ja;q=0.7',
-      'api-key': 'cr!CkH3r0s',
-      'authorization': '167a0e60-4ecf-11f0-9aaf-65c0aaccdb8b',
-      'device-type': 'Chrome: 137.0.0.0',
-      'dnt': '1',
-      'origin': 'https://cricheroes.com',
-      'priority': 'u=1, i',
-      'referer': 'https://cricheroes.com/',
-      'sec-ch-ua': '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'cross-site',
-      'udid': 'b06d1d63f90cf3493b39e534c59b6935',
-      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-    };
+    const scorecardHeaders = {};
 
     try {
       const response = await this.makeRequestWithRetry(url, {
@@ -665,9 +624,9 @@ class ApiService {
 
     // Handle both relative and absolute URLs
     let fullUrl: string;
-    if (pageUrl.startsWith('http')) {
+    if (pageUrl.startsWith('http') || pageUrl.startsWith('/api/')) {
       // Already a full URL
-      fullUrl = pageUrl;
+      fullUrl = pageUrl.startsWith('/api/') ? CRICBUDDY_API_URL + pageUrl : pageUrl;
     } else {
       // Relative URL - construct full URL
       const cleanUrl = pageUrl.startsWith('/') ? pageUrl.substring(1) : pageUrl;

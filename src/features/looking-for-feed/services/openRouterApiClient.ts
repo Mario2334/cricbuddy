@@ -1,6 +1,7 @@
+import { CRICBUDDY_API_URL } from '../../../config/server';
 /**
  * OpenRouter API Client for Looking For Feed
- * 
+ *
  * This client handles AI API communication with OpenRouter for natural language processing
  * with proper authentication, model fallback, request formatting, and retry mechanisms.
  */
@@ -68,33 +69,33 @@ export class OpenRouterApiClient {
   constructor(config?: Partial<OpenRouterConfig>) {
     // Default configuration with model fallback priority
     this.config = {
-      apiKey: process.env.OPENROUTER_API_KEY || '',
-      baseUrl: 'https://openrouter.ai/api/v1',
+      apiKey: 'server-managed',
+      baseUrl: CRICBUDDY_API_URL + '/api/feed',
       models: [
         {
           id: 'openai/gpt-4o-mini',
           name: 'GPT-4o Mini',
           priority: 1,
-          maxRetries: 2,
+          maxRetries: 0,
         },
         {
           id: 'qwen/qwen-2.5-72b-instruct',
           name: 'Qwen 2.5 72B',
           priority: 2,
-          maxRetries: 2,
+          maxRetries: 0,
         },
         {
           id: 'meta-llama/llama-3.1-8b-instruct:free',
           name: 'Llama 3.1 8B',
           priority: 3,
-          maxRetries: 2,
+          maxRetries: 0,
         },
       ],
       ...config,
     };
 
     this.defaultHeaders = {
-      'Authorization': `Bearer ${this.config.apiKey}`,
+
       'Content-Type': 'application/json',
       'HTTP-Referer': 'https://cricheroes.com',
       'X-Title': 'CricBuddy Looking For Feed',
@@ -114,16 +115,16 @@ export class OpenRouterApiClient {
 
     // Sort models by priority
     const sortedModels = [...this.config.models].sort((a, b) => a.priority - b.priority);
-    
+
     let lastError: string = '';
     let totalFallbackAttempts = 0;
 
     // Try each model in priority order
     for (const model of sortedModels) {
       console.log(`[OpenRouterApiClient] Attempting query processing with model: ${model.name}`);
-      
+
       const result = await this.tryModelWithRetry(model, rawQuery);
-      
+
       if (result.success && result.data) {
         console.log(`[OpenRouterApiClient] Successfully processed query with model: ${model.name}`);
         return {
@@ -137,10 +138,11 @@ export class OpenRouterApiClient {
           fallbackAttempts: totalFallbackAttempts,
         };
       }
-      
+
       lastError = result.error || 'Unknown error';
       totalFallbackAttempts++;
-      
+      if (result.error?.includes('503')) break;
+
       console.warn(`[OpenRouterApiClient] Model ${model.name} failed: ${lastError}`);
     }
 
@@ -160,12 +162,9 @@ export class OpenRouterApiClient {
     model: ModelConfig,
     rawQuery: string
   ): Promise<OpenRouterApiResponse<AIQuery>> {
-    const retryResult = await defaultRetryManager.executeWithRetry(
-      async () => {
-        return await this.makeRequest(model.id, rawQuery);
-      },
-      `OpenRouter ${model.name} query processing`
-    );
+    const retryResult = await this.makeRequest(model.id, rawQuery)
+      .then(data => ({success: true, data, error: ''}))
+      .catch((e: Error) => ({success: false, data: undefined, error: e.message}));
 
     if (retryResult.success && retryResult.data) {
       return {
@@ -184,8 +183,8 @@ export class OpenRouterApiClient {
    * Make HTTP request to OpenRouter API
    */
   private async makeRequest(modelId: string, rawQuery: string): Promise<AIQuery> {
-    const url = `${this.config.baseUrl}/chat/completions`;
-    
+    const url = `${this.config.baseUrl}/query`;
+
     const requestBody: OpenRouterRequest = {
       model: modelId,
       messages: [
@@ -250,14 +249,14 @@ export class OpenRouterApiClient {
       return this.parseAIResponse(rawQuery, data);
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           const timeoutError = new Error('Request timeout') as any;
           timeoutError.code = 'TIMEOUT';
           throw timeoutError;
         }
-        
+
         // Network errors
         if (error.message.includes('fetch')) {
           const networkError = new Error('Network error') as any;
@@ -265,7 +264,7 @@ export class OpenRouterApiClient {
           throw networkError;
         }
       }
-      
+
       throw error;
     }
   }
@@ -330,7 +329,7 @@ Always respond with valid JSON only, no additional text.`;
 
       // Parse JSON response
       const parsed = JSON.parse(content);
-      
+
       if (!parsed.filters) {
         throw new Error('Missing filters in AI response');
       }
@@ -358,7 +357,7 @@ Always respond with valid JSON only, no additional text.`;
       };
     } catch (error) {
       console.error('[OpenRouterApiClient] Failed to parse AI response:', error, { response });
-      
+
       // Return fallback response with low confidence
       return {
         rawQuery,

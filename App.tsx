@@ -1,5 +1,6 @@
 import 'react-native-gesture-handler';
 import React from 'react';
+import { WebStatus } from './src/components/WebStatus';
 import { StyleSheet, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import Toast from 'react-native-toast-message';
 
+import type { TabParamList } from './src/types/navigation';
 import { RootTabs } from './src/navigation/RootTabs';
 import { navTheme } from './src/navigation/navTheme';
 import { useTabBarSpace } from './src/navigation/useTabBarSpace';
@@ -39,9 +41,13 @@ const App: React.FC = () => {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
+        <WebStatus />
         {/* No root fade: animating an ancestor's opacity breaks iOS blur views. */}
         <ConfettiProvider>
-          <NavigationContainer theme={navTheme}>
+          <NavigationContainer<TabParamList> theme={navTheme} linking={{prefixes: [], config: {screens: {
+            Home: {path: '', screens: {HomeList: '', MatchDetail: 'match/:matchId'}},
+            LookingForFeed: 'find', Stats: 'stats', MyTeam: {path:'team',screens:{MyTeamList:'',MatchDetail:'match/:matchId'}}, Calendar:{path:'calendar',screens:{CalendarList:'',MatchDetail:'match/:matchId'}},
+          }}}}>
             <RootTabs />
           </NavigationContainer>
         </ConfettiProvider>

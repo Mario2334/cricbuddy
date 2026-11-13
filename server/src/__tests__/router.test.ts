@@ -35,5 +35,7 @@ test('tailnet identity is required and checked', () => {
   assert.throws(() => requireTailnetUser(req('', {}), allowed), (e: HttpError) => e.status === 401);
   assert.throws(() => requireTailnetUser(req('', { 'tailscale-user-login': 'other@example.com' }), allowed), (e: HttpError) => e.status === 403);
   assert.equal(requireTailnetUser(req('', { 'tailscale-user-login': 'Sanket@Example.com' }), allowed), 'sanket@example.com');
-  assert.equal(requireTailnetUser(req('', {}), ['*']), null);
+  assert.throws(() => requireTailnetUser(req('', {}), ['*']));
+  process.env.DEV_AUTH = '1';
+  try { assert.equal(requireTailnetUser(req('', {}), ['*']), 'local-development'); } finally { delete process.env.DEV_AUTH; }
 });

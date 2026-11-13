@@ -86,7 +86,7 @@ describe('OpenRouter API Client', () => {
 
             // Verify URL structure
             expect(typeof url).toBe('string');
-            expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
+            expect(url).toBe('https://veyden.tail2874a5.ts.net:8787/api/feed/query');
 
             // Verify request options
             expect(options).toBeDefined();
@@ -96,7 +96,7 @@ describe('OpenRouter API Client', () => {
 
               // Verify required authentication headers
               const headers = options.headers as Record<string, string>;
-              expect(headers['Authorization']).toBe('Bearer test-api-key-12345');
+              expect(headers['Authorization']).toBeUndefined();
               expect(headers['Content-Type']).toBe('application/json');
               expect(headers['HTTP-Referer']).toBe('https://cricheroes.com');
               expect(headers['X-Title']).toBe('CricBuddy Looking For Feed');

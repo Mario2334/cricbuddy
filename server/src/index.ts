@@ -1,4 +1,6 @@
 import http from 'node:http';
+import { CalendarRepo } from './grist/calendar';
+import { addPwaRoutes, checkBrowserWrite, serveFrontend } from './http/pwa';
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from './config';
@@ -52,14 +54,20 @@ async function main(): Promise<void> {
   deps.runner.enqueue();
 
   const router = buildRouter(deps);
+  addPwaRoutes(router, deps, new CalendarRepo(grist));
   const server = http.createServer(async (req, res) => {
     const startedAt = Date.now();
     const url = new URL(req.url ?? '/', 'http://localhost');
     let status = 200;
     try {
       const user = url.pathname === '/health' ? null : requireTailnetUser(req, cfg.allowedUsers);
+      checkBrowserWrite(req, process.env.PUBLIC_ORIGIN ?? 'https://veyden.tail2874a5.ts.net:8787');
       const hit = router.match(req.method ?? 'GET', url.pathname);
-      if (!hit) throw new HttpError(404, `No route for ${req.method} ${url.pathname}`);
+      if (!hit) {
+        if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/matches/')) throw new HttpError(404, 'Not found');
+        await serveFrontend(req, res, url.pathname, process.env.WEB_ROOT ?? path.resolve(__dirname, '../web'));
+        return;
+      }
       const out = await hit.handler({ req, res, params: hit.params, query: url.searchParams, user });
       if (out instanceof Reply) {
         status = out.status;

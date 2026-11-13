@@ -46,3 +46,6 @@ server/.env.*
 !server/.env.example
 server/work/
 server/cache/
+
+server/web/
+dist-ios/

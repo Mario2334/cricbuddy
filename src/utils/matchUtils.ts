@@ -60,7 +60,7 @@ export const shouldShowMiniScore = (status: string): boolean => {
   return status === 'live' || status === 'past' || status === 'completed';
 };
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { calendarRepository } from '../services/calendarRepository';
 import { Match, ScheduledMatch } from '../types/Match';
 
 export const convertScheduledMatchToMatch = (scheduledMatch: ScheduledMatch): Match => {
@@ -167,7 +167,7 @@ let localCache: { key: string; matches: Match[] } | null = null;
 
 export const getLocalScheduledMatches = async (): Promise<Match[]> => {
   try {
-    const matchesData = await AsyncStorage.getItem('scheduledMatches');
+    const matchesData = JSON.stringify(await calendarRepository.list());
     if (matchesData) {
       const key = `${Math.floor(Date.now() / 60_000)}|${matchesData}`;
       if (localCache?.key === key) return localCache.matches;

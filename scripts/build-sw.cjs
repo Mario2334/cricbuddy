@@ -1,0 +1,2 @@
+const {generateSW}=require('workbox-build');
+generateSW({globDirectory:'dist',globIgnores:['sw.js','workbox-*.js'],globPatterns:['**/*.{html,js,css,png,ico,json,ttf,woff,woff2,svg}'],swDest:'dist/sw.js',maximumFileSizeToCacheInBytes:8*1024*1024,navigateFallback:'/index.html',navigateFallbackDenylist:[/^\/api\//,/^\/matches\//,/^\/team\/players/,/^\/health/],cleanupOutdatedCaches:false,skipWaiting:false,clientsClaim:true}).then(r=>{for(const w of r.warnings)console.warn(w);console.log(`Precached ${r.count} assets`);}).catch(e=>{console.error(e);process.exit(1);});
