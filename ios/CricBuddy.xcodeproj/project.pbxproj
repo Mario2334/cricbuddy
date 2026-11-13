@@ -18,7 +18,7 @@
 
 /* Begin PBXFileReference section */
 		01089B1BBE2DA09D896789ED /* Pods-CricBuddy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CricBuddy.release.xcconfig"; path = "Target Support Files/Pods-CricBuddy/Pods-CricBuddy.release.xcconfig"; sourceTree = "<group>"; };
-		0B27C2C2A5A86821D5061199 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = CricBuddy/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		0B27C2C2A5A86821D5061199 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = CricBuddy/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1387BD2EA799F1A287499040 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CricBuddy/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* CricBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CricBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = CricBuddy/Images.xcassets; sourceTree = "<group>"; };
@@ -81,7 +81,6 @@
 				F69692F100FE15B14A364763 /* Pods-CricBuddy.debug.xcconfig */,
 				01089B1BBE2DA09D896789ED /* Pods-CricBuddy.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -385,7 +384,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = CricBuddy/CricBuddy.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7WVTVM9MK9;
+				DEVELOPMENT_TEAM = 4KDLJ3Y23H;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -404,7 +403,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.sanket.django.cricbuddy;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sanket.django.cricbuddy.dev;
 				PRODUCT_NAME = CricBuddy;
 				SWIFT_OBJC_BRIDGING_HEADER = "CricBuddy/CricBuddy-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -422,7 +421,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = CricBuddy/CricBuddy.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7WVTVM9MK9;
+				DEVELOPMENT_TEAM = 4KDLJ3Y23H;
 				INFOPLIST_FILE = CricBuddy/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -436,7 +435,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.sanket.django.cricbuddy;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sanket.django.cricbuddy.dev;
 				PRODUCT_NAME = CricBuddy;
 				SWIFT_OBJC_BRIDGING_HEADER = "CricBuddy/CricBuddy-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
